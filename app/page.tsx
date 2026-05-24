@@ -956,7 +956,7 @@ export default function App() {
                               🔑 Senha
                             </button>
                             <button onClick={()=>togglePago(nome)}
-                              style={{padding:"5px 10px",borderRadius:7,border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:10,background:u.pago?"rgba(74,222,128,.15)":"rgba(248,113,113,.15)",color:u.pago?"#4ade80":"#f87171",border:u.pago?"1px solid rgba(74,222,128,.3)":"1px solid rgba(248,113,113,.3)"}}>
+                              style={{padding:"5px 10px",borderRadius:7,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:10,background:u.pago?"rgba(74,222,128,.15)":"rgba(248,113,113,.15)",color:u.pago?"#4ade80":"#f87171",border:u.pago?"1px solid rgba(74,222,128,.3)":"1px solid rgba(248,113,113,.3)"}}>
                               {u.pago?"✅ Pago":"⚠ Pendente"}
                             </button>
                           </div>
