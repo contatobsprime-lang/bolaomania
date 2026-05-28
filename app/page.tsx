@@ -54,7 +54,7 @@ const F: Record<string,string> = {
 };
 
 const JOGOS_GRUPO = [
-  {id:1,g:"A",r:1,fase:"grupos",fase:"grupos",time1:"México",time2:"África do Sul",dt:"2026-06-11T16:00:00",est:"Estádio Azteca",cid:"Cidade do México"},
+  {id:1,g:"A",r:1,fase:"grupos",time1:"México",time2:"África do Sul",dt:"2026-06-11T16:00:00",est:"Estádio Azteca",cid:"Cidade do México"},
   {id:2,g:"A",r:1,fase:"grupos",time1:"Coreia do Sul",time2:"República Tcheca",dt:"2026-06-11T23:00:00",est:"Estádio Akron",cid:"Guadalajara"},
   {id:3,g:"B",r:1,fase:"grupos",time1:"Canadá",time2:"Bósnia",dt:"2026-06-12T16:00:00",est:"BMO Field",cid:"Toronto"},
   {id:4,g:"B",r:1,fase:"grupos",time1:"Catar",time2:"Suíça",dt:"2026-06-13T16:00:00",est:"Levi's Stadium",cid:"San Francisco"},
