@@ -998,10 +998,6 @@ export default function App() {
                     )}
                   </div>
                 )}
-                <div style={{marginTop:10,padding:"9px 14px",background:"rgba(247,201,72,.04)",border:"1px solid rgba(247,201,72,.1)",borderRadius:9,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{fontSize:11,color:"rgba(240,244,255,.45)"}}>{totSalvos} palpites salvos no banco</span>
-                  <span className="badge bg">☁ Supabase</span>
-                </div>
               </div>
             )}
 
