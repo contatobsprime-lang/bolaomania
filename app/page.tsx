@@ -201,7 +201,7 @@ const MEDAL=["🥇","🥈","🥉","4º","5º"];
 const FASE_L:Record<string,string>={grupos:"Grupos",oitavas:"Oitavas",quartas:"Quartas",semi:"Semifinal",final:"Final"};
 const CSS=`
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
-*{box-sizing:border-box;margin:0;padding:0;}
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#0a0f1e}::-webkit-scrollbar-thumb{background:#f7c948;border-radius:2px}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 input[type=number]{-moz-appearance:textfield}
@@ -275,6 +275,17 @@ export default function App() {
   const [,setTick]=useState(0);
 
   useEffect(()=>{const t=setInterval(()=>setTick(x=>x+1),30000);return()=>clearInterval(t);},[]);
+
+  useEffect(()=>{
+    if(typeof window==="undefined") return;
+    const saved=localStorage.getItem("bolao_user");
+    if(saved){
+      supabase.from("usuarios").select("*").eq("nome",saved).single().then(({data})=>{
+        if(data){setUsuarioAtual(data.nome);setUsuarios((prev:any)=>({...prev,[data.nome]:{senha:data.senha,pago:data.pago,camp:data.campeao_palpite||""}}));setTela("app");setModo("home");}
+        else localStorage.removeItem("bolao_user");
+      });
+    }
+  },[]);
 
   useEffect(()=>{
     function atualizar(){
@@ -360,6 +371,7 @@ export default function App() {
     if(error||!data){setLoginErro("Usuário não encontrado.");return;}
     if(data.senha!==loginSenha){setLoginErro("Senha incorreta.");return;}
     setUsuarioAtual(data.nome);setLoginNome("");setLoginSenha("");
+    if(typeof window!=="undefined")localStorage.setItem("bolao_user",data.nome);
     const jaViu=typeof window!=="undefined"&&localStorage.getItem(`ob_${data.nome}`);
     if(!jaViu){setOnboarding(true);if(typeof window!=="undefined")localStorage.setItem(`ob_${data.nome}`,"1");}
     setTela("app");setModo("home");
@@ -376,6 +388,7 @@ export default function App() {
     if(error){setCadErro(error.code==="23505"?"Nome já cadastrado.":"Erro ao criar conta.");return;}
     setUsuarios((prev:any)=>({...prev,[nome]:{senha:cadSenha,pago:false,camp:""}}));
     setUsuarioAtual(nome);setCadNome("");setCadSenha("");setCadSenha2("");
+    if(typeof window!=="undefined")localStorage.setItem("bolao_user",nome);
     setOnboarding(true);if(typeof window!=="undefined")localStorage.setItem(`ob_${nome}`,"1");
     setTela("app");setModo("home");
   }
@@ -524,7 +537,7 @@ export default function App() {
   }
 
   return(
-    <div style={{minHeight:"100vh",background:"#0a0f1e",color:"#f0f4ff",fontFamily:"'Syne',sans-serif"}}>
+    <div style={{minHeight:"100vh",background:"#0a0f1e",color:"#f0f4ff",fontFamily:"'Syne',sans-serif",userSelect:"none",WebkitUserSelect:"none"}}>
       <style>{CSS}</style>
 
       {confetis.map(c=><div key={c.id} className="cf" style={{left:c.l,animationDelay:c.d}}>{c.e}</div>)}
@@ -599,10 +612,10 @@ export default function App() {
                 <>
                   <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:16,marginBottom:20}}>
                     <input type="number" min={0} max={30} className={`si${(palR[jogoSel.id]?.gols1!==undefined&&palR[jogoSel.id]?.gols1!=="")?" f":""}`} style={{width:72,height:72,fontSize:28}}
-                      value={palR[jogoSel.id]?.gols1??""} onChange={e=>setPalLocal(jogoSel.id,"gols1",e.target.value,jogoSel.dt)} placeholder="0"/>
+                      value={palR[jogoSel.id]?.gols1??""} onChange={e=>{setPalLocal(jogoSel.id,"gols1",e.target.value,jogoSel.dt);if(e.target.value!==""){const nx=document.getElementById("gols2_modal");if(nx)nx.focus();}}} placeholder="0"/>
                     <span style={{fontSize:24,color:"rgba(240,244,255,.3)",fontWeight:700}}>×</span>
                     <input type="number" min={0} max={30} className={`si${(palR[jogoSel.id]?.gols2!==undefined&&palR[jogoSel.id]?.gols2!=="")?" f":""}`} style={{width:72,height:72,fontSize:28}}
-                      value={palR[jogoSel.id]?.gols2??""} onChange={e=>setPalLocal(jogoSel.id,"gols2",e.target.value,jogoSel.dt)} placeholder="0"/>
+                      value={palR[jogoSel.id]?.gols2??""} id="gols2_modal" onChange={e=>setPalLocal(jogoSel.id,"gols2",e.target.value,jogoSel.dt)} placeholder="0"/>
                   </div>
                   <div className="card" style={{marginBottom:16}}>
                     <div style={{fontWeight:700,fontSize:11,color:"#f7c948",marginBottom:10,textTransform:"uppercase",letterSpacing:1}}>Pontuação</div>
@@ -642,7 +655,7 @@ export default function App() {
                 {" "}{m==="home"?"Home":m==="jogos"?"Jogos":m==="palpites"?"Palpites":m==="ranking"?"Ranking":m==="historico"?"Histórico":m==="pix"?"Pix":"Regras"}
               </button>
             ))}
-            <button className="btn-ghost" style={{fontSize:10,padding:"4px 8px"}} onClick={()=>{setUsuarioAtual(null);setTela("login");}}>Sair</button>
+            <button className="btn-ghost" style={{fontSize:10,padding:"4px 8px"}} onClick={()=>{setUsuarioAtual(null);setTela("login");if(typeof window!=="undefined")localStorage.removeItem("bolao_user");}}>Sair</button>
           </div>
         )}
         {tela==="admin"&&(
