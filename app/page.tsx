@@ -1293,12 +1293,10 @@ export default function App() {
                       const txt=`💰 BOLÃO COPA 2026 — Pagamentos
 
 ✅ Pagos (${pagos.length}):
-${pagos.map(n=>`• ${n}`).join("
-")||"Nenhum"}
+${pagos.map(n=>`• ${n}`).join("\n")||"Nenhum"}
 
 ⚠️ Pendentes (${pendentes.length}):
-${pendentes.map(n=>`• ${n}`).join("
-")||"Nenhum"}
+${pendentes.map(n=>`• ${n}`).join("\n")||"Nenhum"}
 
 Total arrecadado: R$ ${Object.values(usuarios).filter((u:any)=>u.pago).length*CONFIG.valorCota}`;
                       navigator.clipboard.writeText(txt);
