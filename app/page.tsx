@@ -400,6 +400,7 @@ export default function App() {
 
   async function confirmarPalpite(jogo:any){
     if(!usuarioAtual||salvando)return;
+    if(!pago){mostrarToast("Faça o pagamento primeiro!","err");return;}
     const p=palR[jogo.id]||{};
     const g1=parseInt(p.gols1),g2=parseInt(p.gols2);
     if(isNaN(g1)||isNaN(g2)||p.gols1===""||p.gols2===""){mostrarToast("Preencha os dois placares","err");return;}
@@ -412,7 +413,9 @@ export default function App() {
   }
 
   async function salvarGrupo(){
-    if(!usuarioAtual||salvando)return;setSalvando(true);
+    if(!usuarioAtual||salvando)return;
+    if(!pago){mostrarToast("Faça o pagamento primeiro!","err");return;}
+    setSalvando(true);
     const ups:any[]=[];
     JOGOS_GRUPO.filter(j=>j.g===grupoAtivo).forEach(j=>{
       const p=palR[j.id]||{};const g1=parseInt(p.gols1),g2=parseInt(p.gols2);
@@ -427,7 +430,9 @@ export default function App() {
   }
 
   async function salvarElim(){
-    if(!usuarioAtual||salvando)return;setSalvando(true);
+    if(!usuarioAtual||salvando)return;
+    if(!pago){mostrarToast("Faça o pagamento primeiro!","err");return;}
+    setSalvando(true);
     const ups:any[]=[];
     elim.filter(j=>j.fase===faseAtiva&&j.time1&&j.time2).forEach(j=>{
       const p=palR[j.id]||{};const g1=parseInt(p.gols1),g2=parseInt(p.gols2);
@@ -443,6 +448,7 @@ export default function App() {
 
   async function setCamp(time:string){
     if(!usuarioAtual||campLock())return;
+    if(!pago){mostrarToast("Faça o pagamento primeiro!","err");return;}
     setUsuarios((prev:any)=>({...prev,[usuarioAtual]:{...prev[usuarioAtual],camp:time}}));
     await supabase.from("usuarios").update({campeao_palpite:time}).eq("nome",usuarioAtual);
     mostrarToast("🏆 Campeão salvo!");
@@ -905,7 +911,12 @@ export default function App() {
                 )}
                 <div className="card" style={{marginBottom:14,border:"1px solid rgba(247,201,72,.2)",background:"rgba(247,201,72,.03)"}}>
                   <div style={{fontWeight:700,fontSize:11,color:"#f7c948",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>🏆 Campeão da Copa</div>
-                  <div style={{fontSize:12,color:"rgba(240,244,255,.45)",marginBottom:8}}>+{CONFIG.bonusCampeao} pts bônus · {campLock()?<span style={{color:"#f87171"}}>🔒 Bloqueado</span>:<span style={{color:"rgba(240,244,255,.4)"}}>Fecha antes das oitavas (04/07)</span>}</div>
+                  <div style={{fontSize:12,color:"rgba(240,244,255,.45)",marginBottom:8}}>
+    +{CONFIG.bonusCampeao} pts bônus ·{" "}
+    {campLock()
+      ?<span style={{color:"#f87171"}}>🔒 Bloqueado — palpite encerrado</span>
+      :<span style={{color:"#f7c948",fontWeight:700}}>{tr(CONFIG.bloqueioCompetidor)} para fechar</span>}
+  </div>
                   <select value={campAtual} onChange={e=>setCamp(e.target.value)} disabled={campLock()}>
                     <option value="">— Selecione o campeão —</option>
                     {TODOS_TIMES.map(t=><option key={t} value={t}>{F[t]} {t}</option>)}
@@ -998,6 +1009,10 @@ export default function App() {
                     )}
                   </div>
                 )}
+                <div style={{marginTop:10,padding:"9px 14px",background:"rgba(247,201,72,.04)",border:"1px solid rgba(247,201,72,.1)",borderRadius:9,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{fontSize:11,color:"rgba(240,244,255,.45)"}}>{totSalvos} palpites salvos no banco</span>
+                  <span className="badge bg">☁ Supabase</span>
+                </div>
               </div>
             )}
 
@@ -1270,12 +1285,42 @@ export default function App() {
             {adminModo==="usuarios"&&(
               <div>
                 <div style={{marginBottom:12}}>
-                  <div style={{fontWeight:700,fontSize:14}}>{nPart} participantes</div>
-                  <div style={{fontSize:11,color:"rgba(240,244,255,.4)",marginTop:3}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
+                    <div style={{fontWeight:700,fontSize:14}}>{nPart} participantes</div>
+                    <button onClick={()=>{
+                      const pagos=Object.entries(usuarios).filter(([,u]:any)=>u.pago).map(([n]:any)=>n);
+                      const pendentes=Object.entries(usuarios).filter(([,u]:any)=>!u.pago).map(([n]:any)=>n);
+                      const txt=`💰 BOLÃO COPA 2026 — Pagamentos
+
+✅ Pagos (${pagos.length}):
+${pagos.map(n=>`• ${n}`).join("
+")||"Nenhum"}
+
+⚠️ Pendentes (${pendentes.length}):
+${pendentes.map(n=>`• ${n}`).join("
+")||"Nenhum"}
+
+Total arrecadado: R$ ${Object.values(usuarios).filter((u:any)=>u.pago).length*CONFIG.valorCota}`;
+                      navigator.clipboard.writeText(txt);
+                      mostrarToast("✅ Lista copiada para o WhatsApp!");
+                    }} style={{padding:"6px 12px",borderRadius:8,border:"1px solid rgba(74,222,128,.3)",background:"rgba(74,222,128,.1)",color:"#4ade80",fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:11,cursor:"pointer"}}>
+                      📋 Copiar lista
+                    </button>
+                  </div>
+                  <div style={{fontSize:11,color:"rgba(240,244,255,.4)"}}>
                     Total: <span style={{color:"#f7c948",fontWeight:700}}>R$ {premios.total}</span> ·
                     Pagos: <span style={{color:"#4ade80",fontWeight:700}}>R$ {Object.values(usuarios).filter((u:any)=>u.pago).length*CONFIG.valorCota}</span> ·
                     Pendente: <span style={{color:"#f87171",fontWeight:700}}>R$ {Object.values(usuarios).filter((u:any)=>!u.pago).length*CONFIG.valorCota}</span>
                   </div>
+                  {/* Barra visual pagos/pendentes */}
+                  {nPart>0&&(
+                    <div style={{marginTop:8}}>
+                      <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,.08)",overflow:"hidden"}}>
+                        <div style={{height:"100%",borderRadius:3,background:"linear-gradient(90deg,#4ade80,#f7c948)",width:`${Math.round(Object.values(usuarios).filter((u:any)=>u.pago).length/nPart*100)}%`,transition:"width .5s"}}/>
+                      </div>
+                      <div style={{fontSize:10,color:"rgba(240,244,255,.35)",marginTop:4,textAlign:"right"}}>{Object.values(usuarios).filter((u:any)=>u.pago).length}/{nPart} pagos ({Math.round(Object.values(usuarios).filter((u:any)=>u.pago).length/nPart*100)}%)</div>
+                    </div>
+                  )}
                 </div>
                 {nPart===0&&<div className="card" style={{textAlign:"center",color:"rgba(240,244,255,.35)",padding:"28px"}}>Nenhum participante ainda</div>}
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
