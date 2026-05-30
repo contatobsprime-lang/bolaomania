@@ -919,7 +919,7 @@ export default function App() {
                                 <div style={{fontSize:12,color:"#6b7280"}}>{fmtDLong(j.dt)} · {fmtH(j.dt)}</div>
                               </div>
                             </div>
-                            {lk?<span className="badge br">🔒</span>:tP?<span className="badge bgr">✓ {pJ?.gols1}×{pJ?.gols2}</span>:<span className="badge bg">Palpitar</span>}
+                            {lk?<span className="badge br">🔒</span>:tP?<span className="badge bgr">✓ {pJ?.gols1}×{pJ?.gols2}</span>:null}
                           </div>
                           {!lk&&!tP&&(
                             <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -929,8 +929,8 @@ export default function App() {
                               <span style={{color:"#d1d5db",fontWeight:700}}>×</span>
                               <input type="number" min={0} max={30} id={`hg2_${j.id}`} className={`si${(palR[j.id]?.gols2!==undefined&&palR[j.id]?.gols2!=="")?" f":""}`} style={{width:56,height:56}}
                                 value={palR[j.id]?.gols2??""} onClick={e=>e.stopPropagation()}
-                                onChange={e=>{setPalLocal(j.id,"gols2",e.target.value,j.dt);if(e.target.value!==""){setJogoSel(j);}}} placeholder="0"/>
-                              <button className="btn-primary" style={{flex:1,padding:"14px 8px",fontSize:14}} onClick={e=>{e.stopPropagation();setJogoSel(j);}}>Confirmar</button>
+                                onChange={e=>{setPalLocal(j.id,"gols2",e.target.value,j.dt);if(e.target.value!==""){const btn=document.getElementById(`hbtn_${j.id}`);if(btn)btn.focus();}}} placeholder="0"/>
+                              <button id={`hbtn_${j.id}`} className="btn-primary" style={{flex:1,padding:"14px 8px",fontSize:14}} onClick={async e=>{e.stopPropagation();await confirmarPalpite(j);}} onKeyDown={async e=>{if(e.key==="Enter")await confirmarPalpite(j);}}>Confirmar</button>
                             </div>
                           )}
                         </div>
@@ -1277,18 +1277,19 @@ export default function App() {
                       <div style={{fontWeight:800,fontSize:40,color:"#16a34a"}}>R$ {CONFIG.valorCota},00</div>
                       <div style={{fontSize:14,color:"#9ca3af",marginTop:4}}>Valor da cota</div>
                     </div>
-                    <div className="card" style={{marginBottom:12,border:"1.5px solid #86efac",background:"#f0fdf4",textAlign:"center"}}>
-                      <div style={{fontSize:13,fontWeight:700,color:"#166534",marginBottom:8}}>💳 Pagar via Mercado Pago</div>
-                      <div style={{fontSize:12,color:"#6b7280",marginBottom:14}}>Pix, cartão de crédito ou débito — confirmação automática</div>
-                      <button className="btn-primary" onClick={pagarMP} disabled={mpLoading} style={{fontSize:16}}>{mpLoading?"Gerando link...":"💳 Pagar R$ 10 agora"}</button>
+                    <div className="card" style={{marginBottom:12,border:"1.5px solid #86efac",background:"#f0fdf4",textAlign:"center",padding:"24px"}}>
+                      <div style={{fontSize:32,marginBottom:8}}>🏦</div>
+                      <div style={{fontSize:16,fontWeight:700,color:"#166534",marginBottom:6}}>Pagamento via Pix</div>
+                      <div style={{fontSize:13,color:"#6b7280",marginBottom:16,lineHeight:1.6}}>Você será direcionado para o checkout do Mercado Pago onde o pagamento é feito exclusivamente via <strong>Pix</strong>. A liberação é automática após confirmação.</div>
+                      <button className="btn-primary" onClick={pagarMP} disabled={mpLoading} style={{fontSize:16,padding:"16px"}}>{mpLoading?"Gerando link...":"Pagar R$ 10 via Pix"}</button>
                     </div>
-                      <div className="card" style={{marginBottom:12,border:"1.5px solid #e5e7eb",background:"#f9fafb"}}>
-                      <div style={{fontSize:13,color:"#6b7280",lineHeight:1.8}}>
-                        <div style={{fontWeight:700,color:"#111827",marginBottom:8,fontSize:15}}>Como funciona</div>
-                        <div>1. Clique em <strong>"Pagar agora"</strong></div>
-                        <div>2. Escolha Pix, cartão ou débito</div>
-                        <div>3. Confirme o pagamento</div>
-                        <div>4. Seu acesso é liberado automaticamente ✅</div>
+                    <div className="card" style={{marginBottom:12}}>
+                      <div style={{fontWeight:700,color:"#111827",marginBottom:10,fontSize:14}}>Como funciona</div>
+                      <div style={{fontSize:13,color:"#6b7280",lineHeight:2}}>
+                        <div>1️⃣ Clique em <strong>"Pagar via Pix"</strong></div>
+                        <div>2️⃣ Escaneie o QR Code no Mercado Pago</div>
+                        <div>3️⃣ Confirme no app do seu banco</div>
+                        <div>4️⃣ Acesso liberado automaticamente ✅</div>
                       </div>
                     </div>
                   </div>
