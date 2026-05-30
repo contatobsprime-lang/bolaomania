@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
           unit_price: 10,
           currency_id: "BRL",
         }],
+        external_reference: nome,
         payment_methods: {
           excluded_payment_types: [
             { id: "credit_card" },
@@ -37,6 +38,7 @@ export async function POST(req: NextRequest) {
         },
         auto_return: "approved",
         statement_descriptor: "BOLAO COPA 2026",
+        notification_url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://bolao-copa-2026.vercel.app"}/api/mp-webhook`,
       }),
     });
 
