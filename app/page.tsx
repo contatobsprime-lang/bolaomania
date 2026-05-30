@@ -22,6 +22,7 @@ const CONFIG = {
 };
 
 const SENHA_ADMIN = process.env.NEXT_PUBLIC_ADMIN_SENHA || "admin123";
+const MP_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MP_ACCESS_TOKEN || "";
 
 const GRUPOS: Record<string,string[]> = {
   A:["México","Coreia do Sul","República Tcheca","África do Sul"],
@@ -179,6 +180,7 @@ function desempate(a:any,b:any){
   if(b.acertos!==a.acertos)return b.acertos-a.acertos;
   return(b.campeao&&b.campeao===b.campR?1:0)-(a.campeao&&a.campeao===a.campR?1:0);
 }
+function fmtDLong(iso:string){return new Date(iso).toLocaleDateString("pt-BR",{day:"numeric",month:"long"});}
 function fmtD(iso:string){return new Date(iso).toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"});}
 function fmtH(iso:string){return new Date(iso).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});}
 function tr(iso:string){
@@ -197,46 +199,86 @@ function statusJ(dt:string,temRes:boolean){
   return"prox";
 }
 
+function calcBadges(nome:string,ranking:any[],palpitesMap:any,elim:any[],res:any,resE:any){
+  const badges:string[]=[];
+  const rodada1=JOGOS_GRUPO.filter((j:any)=>j.r===1);
+  let maxPts=0,craque="";
+  ranking.forEach(p=>{
+    const pals=palpitesMap[p.nome]||{};let pts=0;
+    rodada1.forEach(j=>{const r=res[j.id];const pal=pals[j.id];if(!r||!pal||r.gols1===""||pal.gols1==="")return;const{pts:pt}=calcJogo(parseInt(pal.gols1),parseInt(pal.gols2),parseInt(r.gols1),parseInt(r.gols2),"grupos",false);pts+=pt;});
+    if(pts>maxPts){maxPts=pts;craque=p.nome;}
+  });
+  if(craque===nome&&maxPts>0)badges.push("🏆 Craque");
+  const pals=palpitesMap[nome]||{};let seq=0;
+  [...JOGOS_GRUPO].sort((a,b)=>new Date(a.dt).getTime()-new Date(b.dt).getTime()).forEach(j=>{
+    const r=res[j.id];const pal=pals[j.id];
+    if(!r||!pal||r.gols1===""||pal.gols1===""){seq=0;return;}
+    const{tipo}=calcJogo(parseInt(pal.gols1),parseInt(pal.gols2),parseInt(r.gols1),parseInt(r.gols2),"grupos",false);
+    if(tipo==="placar"){seq++;if(seq>=3&&!badges.includes("🔮 Vidente"))badges.push("🔮 Vidente");}else seq=0;
+  });
+  const palpitados=JOGOS_GRUPO.filter(j=>{const p=pals[j.id];return p&&p.gols1!==""&&p.gols2!=="";}).length;
+  if(palpitados===JOGOS_GRUPO.length)badges.push("⚽ Fiel");
+  return badges;
+}
+
 const MEDAL=["🥇","🥈","🥉","4º","5º"];
 const FASE_L:Record<string,string>={grupos:"Grupos",oitavas:"Oitavas",quartas:"Quartas",semi:"Semifinal",final:"Final"};
 const CSS=`
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#0a0f1e}::-webkit-scrollbar-thumb{background:#f7c948;border-radius:2px}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#f0f2f5}::-webkit-scrollbar-thumb{background:#16a34a;border-radius:2px}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 input[type=number]{-moz-appearance:textfield}
-.fade{animation:fadeIn .3s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+body{background:#f5f7fa;color:#111827;font-family:'Inter',sans-serif;}
+.fade{animation:fadeIn .25s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes confetti{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(-100px) rotate(720deg);opacity:0}}
-.cf{position:fixed;bottom:60px;animation:confetti 1.2s ease forwards;pointer-events:none;font-size:22px;z-index:9999}
-.btn-gold{background:linear-gradient(135deg,#f7c948,#e8a800);color:#0a0f1e;border:none;border-radius:10px;padding:12px 24px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:transform .15s,box-shadow .15s;width:100%}
-.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(247,201,72,.35)}.btn-gold:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.btn-ghost{background:rgba(255,255,255,.06);color:#f0f4ff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 18px;font-family:'Syne',sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:background .15s}
-.btn-ghost:hover{background:rgba(255,255,255,.12)}
-.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px}
-.inp{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);border-radius:10px;padding:11px 14px;color:#f0f4ff;font-family:'Syne',sans-serif;font-size:14px;outline:none;width:100%;transition:border .2s}.inp:focus{border-color:#f7c948}
-.si{width:56px;height:56px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:#f7c948;font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;text-align:center;outline:none;transition:border .2s}
-.si:focus{border-color:#f7c948;background:rgba(247,201,72,.08)}.si.f{border-color:rgba(247,201,72,.6);background:rgba(247,201,72,.04)}
-.si.r{color:#4ade80}.si.r.f{border-color:rgba(74,222,128,.5)}.si.r:focus{border-color:#4ade80;background:rgba(74,222,128,.08)}.si:disabled{opacity:.35;cursor:not-allowed}
-.tab{padding:6px 10px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:600;font-size:10px;cursor:pointer;border:none;transition:all .2s}
-.tab.on{background:#f7c948;color:#0a0f1e}.tab.off{background:transparent;color:rgba(240,244,255,.5)}.tab.off:hover{color:#f0f4ff}
-.gtab{padding:5px 9px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:11px;cursor:pointer;border:1px solid transparent;transition:all .2s}
-.gtab.on{background:rgba(247,201,72,.15);color:#f7c948;border-color:rgba(247,201,72,.4)}.gtab.off{color:rgba(240,244,255,.4)}
-.ftab{padding:6px 11px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:600;font-size:11px;cursor:pointer;border:1px solid transparent;transition:all .2s}
-.ftab.on{background:rgba(247,201,72,.12);color:#f7c948;border-color:rgba(247,201,72,.3)}.ftab.off{color:rgba(240,244,255,.4);border-color:rgba(255,255,255,.06)}
-.stab{padding:7px 14px;border-radius:20px;font-family:'Syne',sans-serif;font-weight:600;font-size:11px;cursor:pointer;border:none;transition:all .2s}
-.stab.on{background:#f7c948;color:#0a0f1e}.stab.off{background:rgba(255,255,255,.06);color:rgba(240,244,255,.5)}
-.badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
-.bg{background:rgba(247,201,72,.15);color:#f7c948;border:1px solid rgba(247,201,72,.3)}
-.bb{background:rgba(100,160,255,.12);color:#7eb8ff;border:1px solid rgba(100,160,255,.25)}
-.bgr{background:rgba(74,222,128,.1);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
-.br{background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.3)}
-.bp{background:rgba(167,139,250,.1);color:#c4b5fd;border:1px solid rgba(167,139,250,.25)}
-.bred{background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.3)}
-.byellow{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.3)}
-select{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);border-radius:10px;padding:11px 14px;color:#f0f4ff;font-family:'Syne',sans-serif;font-size:14px;outline:none;width:100%}
-select option{background:#1a2035}select:disabled{opacity:.4;cursor:not-allowed}
-.nbtn{width:36px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#f0f4ff;transition:all .2s}
-.nbtn:disabled{opacity:.25;cursor:not-allowed}.nbtn:not(:disabled):hover{background:rgba(255,255,255,.12)}
+.cf{position:fixed;bottom:80px;animation:confetti 1.2s ease forwards;pointer-events:none;font-size:22px;z-index:9999}
+.btn-primary{background:#16a34a;color:#fff;border:none;border-radius:12px;padding:15px 24px;font-family:'Inter',sans-serif;font-weight:700;font-size:16px;cursor:pointer;transition:all .2s;width:100%}
+.btn-primary:hover{background:#15803d}.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-gold{background:#16a34a;color:#fff;border:none;border-radius:12px;padding:15px 24px;font-family:'Inter',sans-serif;font-weight:700;font-size:16px;cursor:pointer;transition:all .2s;width:100%}
+.btn-gold:hover{background:#15803d}.btn-gold:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:#fff;color:#374151;border:1.5px solid #e5e7eb;border-radius:12px;padding:13px 18px;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;cursor:pointer;transition:all .2s;width:100%}
+.btn-ghost:hover{border-color:#16a34a;color:#16a34a}
+.btn-outline{background:transparent;color:#16a34a;border:1.5px solid #16a34a;border-radius:10px;padding:9px 16px;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:all .2s}
+.btn-outline:hover{background:#f0fdf4}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.inp{background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;color:#111827;font-family:'Inter',sans-serif;font-size:16px;outline:none;width:100%;transition:border .2s}
+.inp:focus{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.08)}
+.si{width:62px;height:62px;background:#fff;border:2px solid #e5e7eb;border-radius:12px;color:#16a34a;font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;text-align:center;outline:none;transition:all .2s}
+.si:focus{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.08)}.si.f{border-color:#16a34a;background:#f0fdf4}
+.si.r{color:#16a34a}.si.r.f{border-color:#16a34a;background:#f0fdf4}.si.r:focus{border-color:#16a34a}.si:disabled{opacity:.35;cursor:not-allowed;background:#f9fafb}
+.tab{padding:7px 12px;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:12px;cursor:pointer;border:none;transition:all .2s}
+.tab.on{background:#16a34a;color:#fff}.tab.off{background:transparent;color:#6b7280}.tab.off:hover{color:#16a34a;background:#f0fdf4}
+.gtab{padding:7px 12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:12px;cursor:pointer;border:1.5px solid #e5e7eb;transition:all .2s;background:#fff}
+.gtab.on{background:#f0fdf4;color:#16a34a;border-color:#16a34a}.gtab.off{color:#6b7280}.gtab.off:hover{color:#16a34a;border-color:#16a34a}
+.ftab{padding:8px 14px;border-radius:20px;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;border:1.5px solid #e5e7eb;transition:all .2s;background:#fff}
+.ftab.on{background:#16a34a;color:#fff;border-color:#16a34a}.ftab.off{color:#6b7280}.ftab.off:hover{color:#16a34a;border-color:#16a34a}
+.stab{padding:8px 16px;border-radius:20px;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;border:1.5px solid #e5e7eb;transition:all .2s;background:#fff}
+.stab.on{background:#16a34a;color:#fff;border-color:#16a34a}.stab.off{color:#6b7280}.stab.off:hover{color:#16a34a;border-color:#16a34a}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.bg{background:#fef9c3;color:#854d0e;border:1px solid #fde68a}
+.bb{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.bgr{background:#dcfce7;color:#166534;border:1px solid #86efac}
+.br{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
+.bp{background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe}
+.bred{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
+.byellow{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.bgreen{background:#dcfce7;color:#166534;border:1px solid #86efac}
+select{background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;color:#111827;font-family:'Inter',sans-serif;font-size:16px;outline:none;width:100%;transition:border .2s}
+select:focus{border-color:#16a34a}select option{background:#fff;color:#111827}select:disabled{opacity:.4;cursor:not-allowed;background:#f9fafb}
+.nbtn{width:40px;height:40px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#374151;transition:all .2s}
+.nbtn:disabled{opacity:.3;cursor:not-allowed}.nbtn:not(:disabled):hover{border-color:#16a34a;color:#16a34a}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;align-items:stretch;z-index:200;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -2px 12px rgba(0,0,0,.06)}
+.navbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 2px 8px;cursor:pointer;border:none;background:transparent;transition:color .15s;gap:3px;font-family:'Inter',sans-serif;min-height:58px}
+.navbtn .ni{font-size:22px;line-height:1}
+.navbtn .nl{font-size:10px;font-weight:600;color:#9ca3af}
+.navbtn.active .nl{color:#16a34a;font-weight:700}
+.navbtn.active .ni{filter:drop-shadow(0 0 4px rgba(22,163,74,.4))}
+.date-sep{font-size:15px;font-weight:700;color:#111827;padding:14px 0 8px;font-family:'Inter',sans-serif}
+.jogo-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.jogo-card-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f3f4f6;background:#fafafa}
+.jogo-card-body{padding:18px 16px}
+.jogo-card-footer{padding:10px 16px;border-top:1px solid #f3f4f6;background:#fafafa;display:flex;justify-content:space-between;align-items:center}
 `;
 
 export default function App() {
@@ -272,6 +314,9 @@ export default function App() {
   const [jogoSel,setJogoSel]=useState<any|null>(null);
   const [countdown,setCountdown]=useState("");
   const [histRodada,setHistRodada]=useState<number|"todas">("todas");
+  const [maisOpen,setMaisOpen]=useState(false);
+  const [mpLoading,setMpLoading]=useState(false);
+  const [feed,setFeed]=useState<any[]>([]);
   const [,setTick]=useState(0);
 
   useEffect(()=>{const t=setInterval(()=>setTick(x=>x+1),30000);return()=>clearInterval(t);},[]);
@@ -308,6 +353,26 @@ export default function App() {
     const em=["🎉","⭐","🏆","✨","🎊","⚽","🥇"];
     setConfetis(Array.from({length:10},(_,i)=>({id:Date.now()+i,e:em[i%em.length],l:`${10+Math.random()*80}%`,d:`${Math.random()*0.4}s`})));
     setTimeout(()=>setConfetis([]),1500);
+  }
+
+  function adicionarFeed(msg:string){
+    setFeed(prev=>[{id:Date.now(),msg,ts:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})},...prev].slice(0,20));
+  }
+
+  async function pagarMP(){
+    if(!MP_ACCESS_TOKEN){mostrarToast("Token MP não configurado","err");return;}
+    setMpLoading(true);
+    try{
+      const resp=await fetch("https://api.mercadopago.com/v1/payment_links",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":`Bearer ${MP_ACCESS_TOKEN}`},
+        body:JSON.stringify({name:`Bolão Copa 2026 — ${usuarioAtual}`,items:[{title:"Cota Bolão Copa 2026",quantity:1,unit_price:CONFIG.valorCota,currency_id:"BRL"}],back_urls:{success:typeof window!=="undefined"?window.location.href:""},auto_return:"approved"})
+      });
+      const data=await resp.json();
+      if(data.init_point){window.open(data.init_point,"_blank");mostrarToast("🔗 Link MP aberto! Após pagamento, aguarde confirmação.");}
+      else mostrarToast("Erro ao gerar link MP","err");
+    }catch{mostrarToast("Erro ao conectar MP","err");}
+    setMpLoading(false);
   }
 
   const carregarTudo=useCallback(async()=>{
@@ -512,30 +577,30 @@ export default function App() {
     const r=isElim?(resE[jogo.id]||{}):(res[jogo.id]||{});
     const temRes=r.gols1!==undefined&&r.gols1!==""&&r.gols2!==undefined&&r.gols2!=="";
     return(
-      <div className="card" style={{padding:"12px",border:`1px solid ${temRes?"rgba(74,222,128,.25)":"rgba(255,255,255,.08)"}`}}>
-        <div style={{fontSize:9,color:"rgba(240,244,255,.35)",marginBottom:8,fontFamily:"'JetBrains Mono',monospace"}}>
+      <div className="card" style={{padding:"12px",border:`1.5px solid ${temRes?"#86efac":"#e5e7eb"}`}}>
+        <div style={{fontSize:11,color:"#9ca3af",marginBottom:8,fontFamily:"'JetBrains Mono',monospace"}}>
           📍 {jogo.est||jogo.estadio} · {fmtD(jogo.dt||jogo.dataHora)} {fmtH(jogo.dt||jogo.dataHora)}
         </div>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{textAlign:"center",flex:1}}>
-            <div style={{fontSize:22}}>{F[jogo.time1]||"🏳️"}</div>
-            <div style={{fontSize:10,fontWeight:700,color:"rgba(240,244,255,.7)"}}>{jogo.time1||"A definir"}</div>
+            <div style={{fontSize:26}}>{F[jogo.time1]||"🏳️"}</div>
+            <div style={{fontSize:11,fontWeight:700,color:"#374151"}}>{jogo.time1||"A definir"}</div>
           </div>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,padding:"0 8px",flexShrink:0}}>
             <div style={{display:"flex",alignItems:"center",gap:6}}>
               <input type="number" min={0} max={30} className={`si r${temRes?" f":""}`} value={r.gols1??""} onChange={e=>isElim?setResEAdmin(jogo.id,"gols1",e.target.value):setResAdmin(jogo.id,"gols1",e.target.value)} placeholder="—"/>
-              <span style={{color:"rgba(240,244,255,.3)",fontSize:14}}>×</span>
+              <span style={{color:"#d1d5db",fontSize:14}}>×</span>
               <input type="number" min={0} max={30} className={`si r${temRes?" f":""}`} value={r.gols2??""} onChange={e=>isElim?setResEAdmin(jogo.id,"gols2",e.target.value):setResAdmin(jogo.id,"gols2",e.target.value)} placeholder="—"/>
             </div>
             {isElim&&jogo.fase!=="grupos"&&(
-              <label style={{display:"flex",alignItems:"center",gap:4,fontSize:9,color:"rgba(240,244,255,.5)",cursor:"pointer"}}>
-                <input type="checkbox" checked={r.penalti||false} onChange={e=>setResEAdmin(jogo.id,"penalti",e.target.checked)} style={{width:12,height:12}}/> Pênalti
+              <label style={{display:"flex",alignItems:"center",gap:4,fontSize:11,color:"#6b7280",cursor:"pointer"}}>
+                <input type="checkbox" checked={r.penalti||false} onChange={e=>setResEAdmin(jogo.id,"penalti",e.target.checked)} style={{width:14,height:14}}/> Pênalti
               </label>
             )}
           </div>
           <div style={{textAlign:"center",flex:1}}>
-            <div style={{fontSize:22}}>{F[jogo.time2]||"🏳️"}</div>
-            <div style={{fontSize:10,fontWeight:700,color:"rgba(240,244,255,.7)"}}>{jogo.time2||"A definir"}</div>
+            <div style={{fontSize:26}}>{F[jogo.time2]||"🏳️"}</div>
+            <div style={{fontSize:11,fontWeight:700,color:"#374151"}}>{jogo.time2||"A definir"}</div>
           </div>
         </div>
       </div>
@@ -543,16 +608,15 @@ export default function App() {
   }
 
   return(
-    <div style={{minHeight:"100vh",background:"#0a0f1e",color:"#f0f4ff",fontFamily:"'Syne',sans-serif",userSelect:"none",WebkitUserSelect:"none"}}>
+    <div style={{minHeight:"100vh",background:"#f5f7fa",color:"#111827",fontFamily:"'Inter',sans-serif",userSelect:"none",WebkitUserSelect:"none",paddingBottom:tela==="app"?"72px":"0"}}>
       <style>{CSS}</style>
 
       {confetis.map(c=><div key={c.id} className="cf" style={{left:c.l,animationDelay:c.d}}>{c.e}</div>)}
 
       {toast&&(
-        <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",zIndex:9998,
-          background:toast.tipo==="ok"?"rgba(74,222,128,.15)":"rgba(248,113,113,.15)",
-          border:`1px solid ${toast.tipo==="ok"?"rgba(74,222,128,.3)":"rgba(248,113,113,.3)"}`,
-          color:toast.tipo==="ok"?"#4ade80":"#f87171",
+        <div style={{position:"fixed",top:20,left:"50%",transform:"translateX(-50%)",zIndex:9998,
+          background:toast.tipo==="ok"?"#166534":"#b91c1c",
+          color:"#fff",
           padding:"10px 20px",borderRadius:20,fontSize:13,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",
           whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,.4)"}}>
           {toast.msg}
@@ -560,37 +624,37 @@ export default function App() {
       )}
 
       {onboarding&&(
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:9997,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",zIndex:9997,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
           <div className="card" style={{maxWidth:380,width:"100%",textAlign:"center",padding:"32px 24px"}}>
-            <div style={{fontSize:48,marginBottom:12}}>⚽</div>
-            <h2 style={{fontSize:22,fontWeight:800,marginBottom:6}}>Bem-vindo ao <span style={{color:"#f7c948"}}>Bolão 2026!</span></h2>
-            <p style={{fontSize:13,color:"rgba(240,244,255,.5)",marginBottom:20,lineHeight:1.7}}>EUA · México · Canadá · 11 Jun – 19 Jul 2026</p>
+            <div style={{width:72,height:72,background:"#16a34a",borderRadius:20,display:"flex",alignItems:"center",justifyContent:"center",fontSize:38,margin:"0 auto 16px"}}>⚽</div>
+            <h2 style={{fontSize:22,fontWeight:800,marginBottom:6,color:"#111827"}}>Bem-vindo ao <span style={{color:"#16a34a"}}>Bolão 2026!</span></h2>
+            <p style={{fontSize:13,color:"#9ca3af",marginBottom:20,lineHeight:1.7}}>EUA · México · Canadá · 11 Jun – 19 Jul 2026</p>
             <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:24,textAlign:"left"}}>
               {[["🎯","Placar exato",`+5 pts (grupos)`],["⚽","Acertar vencedor","+2 pts (grupos)"],
                 ["🏆","Campeão da Copa",`+${CONFIG.bonusCampeao} pts bônus`],
                 ["🔒","Palpites fecham",`${CONFIG.minutesBloqueio}min antes do jogo`],
-                ["💸","Cota de entrada",`R$ ${CONFIG.valorCota} via Pix`]
+                ["💳","Cota de entrada",`R$ ${CONFIG.valorCota} via Mercado Pago`]
               ].map(([ic,txt,sub])=>(
-                <div key={txt} style={{display:"flex",alignItems:"center",gap:12,padding:"8px 12px",background:"rgba(255,255,255,.04)",borderRadius:10}}>
-                  <span style={{fontSize:20}}>{ic}</span>
-                  <div><div style={{fontSize:13,fontWeight:600}}>{txt}</div><div style={{fontSize:11,color:"rgba(240,244,255,.4)"}}>{sub}</div></div>
+                <div key={txt} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:"#f9fafb",borderRadius:12,border:"1px solid #e5e7eb"}}>
+                  <span style={{fontSize:22}}>{ic}</span>
+                  <div><div style={{fontSize:14,fontWeight:600,color:"#111827"}}>{txt}</div><div style={{fontSize:12,color:"#6b7280"}}>{sub}</div></div>
                 </div>
               ))}
             </div>
-            <button className="btn-gold" onClick={()=>setOnboarding(false)}>Entendido, vamos lá! 🚀</button>
+            <button className="btn-primary" onClick={()=>setOnboarding(false)}>Entendido, vamos lá! 🚀</button>
           </div>
         </div>
       )}
 
       {jogoSel&&(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:9996,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
-          <div style={{background:"#0f1628",borderRadius:"20px 20px 0 0",width:"100%",maxWidth:480,maxHeight:"95vh",overflow:"auto"}}>
-            <div style={{padding:"16px 20px",borderBottom:"1px solid rgba(255,255,255,.07)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{background:"#fff",borderRadius:"24px 24px 0 0",width:"100%",maxWidth:480,maxHeight:"95vh",overflow:"auto"}}>
+            <div style={{padding:"16px 20px",borderBottom:"1px solid #f3f4f6",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div>
-                <div style={{fontSize:10,color:"#f7c948",fontFamily:"'JetBrains Mono',monospace",fontWeight:700}}>GRUPO {jogoSel.g} · {fmtD(jogoSel.dt)}</div>
-                <div style={{fontSize:11,color:"rgba(240,244,255,.5)",marginTop:2}}>📍 {jogoSel.est}, {jogoSel.cid}</div>
+                <div style={{fontSize:12,color:"#16a34a",fontWeight:700}}>GRUPO {jogoSel.g} · {fmtD(jogoSel.dt)}</div>
+                <div style={{fontSize:12,color:"#9ca3af",marginTop:2}}>📍 {jogoSel.est}, {jogoSel.cid}</div>
               </div>
-              <button onClick={()=>setJogoSel(null)} style={{background:"rgba(255,255,255,.08)",border:"none",color:"#f0f4ff",width:32,height:32,borderRadius:"50%",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+              <button onClick={()=>setJogoSel(null)} style={{background:"#f3f4f6",border:"none",color:"#374151",width:34,height:34,borderRadius:"50%",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
             </div>
             <div style={{padding:"20px"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
@@ -599,8 +663,8 @@ export default function App() {
                   <div style={{fontWeight:700,fontSize:15}}>{jogoSel.time1}</div>
                 </div>
                 <div style={{textAlign:"center",padding:"0 16px"}}>
-                  <div style={{fontWeight:800,fontSize:18,color:"rgba(240,244,255,.3)"}}>VS</div>
-                  <div style={{fontSize:11,color:"rgba(240,244,255,.35)",marginTop:4,fontFamily:"'JetBrains Mono',monospace"}}>{fmtH(jogoSel.dt)}</div>
+                  <div style={{fontWeight:800,fontSize:18,color:"#d1d5db"}}>VS</div>
+                  <div style={{fontSize:13,color:"#9ca3af",marginTop:4,fontFamily:"'JetBrains Mono',monospace"}}>{fmtH(jogoSel.dt)}</div>
                 </div>
                 <div style={{textAlign:"center",flex:1}}>
                   <div style={{fontSize:40,marginBottom:6}}>{F[jogoSel.time2]||"🏳️"}</div>
@@ -608,32 +672,32 @@ export default function App() {
                 </div>
               </div>
               {lock(jogoSel.dt)?(
-                <div style={{textAlign:"center",padding:"24px",background:"rgba(248,113,113,.07)",borderRadius:12,border:"1px solid rgba(248,113,113,.2)"}}>
+                <div style={{textAlign:"center",padding:"24px",background:"#fef2f2",borderRadius:16,border:"1px solid #fecaca"}}>
                   <div style={{fontSize:32,marginBottom:8}}>🔒</div>
-                  <div style={{fontWeight:700,color:"#f87171",marginBottom:4}}>Palpite bloqueado</div>
-                  <div style={{fontSize:12,color:"rgba(240,244,255,.4)"}}>O prazo encerrou</div>
-                  {palS[jogoSel.id]&&<div style={{marginTop:12,fontSize:14,color:"rgba(240,244,255,.7)"}}>Seu palpite: <strong style={{color:"#f7c948"}}>{palS[jogoSel.id].gols1} × {palS[jogoSel.id].gols2}</strong></div>}
+                  <div style={{fontWeight:700,color:"#b91c1c",marginBottom:4,fontSize:16}}>Palpite bloqueado</div>
+                  <div style={{fontSize:13,color:"#6b7280"}}>O prazo encerrou</div>
+                  {palS[jogoSel.id]&&<div style={{marginTop:12,fontSize:15,color:"#374151"}}>Seu palpite: <strong style={{color:"#16a34a"}}>{palS[jogoSel.id].gols1} × {palS[jogoSel.id].gols2}</strong></div>}
                 </div>
               ):(
                 <>
                   <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:16,marginBottom:20}}>
                     <input type="number" min={0} max={30} className={`si${(palR[jogoSel.id]?.gols1!==undefined&&palR[jogoSel.id]?.gols1!=="")?" f":""}`} style={{width:72,height:72,fontSize:28}}
                       value={palR[jogoSel.id]?.gols1??""} onChange={e=>{setPalLocal(jogoSel.id,"gols1",e.target.value,jogoSel.dt);if(e.target.value!==""){const nx=document.getElementById("gols2_modal");if(nx)nx.focus();}}} placeholder="0"/>
-                    <span style={{fontSize:24,color:"rgba(240,244,255,.3)",fontWeight:700}}>×</span>
+                    <span style={{fontSize:24,color:"#d1d5db",fontWeight:700}}>×</span>
                     <input type="number" min={0} max={30} className={`si${(palR[jogoSel.id]?.gols2!==undefined&&palR[jogoSel.id]?.gols2!=="")?" f":""}`} style={{width:72,height:72,fontSize:28}}
                       value={palR[jogoSel.id]?.gols2??""} id="gols2_modal" onChange={e=>setPalLocal(jogoSel.id,"gols2",e.target.value,jogoSel.dt)} placeholder="0"/>
                   </div>
                   <div className="card" style={{marginBottom:16}}>
-                    <div style={{fontWeight:700,fontSize:11,color:"#f7c948",marginBottom:10,textTransform:"uppercase",letterSpacing:1}}>Pontuação</div>
+                    <div style={{fontWeight:700,fontSize:11,color:"#16a34a",marginBottom:10,textTransform:"uppercase",letterSpacing:1}}>Pontuação</div>
                     {[["🎯","Placar exato",`+${pts(jogoSel.fase||"grupos").placar} pts`],["⚽","Vencedor/Empate",`+${pts(jogoSel.fase||"grupos").vencedor} pts`],["❌","Errar","0 pts"]].map(([ic,txt,p])=>(
-                      <div key={txt} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,.05)"}}>
-                        <span style={{fontSize:14}}>{ic}</span><span style={{flex:1,fontSize:12,color:"rgba(240,244,255,.7)"}}>{txt}</span><span className="badge bg">{p}</span>
+                      <div key={txt} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderBottom:"1px solid #f9fafb"}}>
+                        <span style={{fontSize:14}}>{ic}</span><span style={{flex:1,fontSize:12,color:"#374151"}}>{txt}</span><span className="badge bg">{p}</span>
                       </div>
                     ))}
                   </div>
                   {tr(jogoSel.dt)&&<div style={{textAlign:"center",marginBottom:16}}>
-                    <div style={{fontSize:10,color:"rgba(240,244,255,.4)",marginBottom:4}}>Tempo restante</div>
-                    <div style={{fontWeight:800,fontSize:20,color:"#f7c948",fontFamily:"'JetBrains Mono',monospace"}}>{tr(jogoSel.dt)}</div>
+                    <div style={{fontSize:10,color:"#9ca3af",marginBottom:4}}>Tempo restante</div>
+                    <div style={{fontWeight:800,fontSize:20,color:"#16a34a",fontFamily:"'JetBrains Mono',monospace"}}>{tr(jogoSel.dt)}</div>
                   </div>}
                   <button className="btn-gold" onClick={()=>confirmarPalpite(jogoSel)} disabled={salvando} style={{fontSize:16,padding:"16px"}}>
                     {salvando?"Salvando...":"✅ Confirmar Palpite"}
@@ -645,73 +709,84 @@ export default function App() {
         </div>
       )}
 
-      <div style={{borderBottom:"1px solid rgba(255,255,255,.07)",padding:"11px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,background:"rgba(10,15,30,.96)",backdropFilter:"blur(12px)",zIndex:100,gap:8,flexWrap:"wrap"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:18}}>🏆</span>
+      {/* Tela Mais */}
+      {maisOpen&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:9995,display:"flex",alignItems:"flex-end"}} onClick={()=>setMaisOpen(false)}>
+          <div style={{background:"#fff",borderRadius:"24px 24px 0 0",width:"100%",padding:"20px 16px 36px"}} onClick={e=>e.stopPropagation()}>
+            <div style={{width:40,height:4,background:"#e5e7eb",borderRadius:2,margin:"0 auto 20px"}}/>
+            <div style={{fontWeight:700,fontSize:16,color:"#111827",marginBottom:14}}>Mais opções</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              {[{id:"pix",icon:"💳",label:"Pix"},{id:"perfil",icon:"👤",label:"Perfil"},{id:"campeao",icon:"🏆",label:"Campeão"},{id:"regras",icon:"📋",label:"Regras"},{id:"historico",icon:"📊",label:"Histórico"},{id:"feed",icon:"💬",label:"Feed"}].map(item=>(
+                <button key={item.id} onClick={()=>{setModo(item.id);setMaisOpen(false);}}
+                  style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,padding:"20px 12px",background:modo===item.id?"#f0fdf4":"#f9fafb",border:`1.5px solid ${modo===item.id?"#16a34a":"#e5e7eb"}`,borderRadius:16,cursor:"pointer",transition:"all .2s"}}>
+                  <span style={{fontSize:30}}>{item.icon}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:modo===item.id?"#16a34a":"#374151"}}>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{background:"#fff",borderBottom:"1px solid #e5e7eb",padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:100,boxShadow:"0 1px 3px rgba(0,0,0,.05)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:36,height:36,background:"#16a34a",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>⚽</div>
           <div>
-            <div style={{fontWeight:800,fontSize:13,color:"#f7c948",letterSpacing:"-.5px"}}>BOLÃO COPA 2026</div>
-            <div style={{fontSize:9,color:"rgba(240,244,255,.35)",fontFamily:"'JetBrains Mono',monospace"}}>48 SELEÇÕES · 12 GRUPOS</div>
+            <div style={{fontWeight:800,fontSize:15,color:"#111827",letterSpacing:"-.3px"}}>Bolão Copa 2026</div>
+            <div style={{fontSize:11,color:"#9ca3af"}}>48 seleções · 12 grupos</div>
           </div>
         </div>
         {tela==="app"&&(
-          <div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}>
-            {["home","jogos","palpites","ranking","historico","pix","regras"].map(m=>(
-              <button key={m} className={`tab ${modo===m?"on":"off"}`} onClick={()=>setModo(m)}>
-                {m==="home"?"🏠":m==="jogos"?"📅":m==="palpites"?"🎯":m==="ranking"?"🏅":m==="historico"?"📊":m==="pix"?"💸":"📋"}
-                {" "}{m==="home"?"Home":m==="jogos"?"Jogos":m==="palpites"?"Palpites":m==="ranking"?"Ranking":m==="historico"?"Histórico":m==="pix"?"Pix":"Regras"}
-              </button>
-            ))}
-            <button className="btn-ghost" style={{fontSize:10,padding:"4px 8px"}} onClick={()=>{setUsuarioAtual(null);setTela("login");if(typeof window!=="undefined")localStorage.removeItem("bolao_user");}}>Sair</button>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            {pago?<span className="badge bgr">✅ Pago</span>:<span className="badge br" onClick={()=>setModo("pix")} style={{cursor:"pointer"}}>💳 Pagar</span>}
+            <button onClick={()=>{setUsuarioAtual(null);setTela("login");if(typeof window!=="undefined")localStorage.removeItem("bolao_user");}}
+              style={{width:32,height:32,borderRadius:8,border:"1.5px solid #e5e7eb",background:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>↩</button>
           </div>
         )}
         {tela==="admin"&&(
-          <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-            {["resultados","elim","usuarios"].map(m=>(
-              <button key={m} className={`tab ${adminModo===m?"on":"off"}`} onClick={()=>setAdminModo(m)}>
-                {m==="resultados"?"📋 Grupos":m==="elim"?"⚡ Eliminatórias":"👥 Usuários"}
-              </button>
-            ))}
-            <button className="btn-ghost" style={{fontSize:10,padding:"4px 8px"}} onClick={()=>setTela("login")}>Sair</button>
-          </div>
+          <button style={{padding:"7px 14px",borderRadius:8,border:"1.5px solid #e5e7eb",background:"#fff",cursor:"pointer",fontSize:13,fontWeight:600,color:"#374151"}} onClick={()=>setTela("login")}>Sair</button>
         )}
       </div>
 
-      <div style={{maxWidth:700,margin:"0 auto",padding:"16px 12px"}}>
+      <div style={{maxWidth:700,margin:"0 auto",padding:"16px 14px"}}>
 
         {tela==="login"&&(
-          <div className="fade" style={{maxWidth:360,margin:"0 auto",paddingTop:20}}>
-            <div style={{textAlign:"center",marginBottom:28}}>
-              <div style={{fontSize:52,marginBottom:10}}>⚽</div>
-              <h1 style={{fontSize:26,fontWeight:800,letterSpacing:"-1px",marginBottom:6}}>Bem-vindo ao<br/><span style={{color:"#f7c948"}}>Bolão 2026</span></h1>
-              <p style={{color:"rgba(240,244,255,.4)",fontSize:12}}>EUA · México · Canadá · Jun–Jul 2026</p>
+          <div className="fade" style={{maxWidth:360,margin:"0 auto",paddingTop:24}}>
+            <div style={{textAlign:"center",marginBottom:32}}>
+              <div style={{width:80,height:80,background:"linear-gradient(135deg,#16a34a,#15803d)",borderRadius:24,display:"flex",alignItems:"center",justifyContent:"center",fontSize:42,margin:"0 auto 16px"}}>⚽</div>
+              <h1 style={{fontSize:26,fontWeight:800,letterSpacing:"-1px",marginBottom:6,color:"#111827"}}>Bolão Copa 2026</h1>
+              <p style={{color:"#9ca3af",fontSize:14}}>EUA · México · Canadá · Jun–Jul 2026</p>
             </div>
-            <div className="card" style={{marginBottom:12}}>
-              <div style={{fontWeight:700,fontSize:11,color:"#f7c948",letterSpacing:1,textTransform:"uppercase",marginBottom:12}}>Entrar</div>
-              <div style={{display:"flex",flexDirection:"column",gap:9}}>
+            <div className="card" style={{marginBottom:12,padding:"24px"}}>
+              <div style={{fontWeight:700,fontSize:13,color:"#16a34a",letterSpacing:.5,textTransform:"uppercase",marginBottom:16}}>Entrar</div>
+              <div style={{display:"flex",flexDirection:"column",gap:12}}>
                 <input className="inp" placeholder="Seu nome" value={loginNome} onChange={e=>setLoginNome(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
                 <input className="inp" type="password" placeholder="Senha" value={loginSenha} onChange={e=>setLoginSenha(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
-                {loginErro&&<div style={{color:"#f87171",fontSize:12}}>{loginErro}</div>}
-                <button className="btn-gold" onClick={handleLogin} disabled={carregando}>{carregando?"Entrando...":"Entrar"}</button>
+                {loginErro&&<div style={{color:"#b91c1c",fontSize:13,background:"#fef2f2",padding:"8px 12px",borderRadius:8}}>{loginErro}</div>}
+                <button className="btn-primary" onClick={handleLogin} disabled={carregando}>{carregando?"Entrando...":"Entrar"}</button>
               </div>
             </div>
-            <button className="btn-ghost" style={{width:"100%"}} onClick={()=>{setLoginErro("");setTela("cadastro");}}>Criar conta nova →</button>
+            <button className="btn-ghost" onClick={()=>{setLoginErro("");setTela("cadastro");}}>Criar conta nova →</button>
+            <div style={{textAlign:"center",marginTop:16}}>
+              <button onClick={()=>setTela("admin-login")} style={{fontSize:12,color:"#9ca3af",background:"none",border:"none",cursor:"pointer"}}>Área do admin</button>
+            </div>
           </div>
         )}
 
         {tela==="cadastro"&&(
-          <div className="fade" style={{maxWidth:360,margin:"0 auto",paddingTop:20}}>
-            <div style={{textAlign:"center",marginBottom:24}}>
-              <div style={{fontSize:36,marginBottom:8}}>👤</div>
-              <h2 style={{fontSize:20,fontWeight:800}}>Criar conta</h2>
-              <p style={{color:"rgba(240,244,255,.4)",fontSize:12,marginTop:4}}>Cota: <span style={{color:"#f7c948",fontWeight:700}}>R$ {CONFIG.valorCota}</span></p>
+          <div className="fade" style={{maxWidth:360,margin:"0 auto",paddingTop:24}}>
+            <div style={{textAlign:"center",marginBottom:28}}>
+              <div style={{fontSize:42,marginBottom:10}}>👤</div>
+              <h2 style={{fontSize:22,fontWeight:800,color:"#111827"}}>Criar conta</h2>
+              <p style={{color:"#9ca3af",fontSize:14,marginTop:4}}>Cota: <span style={{color:"#16a34a",fontWeight:700}}>R$ {CONFIG.valorCota}</span></p>
             </div>
-            <div className="card" style={{marginBottom:10}}>
-              <div style={{display:"flex",flexDirection:"column",gap:9}}>
+            <div className="card" style={{marginBottom:12,padding:"24px"}}>
+              <div style={{display:"flex",flexDirection:"column",gap:12}}>
                 <input className="inp" placeholder="Seu nome completo" value={cadNome} onChange={e=>setCadNome(e.target.value)}/>
                 <input className="inp" type="password" placeholder="Criar senha (mín. 4 chars)" value={cadSenha} onChange={e=>setCadSenha(e.target.value)}/>
                 <input className="inp" type="password" placeholder="Confirmar senha" value={cadSenha2} onChange={e=>setCadSenha2(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleCadastro()}/>
-                {cadErro&&<div style={{color:"#f87171",fontSize:12}}>{cadErro}</div>}
-                <button className="btn-gold" onClick={handleCadastro} disabled={carregando}>{carregando?"Criando...":"Criar conta e entrar"}</button>
+                {cadErro&&<div style={{color:"#b91c1c",fontSize:13,background:"#fef2f2",padding:"8px 12px",borderRadius:8}}>{cadErro}</div>}
+                <button className="btn-primary" onClick={handleCadastro} disabled={carregando}>{carregando?"Criando...":"Criar conta e entrar"}</button>
               </div>
             </div>
             <button className="btn-ghost" style={{width:"100%"}} onClick={()=>{setCadErro("");setTela("login");}}>← Voltar</button>
@@ -725,7 +800,7 @@ export default function App() {
               <div style={{display:"flex",flexDirection:"column",gap:9}}>
                 <input className="inp" type="password" placeholder="Senha do administrador" value={adminSenha} onChange={e=>setAdminSenha(e.target.value)}
                   onKeyDown={e=>{if(e.key==="Enter"){if(adminSenha===SENHA_ADMIN){setAdminErro("");setAdminSenha("");setTela("admin");}else setAdminErro("Senha incorreta.");}}}/>
-                {adminErro&&<div style={{color:"#f87171",fontSize:12}}>{adminErro}</div>}
+                {adminErro&&<div style={{color:"#b91c1c",fontSize:12}}>{adminErro}</div>}
                 <button className="btn-gold" onClick={()=>{if(adminSenha===SENHA_ADMIN){setAdminErro("");setAdminSenha("");setTela("admin");}else setAdminErro("Senha incorreta.");}}>Entrar</button>
               </div>
             </div>
@@ -740,70 +815,70 @@ export default function App() {
             {modo==="home"&&(
               <div>
                 <div style={{marginBottom:16,padding:"14px 16px",background:"linear-gradient(135deg,rgba(247,201,72,.1),rgba(247,201,72,.03))",border:"1px solid rgba(247,201,72,.2)",borderRadius:14}}>
-                  <div style={{fontSize:11,color:"rgba(240,244,255,.4)",marginBottom:4}}>Olá,</div>
+                  <div style={{fontSize:11,color:"#9ca3af",marginBottom:4}}>Olá,</div>
                   <div style={{fontWeight:800,fontSize:20,marginBottom:2}}>{usuarioAtual} {pago?"✅":"⚠️"}</div>
-                  <div style={{fontSize:11,color:"rgba(240,244,255,.4)"}}>{pago?"Você está dentro do bolão!":"Pagamento pendente — vá em Pix"}</div>
+                  <div style={{fontSize:12,color:"#6b7280"}}>{pago?"Você está dentro do bolão!":"Pagamento pendente — vá em Pix"}</div>
                 </div>
                 <div style={{display:"flex",gap:10,marginBottom:14}}>
-                  {[["⭐",meusDados?.pontos??0,"Pontos","#f7c948"],["🎯",totSalvos,"Palpites","#7eb8ff"],["🥇",meusDados?.placares??0,"Exatos","#4ade80"]].map(([ic,v,lb,cor]:any)=>(
-                    <div key={lb} style={{flex:1,textAlign:"center",padding:"12px 8px",background:"rgba(255,255,255,.04)",borderRadius:12,border:"1px solid rgba(255,255,255,.07)"}}>
+                  {[["⭐",meusDados?.pontos??0,"Pontos","#16a34a"],["🎯",totSalvos,"Palpites","#2563eb"],["🥇",meusDados?.placares??0,"Exatos","#16a34a"]].map(([ic,v,lb,cor]:any)=>(
+                    <div key={lb} style={{flex:1,textAlign:"center",padding:"12px 8px",background:"rgba(255,255,255,.04)",borderRadius:12,border:"1px solid #f3f4f6"}}>
                       <div style={{fontSize:20}}>{ic}</div>
                       <div style={{fontWeight:800,fontSize:20,color:cor}}>{v}</div>
-                      <div style={{fontSize:10,color:"rgba(240,244,255,.4)"}}>{lb}</div>
+                      <div style={{fontSize:10,color:"#9ca3af"}}>{lb}</div>
                     </div>
                   ))}
                 </div>
                 {minhaPos>0&&(
-                  <div style={{marginBottom:14,padding:"12px 16px",background:"rgba(255,255,255,.04)",borderRadius:12,border:"1px solid rgba(255,255,255,.07)",display:"flex",alignItems:"center",gap:12}}>
+                  <div style={{marginBottom:14,padding:"12px 16px",background:"rgba(255,255,255,.04)",borderRadius:12,border:"1px solid #f3f4f6",display:"flex",alignItems:"center",gap:12}}>
                     <div style={{fontSize:26}}>{MEDAL[minhaPos-1]||`${minhaPos}º`}</div>
                     <div style={{flex:1}}>
                       <div style={{fontWeight:700,fontSize:14}}>Posição no ranking</div>
-                      <div style={{fontSize:11,color:"rgba(240,244,255,.4)"}}>de {nPart} participantes</div>
+                      <div style={{fontSize:11,color:"#9ca3af"}}>de {nPart} participantes</div>
                     </div>
                     {premios.dist.find(d=>d.pos===minhaPos)&&(
                       <div style={{textAlign:"right"}}>
-                        <div style={{fontWeight:800,fontSize:16,color:"#f7c948"}}>R$ {premios.dist.find(d=>d.pos===minhaPos)?.valor}</div>
-                        <div style={{fontSize:10,color:"rgba(240,244,255,.4)"}}>prêmio atual</div>
+                        <div style={{fontWeight:800,fontSize:16,color:"#16a34a"}}>R$ {premios.dist.find(d=>d.pos===minhaPos)?.valor}</div>
+                        <div style={{fontSize:10,color:"#9ca3af"}}>prêmio atual</div>
                       </div>
                     )}
                   </div>
                 )}
-                <div style={{marginBottom:14,padding:"12px 16px",background:"rgba(255,255,255,.04)",borderRadius:12,border:"1px solid rgba(255,255,255,.07)"}}>
+                <div style={{marginBottom:14,padding:"12px 16px",background:"rgba(255,255,255,.04)",borderRadius:12,border:"1px solid #f3f4f6"}}>
                   <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
                     <span style={{fontSize:12,fontWeight:700}}>Progresso dos palpites</span>
-                    <span style={{fontSize:12,color:"#f7c948",fontWeight:700}}>{totSalvos}/{totJogos} ({pctPal}%)</span>
+                    <span style={{fontSize:12,color:"#16a34a",fontWeight:700}}>{totSalvos}/{totJogos} ({pctPal}%)</span>
                   </div>
-                  <div style={{height:8,borderRadius:4,background:"rgba(255,255,255,.08)",overflow:"hidden"}}>
-                    <div style={{height:"100%",borderRadius:4,background:"linear-gradient(90deg,#f7c948,#4ade80)",width:`${pctPal}%`,transition:"width .5s"}}/>
+                  <div style={{height:8,borderRadius:4,background:"#f3f4f6",overflow:"hidden"}}>
+                    <div style={{height:"100%",borderRadius:4,background:"linear-gradient(90deg,#16a34a,#4ade80)",width:`${pctPal}%`,transition:"width .5s"}}/>
                   </div>
                 </div>
                 {countdown&&(
                   <div style={{marginBottom:14,padding:"12px 16px",background:"rgba(247,201,72,.07)",border:"1px solid rgba(247,201,72,.2)",borderRadius:12}}>
-                    <div style={{fontSize:10,color:"rgba(240,244,255,.4)",fontFamily:"'JetBrains Mono',monospace",marginBottom:4}}>⏱ PRÓXIMO PALPITE PENDENTE</div>
-                    <div style={{fontWeight:700,fontSize:13,color:"#f7c948"}}>{countdown}</div>
+                    <div style={{fontSize:10,color:"#9ca3af",fontFamily:"'JetBrains Mono',monospace",marginBottom:4}}>⏱ PRÓXIMO PALPITE PENDENTE</div>
+                    <div style={{fontWeight:700,fontSize:13,color:"#16a34a"}}>{countdown}</div>
                   </div>
                 )}
                 <div style={{marginBottom:10}}>
                   <div style={{fontWeight:700,fontSize:13,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <span>Próximos Jogos</span>
-                    <button onClick={()=>setModo("jogos")} style={{fontSize:11,color:"#f7c948",background:"none",border:"none",cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:600}}>Ver todos →</button>
+                    <button onClick={()=>setModo("jogos")} style={{fontSize:11,color:"#16a34a",background:"none",border:"none",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:600}}>Ver todos →</button>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
                     {JOGOS_GRUPO.filter(j=>{const r=res[j.id]||{};const tR=r.gols1!==undefined&&r.gols1!==""&&r.gols2!==undefined&&r.gols2!=="";return !tR&&new Date(j.dt).getTime()>Date.now();}).slice(0,3).map(j=>{
                       const pJ=palS[j.id];const tP=pJ&&pJ.gols1!==""&&pJ.gols2!=="";const lk=lock(j.dt);
                       return(
                         <div key={j.id} onClick={()=>{if(!lk)setJogoSel(j);}} className="card"
-                          style={{padding:"11px 14px",cursor:lk?"default":"pointer",display:"flex",alignItems:"center",gap:12,border:`1px solid ${tP?"rgba(74,222,128,.2)":"rgba(255,255,255,.08)"}`}}>
+                          style={{padding:"11px 14px",cursor:lk?"default":"pointer",display:"flex",alignItems:"center",gap:12,border:`1px solid ${tP?"rgba(74,222,128,.2)":"#f3f4f6"}`}}>
                           <div style={{display:"flex",alignItems:"center",gap:5,flex:1,minWidth:0}}>
                             <span style={{fontSize:18}}>{F[j.time1]||"🏳️"}</span>
                             <span style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{j.time1}</span>
-                            <span style={{fontSize:10,color:"rgba(240,244,255,.3)"}}>×</span>
+                            <span style={{fontSize:10,color:"#d1d5db"}}>×</span>
                             <span style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{j.time2}</span>
                             <span style={{fontSize:18}}>{F[j.time2]||"🏳️"}</span>
                           </div>
                           <div style={{flexShrink:0,textAlign:"right"}}>
-                            <div style={{fontSize:10,color:"rgba(240,244,255,.4)",fontFamily:"'JetBrains Mono',monospace"}}>{fmtD(j.dt)}</div>
-                            <div style={{fontSize:10,color:"rgba(240,244,255,.4)",fontFamily:"'JetBrains Mono',monospace"}}>{fmtH(j.dt)}</div>
+                            <div style={{fontSize:10,color:"#9ca3af",fontFamily:"'JetBrains Mono',monospace"}}>{fmtD(j.dt)}</div>
+                            <div style={{fontSize:10,color:"#9ca3af",fontFamily:"'JetBrains Mono',monospace"}}>{fmtH(j.dt)}</div>
                           </div>
                           {lk?<span className="badge br" style={{flexShrink:0}}>🔒</span>:tP?<span className="badge bgr" style={{flexShrink:0}}>✓</span>:<span className="badge bg" style={{flexShrink:0}}>Palpitar</span>}
                         </div>
@@ -828,17 +903,17 @@ export default function App() {
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                   <button className="nbtn" onClick={()=>setRodada(r=>Math.max(1,r-1))} disabled={rodada===1}>←</button>
                   <div style={{flex:1,textAlign:"center"}}>
-                    <div style={{fontWeight:800,fontSize:16,color:"#f7c948"}}>Rodada {rodada}</div>
-                    <div style={{fontSize:10,color:"rgba(240,244,255,.4)",marginTop:1}}>{[...new Set(jogosRodada.map(j=>fmtD(j.dt)))].join(" · ")}</div>
+                    <div style={{fontWeight:800,fontSize:16,color:"#16a34a"}}>Rodada {rodada}</div>
+                    <div style={{fontSize:10,color:"#9ca3af",marginTop:1}}>{[...new Set(jogosRodada.map(j=>fmtD(j.dt)))].join(" · ")}</div>
                   </div>
                   <button className="nbtn" onClick={()=>setRodada(r=>Math.min(3,r+1))} disabled={rodada===3}>→</button>
                 </div>
                 <div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:14}}>
-                  {[1,2,3].map(r=><button key={r} onClick={()=>setRodada(r)} style={{width:22,height:5,borderRadius:3,border:"none",cursor:"pointer",background:r===rodada?"#f7c948":"rgba(255,255,255,.15)",transition:"all .2s"}}/>)}
+                  {[1,2,3].map(r=><button key={r} onClick={()=>setRodada(r)} style={{width:22,height:5,borderRadius:3,border:"none",cursor:"pointer",background:r===rodada?"#16a34a":"#e5e7eb",transition:"all .2s"}}/>)}
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:10}}>
                   {jogosFiltrados.length===0&&(
-                    <div className="card" style={{textAlign:"center",padding:"32px",color:"rgba(240,244,255,.35)"}}>
+                    <div className="card" style={{textAlign:"center",padding:"32px",color:"#9ca3af"}}>
                       <div style={{fontSize:28,marginBottom:8}}>{statusF==="proximos"?"⏰":statusF==="aovivo"?"🔴":"✅"}</div>
                       Nenhum jogo {statusF==="proximos"?"próximo":statusF==="aovivo"?"ao vivo":"encerrado"} nesta rodada
                     </div>
@@ -855,11 +930,11 @@ export default function App() {
                     return(
                       <div key={j.id} className="card" onClick={()=>{if(!lk&&!tR)setJogoSel(j);}}
                         style={{padding:"14px",cursor:(!lk&&!tR)?"pointer":"default",
-                          border:`1px solid ${st==="live"?"rgba(248,113,113,.3)":mT==="placar"?"rgba(247,201,72,.3)":mT==="vencedor"?"rgba(100,160,255,.3)":"rgba(255,255,255,.08)"}`}}>
+                          border:`1px solid ${st==="live"?"rgba(248,113,113,.3)":mT==="placar"?"rgba(247,201,72,.3)":mT==="vencedor"?"rgba(100,160,255,.3)":"#f3f4f6"}`}}>
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                           <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                            <span style={{fontSize:10,fontFamily:"'JetBrains Mono',monospace",color:"rgba(240,244,255,.4)",background:"rgba(255,255,255,.05)",padding:"2px 7px",borderRadius:4}}>Grupo {j.g}</span>
-                            <span style={{fontSize:9,color:"rgba(240,244,255,.3)"}}>{j.est}</span>
+                            <span style={{fontSize:10,fontFamily:"'JetBrains Mono',monospace",color:"#9ca3af",background:"#f9fafb",padding:"2px 7px",borderRadius:4}}>Grupo {j.g}</span>
+                            <span style={{fontSize:9,color:"#d1d5db"}}>{j.est}</span>
                           </div>
                           <div style={{display:"flex",gap:5,alignItems:"center"}}>
                             {!lk&&!tR&&tP&&<span className="badge bgr" style={{fontSize:9}}>✓ {pJ.gols1}×{pJ.gols2}</span>}
@@ -875,8 +950,8 @@ export default function App() {
                             <span style={{fontSize:11,fontWeight:700,textAlign:"center"}}>{j.time1}</span>
                           </div>
                           <div style={{textAlign:"center",padding:"0 12px",minWidth:80}}>
-                            {tR?<div style={{fontWeight:800,fontSize:24,fontFamily:"'JetBrains Mono',monospace",color:"#f0f4ff",letterSpacing:2}}>{r.gols1} × {r.gols2}</div>
-                              :<div style={{fontSize:12,color:"rgba(240,244,255,.35)",fontFamily:"'JetBrains Mono',monospace"}}>{fmtD(j.dt)}<br/>{fmtH(j.dt)}</div>}
+                            {tR?<div style={{fontWeight:800,fontSize:24,fontFamily:"'JetBrains Mono',monospace",color:"#111827",letterSpacing:2}}>{r.gols1} × {r.gols2}</div>
+                              :<div style={{fontSize:12,color:"#9ca3af",fontFamily:"'JetBrains Mono',monospace"}}>{fmtD(j.dt)}<br/>{fmtH(j.dt)}</div>}
                             {r.penalti&&<div style={{fontSize:9,color:"#fbbf24",marginTop:2}}>Pênaltis</div>}
                           </div>
                           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,flex:1}}>
@@ -885,11 +960,11 @@ export default function App() {
                           </div>
                         </div>
                         {tR&&(
-                          <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid rgba(255,255,255,.06)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                            <div style={{fontSize:11,color:"rgba(240,244,255,.5)"}}>
-                              Meu palpite: {tP?<strong style={{color:mT==="placar"?"#f7c948":mT==="vencedor"?"#7eb8ff":"#f87171"}}>{pJ.gols1}×{pJ.gols2} {mT==="placar"?"🎯":mT==="vencedor"?"✅":"❌"}</strong>:<span style={{color:"rgba(240,244,255,.3)"}}>—</span>}
+                          <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid #f9fafb",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                            <div style={{fontSize:11,color:"#6b7280"}}>
+                              Meu palpite: {tP?<strong style={{color:mT==="placar"?"#16a34a":mT==="vencedor"?"#2563eb":"#b91c1c"}}>{pJ.gols1}×{pJ.gols2} {mT==="placar"?"🎯":mT==="vencedor"?"✅":"❌"}</strong>:<span style={{color:"#d1d5db"}}>—</span>}
                             </div>
-                            {nPal>0&&<div style={{fontSize:10,color:"#4ade80",fontWeight:700}}>{nAc}/{nPal} acertaram</div>}
+                            {nPal>0&&<div style={{fontSize:10,color:"#16a34a",fontWeight:700}}>{nAc}/{nPal} acertaram</div>}
                           </div>
                         )}
                       </div>
@@ -904,24 +979,24 @@ export default function App() {
               <div>
                 {!pago&&(
                   <div className="card" style={{marginBottom:14,background:"rgba(248,113,113,.06)",border:"1px solid rgba(248,113,113,.2)"}}>
-                    <div style={{fontWeight:700,color:"#f87171",marginBottom:6}}>🔒 Pagamento pendente</div>
-                    <div style={{fontSize:12,color:"rgba(240,244,255,.5)",marginBottom:10}}>Faça o Pix para participar do bolão.</div>
+                    <div style={{fontWeight:700,color:"#b91c1c",marginBottom:6}}>🔒 Pagamento pendente</div>
+                    <div style={{fontSize:12,color:"#6b7280",marginBottom:10}}>Faça o Pix para participar do bolão.</div>
                     <button className="btn-gold" onClick={()=>setModo("pix")}>Ver dados do Pix →</button>
                   </div>
                 )}
                 <div className="card" style={{marginBottom:14,border:"1px solid rgba(247,201,72,.2)",background:"rgba(247,201,72,.03)"}}>
-                  <div style={{fontWeight:700,fontSize:11,color:"#f7c948",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>🏆 Campeão da Copa</div>
-                  <div style={{fontSize:12,color:"rgba(240,244,255,.45)",marginBottom:8}}>
+                  <div style={{fontWeight:700,fontSize:11,color:"#16a34a",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>🏆 Campeão da Copa</div>
+                  <div style={{fontSize:12,color:"#6b7280",marginBottom:8}}>
     +{CONFIG.bonusCampeao} pts bônus ·{" "}
     {campLock()
-      ?<span style={{color:"#f87171"}}>🔒 Bloqueado — palpite encerrado</span>
-      :<span style={{color:"#f7c948",fontWeight:700}}>{tr(CONFIG.bloqueioCompetidor)} para fechar</span>}
+      ?<span style={{color:"#b91c1c"}}>🔒 Bloqueado — palpite encerrado</span>
+      :<span style={{color:"#16a34a",fontWeight:700}}>{tr(CONFIG.bloqueioCompetidor)} para fechar</span>}
   </div>
                   <select value={campAtual} onChange={e=>setCamp(e.target.value)} disabled={campLock()}>
                     <option value="">— Selecione o campeão —</option>
                     {TODOS_TIMES.map(t=><option key={t} value={t}>{F[t]} {t}</option>)}
                   </select>
-                  {campAtual&&<div style={{marginTop:8,fontSize:12,color:"rgba(240,244,255,.6)"}}>Seu palpite: <strong style={{color:"#f7c948"}}>{F[campAtual]} {campAtual}</strong></div>}
+                  {campAtual&&<div style={{marginTop:8,fontSize:12,color:"#6b7280"}}>Seu palpite: <strong style={{color:"#16a34a"}}>{F[campAtual]} {campAtual}</strong></div>}
                 </div>
                 <div style={{display:"flex",gap:5,marginBottom:12,flexWrap:"wrap"}}>
                   {["grupos","oitavas","quartas","semi","final"].map(f=><button key={f} className={`ftab ${faseAtiva===f?"on":"off"}`} onClick={()=>setFaseAtiva(f)}>{FASE_L[f]}</button>)}
@@ -932,7 +1007,7 @@ export default function App() {
                       {Object.keys(GRUPOS).map(g=><button key={g} className={`gtab ${grupoAtivo===g?"on":"off"}`} onClick={()=>setGrupoAtivo(g)}>{g}</button>)}
                     </div>
                     <div style={{marginBottom:10,padding:"6px 10px",background:"rgba(255,255,255,.03)",borderRadius:7,display:"flex",gap:6,flexWrap:"wrap"}}>
-                      {GRUPOS[grupoAtivo].map(t=><span key={t} style={{fontSize:10,color:"rgba(240,244,255,.55)"}}>{F[t]} {t}</span>)}
+                      {GRUPOS[grupoAtivo].map(t=><span key={t} style={{fontSize:10,color:"#6b7280"}}>{F[t]} {t}</span>)}
                     </div>
                     <div style={{display:"flex",flexDirection:"column",gap:9}}>
                       {JOGOS_GRUPO.filter(j=>j.g===grupoAtivo).map(j=>{
@@ -942,9 +1017,9 @@ export default function App() {
                         const mod=!lk&&(pL.gols1!==pSv.gols1||pL.gols2!==pSv.gols2)&&tPL;
                         let aV=false,aP=false;
                         if(tR&&pSv.gols1!==undefined&&pSv.gols1!==""){const{tipo}=calcJogo(parseInt(pSv.gols1),parseInt(pSv.gols2),parseInt(r.gols1),parseInt(r.gols2),j.fase||"grupos",r.penalti||false);aV=tipo==="vencedor";aP=tipo==="placar";}
-                        const bc=aP?"#f7c948":aV?"#7eb8ff":"transparent";
+                        const bc=aP?"#16a34a":aV?"#2563eb":"transparent";
                         return(
-                          <div key={j.id} className="card" style={{position:"relative",overflow:"hidden",padding:"13px",border:`1px solid ${bc==="transparent"?"rgba(255,255,255,.08)":bc+"44"}`}}>
+                          <div key={j.id} className="card" style={{position:"relative",overflow:"hidden",padding:"13px",border:`1px solid ${bc==="transparent"?"#f3f4f6":bc+"44"}`}}>
                             {bc!=="transparent"&&<div style={{position:"absolute",top:0,left:0,width:3,height:"100%",background:bc}}/>}
                             <div style={{position:"absolute",top:8,right:8,display:"flex",gap:4}}>
                               {lk&&!tPL&&<span className="badge br">🔒</span>}
@@ -952,65 +1027,65 @@ export default function App() {
                               {aV&&<span className="badge bb">✅</span>}
                               {mod&&<span className="badge" style={{background:"rgba(251,191,36,.15)",color:"#fbbf24",border:"1px solid rgba(251,191,36,.3)"}}>✏️</span>}
                             </div>
-                            <div style={{fontSize:9,color:"rgba(240,244,255,.3)",fontFamily:"'JetBrains Mono',monospace",marginBottom:9}}>📍 {j.est}, {j.cid} · {fmtD(j.dt)} {fmtH(j.dt)}</div>
+                            <div style={{fontSize:9,color:"#d1d5db",fontFamily:"'JetBrains Mono',monospace",marginBottom:9}}>📍 {j.est}, {j.cid} · {fmtD(j.dt)} {fmtH(j.dt)}</div>
                             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                               <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,flex:1,minWidth:0}}>
                                 <span style={{fontSize:22}}>{F[j.time1]}</span>
-                                <span style={{fontSize:10,fontWeight:700,color:"rgba(240,244,255,.7)",textAlign:"center"}}>{j.time1}</span>
+                                <span style={{fontSize:10,fontWeight:700,color:"#374151",textAlign:"center"}}>{j.time1}</span>
                               </div>
                               <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,padding:"0 8px",flexShrink:0}}>
                                 <div style={{display:"flex",alignItems:"center",gap:5}}>
                                   <input type="number" min={0} max={30} disabled={lk} className={`si${tPL?" f":""}`} value={pL.gols1??""} onChange={e=>setPalLocal(j.id,"gols1",e.target.value,j.dt)} placeholder="—"/>
-                                  <span style={{color:"rgba(240,244,255,.3)",fontSize:13}}>×</span>
+                                  <span style={{color:"#d1d5db",fontSize:13}}>×</span>
                                   <input type="number" min={0} max={30} disabled={lk} className={`si${tPL?" f":""}`} value={pL.gols2??""} onChange={e=>setPalLocal(j.id,"gols2",e.target.value,j.dt)} placeholder="—"/>
                                 </div>
-                                {tR&&<div style={{fontSize:9,color:"rgba(240,244,255,.4)",fontFamily:"'JetBrains Mono',monospace"}}>Resultado: {r.gols1}×{r.gols2}{r.penalti?" (pên.)":""}</div>}
+                                {tR&&<div style={{fontSize:9,color:"#9ca3af",fontFamily:"'JetBrains Mono',monospace"}}>Resultado: {r.gols1}×{r.gols2}{r.penalti?" (pên.)":""}</div>}
                               </div>
                               <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,flex:1,minWidth:0}}>
                                 <span style={{fontSize:22}}>{F[j.time2]}</span>
-                                <span style={{fontSize:10,fontWeight:700,color:"rgba(240,244,255,.7)",textAlign:"center"}}>{j.time2}</span>
+                                <span style={{fontSize:10,fontWeight:700,color:"#374151",textAlign:"center"}}>{j.time2}</span>
                               </div>
                             </div>
                           </div>
                         );
                       })}
                     </div>
-                    <button onClick={salvarGrupo} disabled={salvando} style={{marginTop:13,width:"100%",padding:"13px",borderRadius:12,border:"none",cursor:salvando?"not-allowed":"pointer",background:temRasc?"linear-gradient(135deg,#f7c948,#e8a800)":"rgba(255,255,255,.06)",color:temRasc?"#0a0f1e":"rgba(240,244,255,.4)",fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:14,transition:"all .2s"}}>
+                    <button onClick={salvarGrupo} disabled={salvando} style={{marginTop:13,width:"100%",padding:"13px",borderRadius:12,border:"none",cursor:salvando?"not-allowed":"pointer",background:temRasc?"#16a34a":"#f3f4f6",color:temRasc?"#fff":"#9ca3af",fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:14,transition:"all .2s"}}>
                       {salvando?"Salvando...":temRasc?`💾 Salvar — Grupo ${grupoAtivo}`:"✅ Palpites salvos"}
                     </button>
                   </>
                 )}
                 {faseAtiva!=="grupos"&&(
                   <div>
-                    {elim.filter(j=>j.fase===faseAtiva&&j.time1).length===0&&<div className="card" style={{textAlign:"center",color:"rgba(240,244,255,.3)",padding:"28px"}}>Fase ainda não definida pelo admin</div>}
+                    {elim.filter(j=>j.fase===faseAtiva&&j.time1).length===0&&<div className="card" style={{textAlign:"center",color:"#d1d5db",padding:"28px"}}>Fase ainda não definida pelo admin</div>}
                     <div style={{display:"flex",flexDirection:"column",gap:9}}>
                       {elim.filter(j=>j.fase===faseAtiva&&j.time1).map(j=>{
                         const pL=palR[j.id]||{};const lk=lock(j.dt);const tPL=pL.gols1!==""&&pL.gols1!==undefined&&pL.gols2!==""&&pL.gols2!==undefined;
                         return(
                           <div key={j.id} className="card" style={{padding:"13px"}}>
-                            <div style={{fontSize:9,color:"rgba(240,244,255,.35)",marginBottom:9}}>{j.label} · {fmtD(j.dt)} {fmtH(j.dt)} · {j.est}</div>
+                            <div style={{fontSize:9,color:"#9ca3af",marginBottom:9}}>{j.label} · {fmtD(j.dt)} {fmtH(j.dt)} · {j.est}</div>
                             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                              <div style={{textAlign:"center",flex:1}}><div style={{fontSize:22}}>{F[j.time1]||"🏳️"}</div><div style={{fontSize:10,fontWeight:700,color:"rgba(240,244,255,.7)"}}>{j.time1}</div></div>
+                              <div style={{textAlign:"center",flex:1}}><div style={{fontSize:22}}>{F[j.time1]||"🏳️"}</div><div style={{fontSize:10,fontWeight:700,color:"#374151"}}>{j.time1}</div></div>
                               <div style={{display:"flex",alignItems:"center",gap:5,padding:"0 8px"}}>
                                 <input type="number" min={0} max={30} disabled={lk} className={`si${tPL?" f":""}`} value={pL.gols1??""} onChange={e=>setPalLocal(j.id,"gols1",e.target.value,j.dt)} placeholder="—"/>
-                                <span style={{color:"rgba(240,244,255,.3)",fontSize:13}}>×</span>
+                                <span style={{color:"#d1d5db",fontSize:13}}>×</span>
                                 <input type="number" min={0} max={30} disabled={lk} className={`si${tPL?" f":""}`} value={pL.gols2??""} onChange={e=>setPalLocal(j.id,"gols2",e.target.value,j.dt)} placeholder="—"/>
                               </div>
-                              <div style={{textAlign:"center",flex:1}}><div style={{fontSize:22}}>{F[j.time2]||"🏳️"}</div><div style={{fontSize:10,fontWeight:700,color:"rgba(240,244,255,.7)"}}>{j.time2}</div></div>
+                              <div style={{textAlign:"center",flex:1}}><div style={{fontSize:22}}>{F[j.time2]||"🏳️"}</div><div style={{fontSize:10,fontWeight:700,color:"#374151"}}>{j.time2}</div></div>
                             </div>
                           </div>
                         );
                       })}
                     </div>
                     {elim.filter(j=>j.fase===faseAtiva&&j.time1).length>0&&(
-                      <button onClick={salvarElim} disabled={salvando} style={{marginTop:13,width:"100%",padding:"13px",borderRadius:12,border:"none",cursor:"pointer",background:temRasc?"linear-gradient(135deg,#f7c948,#e8a800)":"rgba(255,255,255,.06)",color:temRasc?"#0a0f1e":"rgba(240,244,255,.4)",fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:14}}>
+                      <button onClick={salvarElim} disabled={salvando} style={{marginTop:13,width:"100%",padding:"13px",borderRadius:12,border:"none",cursor:"pointer",background:temRasc?"#16a34a":"#f3f4f6",color:temRasc?"#fff":"#9ca3af",fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:14}}>
                         {salvando?"Salvando...":temRasc?`💾 Salvar — ${FASE_L[faseAtiva]}`:"✅ Palpites salvos"}
                       </button>
                     )}
                   </div>
                 )}
                 <div style={{marginTop:10,padding:"9px 14px",background:"rgba(247,201,72,.04)",border:"1px solid rgba(247,201,72,.1)",borderRadius:9,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{fontSize:11,color:"rgba(240,244,255,.45)"}}>{totSalvos} palpites salvos no banco</span>
+                  <span style={{fontSize:11,color:"#6b7280"}}>{totSalvos} palpites salvos no banco</span>
                   <span className="badge bg">☁ Supabase</span>
                 </div>
               </div>
@@ -1021,76 +1096,76 @@ export default function App() {
               <div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
                   <div>
-                    <div style={{fontSize:10,color:"rgba(240,244,255,.35)",fontFamily:"'JetBrains Mono',monospace",marginBottom:2}}>AO VIVO</div>
+                    <div style={{fontSize:10,color:"#9ca3af",fontFamily:"'JetBrains Mono',monospace",marginBottom:2}}>AO VIVO</div>
                     <div style={{fontWeight:800,fontSize:18}}>Classificação Geral</div>
                   </div>
                   <button onClick={exportarRanking} className="btn-ghost" style={{fontSize:11,padding:"6px 12px"}}>{copRank?"✅ Copiado!":"📤 WhatsApp"}</button>
                 </div>
                 {minhaPos>0&&(
-                  <div style={{marginBottom:14,padding:"12px 14px",background:"rgba(247,201,72,.08)",border:"1px solid rgba(247,201,72,.25)",borderRadius:12,display:"flex",alignItems:"center",gap:10}}>
-                    <div style={{fontSize:22}}>{MEDAL[minhaPos-1]||`${minhaPos}º`}</div>
+                  <div style={{background:"linear-gradient(135deg,#16a34a,#15803d)",borderRadius:16,padding:"16px",marginBottom:14,color:"#fff",display:"flex",alignItems:"center",gap:14}}>
+                    <div style={{fontSize:28}}>{MEDAL[minhaPos-1]||`${minhaPos}º`}</div>
                     <div style={{flex:1}}>
-                      <div style={{fontWeight:700,fontSize:14}}>{usuarioAtual}</div>
-                      <div style={{fontSize:11,color:"rgba(240,244,255,.5)"}}>{meusDados?.pontos||0} pts · {meusDados?.acertos||0} acertos · {meusDados?.placares||0} exatos</div>
+                      <div style={{fontWeight:700,fontSize:16}}>{usuarioAtual} <span style={{fontSize:12,opacity:.8}}>(você)</span></div>
+                      <div style={{fontSize:13,opacity:.8}}>{meusDados?.pontos||0} pts · {meusDados?.acertos||0} acertos · {meusDados?.placares||0} exatos</div>
                     </div>
-                    {premios.dist.find(d=>d.pos===minhaPos)&&<div style={{textAlign:"right"}}><div style={{fontWeight:800,fontSize:15,color:"#f7c948"}}>R$ {premios.dist.find(d=>d.pos===minhaPos)?.valor}</div><div style={{fontSize:10,color:"rgba(240,244,255,.4)"}}>prêmio</div></div>}
+                    {premios.dist.find(d=>d.pos===minhaPos)&&<div style={{textAlign:"right"}}><div style={{fontWeight:800,fontSize:20}}>R$ {premios.dist.find(d=>d.pos===minhaPos)?.valor}</div><div style={{fontSize:11,opacity:.8}}>prêmio</div></div>}
                   </div>
                 )}
-                <div className="card" style={{marginBottom:14,background:"rgba(247,201,72,.04)",border:"1px solid rgba(247,201,72,.15)"}}>
-                  <div style={{fontWeight:700,fontSize:10,color:"#f7c948",letterSpacing:1,textTransform:"uppercase",marginBottom:10}}>💰 Premiação Final</div>
+                <div className="card" style={{marginBottom:14,border:"1.5px solid #fde68a",background:"#fefce8"}}>
+                  <div style={{fontWeight:700,fontSize:13,color:"#854d0e",marginBottom:10}}>💰 Premiação — {nPagos} pagos · R$ {premios.total} no total</div>
                   <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                     {premios.dist.map(d=>(
-                      <div key={d.pos} style={{flex:"1 1 60px",textAlign:"center",padding:"8px",background:"rgba(255,255,255,.03)",borderRadius:8}}>
-                        <div style={{fontSize:16}}>{MEDAL[d.pos-1]}</div>
-                        <div style={{fontWeight:800,fontSize:14,color:"#f7c948"}}>R$ {d.valor}</div>
-                        <div style={{fontSize:9,color:"rgba(240,244,255,.4)"}}>{d.pct*100}%</div>
+                      <div key={d.pos} style={{flex:"1 1 60px",textAlign:"center",padding:"10px 8px",background:"#fff",borderRadius:10,border:"1px solid #fde68a"}}>
+                        <div style={{fontSize:18}}>{MEDAL[d.pos-1]}</div>
+                        <div style={{fontWeight:800,fontSize:15,color:"#16a34a"}}>R$ {d.valor}</div>
                       </div>
                     ))}
                   </div>
-                  <div style={{marginTop:8,fontSize:10,color:"rgba(240,244,255,.35)",textAlign:"center"}}>Total: R$ {premios.total} · {nPart} × R$ {CONFIG.valorCota}</div>
                 </div>
-                {nPart===0?<div className="card" style={{textAlign:"center",padding:"36px",color:"rgba(240,244,255,.4)"}}>Nenhum participante ainda</div>:(
-                  <div style={{display:"flex",flexDirection:"column",gap:9}}>
-                    {ranking.map((p,i)=>{
-                      const isMe=p.nome===usuarioAtual;const premio=premios.dist.find(d=>d.pos===i+1);
-                      return(
-                        <div key={p.nome} className="card" style={{display:"flex",alignItems:"center",gap:10,background:isMe?"rgba(247,201,72,.06)":"rgba(255,255,255,.04)",border:isMe?"1px solid rgba(247,201,72,.25)":"1px solid rgba(255,255,255,.07)",cursor:"pointer",position:"relative",overflow:"hidden"}}
-                          onClick={()=>setDetUser(detUser===p.nome?null:p.nome)}>
-                          {isMe&&<div style={{position:"absolute",top:0,left:0,width:3,height:"100%",background:"#f7c948"}}/>}
-                          <div style={{fontSize:18,width:26,textAlign:"center",flexShrink:0}}>{MEDAL[i]||`${i+1}º`}</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {ranking.map((p,i)=>{
+                    const isMe=p.nome===usuarioAtual;const premio=premios.dist.find(d=>d.pos===i+1);
+                    const badges=calcBadges(p.nome,ranking,palpitesMap,elim,res,resE);
+                    return(
+                      <div key={p.nome} className="card" style={{border:`1.5px solid ${isMe?"#86efac":"#e5e7eb"}`,background:isMe?"#f0fdf4":"#fff",cursor:"pointer",position:"relative",overflow:"hidden",padding:"14px 16px"}}
+                        onClick={()=>setDetUser(detUser===p.nome?null:p.nome)}>
+                        {isMe&&<div style={{position:"absolute",top:0,left:0,width:4,height:"100%",background:"#16a34a",borderRadius:"2px 0 0 2px"}}/>}
+                        <div style={{display:"flex",alignItems:"center",gap:12}}>
+                          <div style={{fontSize:20,width:28,textAlign:"center",flexShrink:0,fontWeight:700}}>{MEDAL[i]||`${i+1}º`}</div>
                           <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontWeight:700,fontSize:13,marginBottom:3}}>{p.nome} {isMe&&<span style={{fontSize:9,color:"#f7c948"}}>(você)</span>}</div>
-                            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                            <div style={{fontWeight:700,fontSize:15,color:"#111827",marginBottom:4}}>{p.nome} {isMe&&<span style={{fontSize:11,color:"#16a34a",fontWeight:600}}>(você)</span>}</div>
+                            <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
                               <span className="badge bb">✅ {p.acertos}</span>
                               <span className="badge bp">🎯 {p.placares}</span>
                               {p.campeao&&<span className="badge bg">{F[p.campeao]}</span>}
-                              {!p.pago&&<span className="badge br">💸</span>}
+                              {!p.pago&&<span className="badge br">Pendente</span>}
+                              {badges.map(b=><span key={b} className="badge bgr">{b}</span>)}
                             </div>
                             {detUser===p.nome&&(
-                              <div style={{marginTop:8,fontSize:10,color:"rgba(240,244,255,.5)",lineHeight:1.7}}>
+                              <div style={{marginTop:10,fontSize:12,color:"#6b7280",lineHeight:1.8,background:"#f9fafb",borderRadius:8,padding:"8px 10px"}}>
                                 {p.bonusCampeao>0&&<div>🏆 Bônus campeão: +{p.bonusCampeao}pts</div>}
                                 <div>Desempate: {p.placares} placares → {p.acertos} acertos</div>
-                                {premio&&<div style={{color:"#f7c948",fontWeight:700}}>💰 Prêmio: R$ {premio.valor}</div>}
+                                {premio&&<div style={{color:"#16a34a",fontWeight:700}}>💰 Prêmio: R$ {premio.valor}</div>}
                               </div>
                             )}
                           </div>
                           <div style={{textAlign:"right",flexShrink:0}}>
-                            <div style={{fontSize:22,fontWeight:800,color:"#f7c948",fontFamily:"'JetBrains Mono',monospace"}}>{p.pontos}</div>
-                            <div style={{fontSize:9,color:"rgba(240,244,255,.35)"}}>pts</div>
+                            <div style={{fontSize:26,fontWeight:800,color:"#16a34a",fontFamily:"'JetBrains Mono',monospace"}}>{p.pontos}</div>
+                            <div style={{fontSize:11,color:"#9ca3af"}}>pts</div>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
             {/* HISTÓRICO */}
             {modo==="historico"&&(
               <div>
-                <div style={{marginBottom:14}}>
-                  <div style={{fontWeight:800,fontSize:18,marginBottom:8}}>📊 Meu Histórico</div>
+                <div style={{marginBottom:16}}>
+                  <div style={{fontWeight:800,fontSize:20,marginBottom:10,color:"#111827"}}>📊 Meu Histórico</div>
                   <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                     {(["todas",1,2,3] as const).map(r=><button key={r} className={`gtab ${histRodada===r?"on":"off"}`} onClick={()=>setHistRodada(r)}>{r==="todas"?"Todas":`Rodada ${r}`}</button>)}
                   </div>
@@ -1099,45 +1174,32 @@ export default function App() {
                   const dados=calcTudo(palS,elim,res,resE,campAtual,campR);
                   let comRes=dados.det.filter((d:any)=>d.res);
                   if(histRodada!=="todas")comRes=comRes.filter((d:any)=>d.r===histRodada);
-                  if(comRes.length===0)return<div className="card" style={{textAlign:"center",padding:"36px",color:"rgba(240,244,255,.35)"}}>Nenhum jogo encerrado nesta rodada</div>;
+                  if(comRes.length===0)return<div className="card" style={{textAlign:"center",padding:"40px",color:"#9ca3af"}}>Nenhum jogo encerrado nesta rodada</div>;
                   const ac=comRes.filter((d:any)=>d.tipo==="placar"||d.tipo==="vencedor").length;
                   const pct=comRes.length>0?Math.round(ac/comRes.length*100):0;
                   return(
                     <>
                       <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
-                        {[["🎯",comRes.filter((d:any)=>d.tipo==="placar").length,"Exatos","#f7c948"],["✅",comRes.filter((d:any)=>d.tipo==="vencedor").length,"Acertos","#7eb8ff"],["❌",comRes.filter((d:any)=>d.tipo==="erro"||d.tipo==="sem_palpite").length,"Erros","#f87171"],["📊",`${pct}%`,"Taxa","#4ade80"]].map(([ic,v,lb,cor]:any)=>(
-                          <div key={lb} style={{flex:"1 1 60px",textAlign:"center",padding:"10px",background:"rgba(255,255,255,.04)",borderRadius:10,border:"1px solid rgba(255,255,255,.07)"}}>
-                            <div style={{fontSize:16}}>{ic}</div><div style={{fontWeight:800,fontSize:16,color:cor}}>{v}</div><div style={{fontSize:9,color:"rgba(240,244,255,.35)"}}>{lb}</div>
+                        {[["🎯",comRes.filter((d:any)=>d.tipo==="placar").length,"Exatos","#16a34a"],["✅",comRes.filter((d:any)=>d.tipo==="vencedor").length,"Acertos","#2563eb"],["❌",comRes.filter((d:any)=>d.tipo==="erro"||d.tipo==="sem_palpite").length,"Erros","#b91c1c"],["📊",`${pct}%`,"Taxa","#16a34a"]].map(([ic,v,lb,cor]:any)=>(
+                          <div key={lb} className="card" style={{flex:"1 1 60px",textAlign:"center",padding:"12px 6px"}}>
+                            <div style={{fontSize:18}}>{ic}</div><div style={{fontWeight:800,fontSize:18,color:cor}}>{v}</div><div style={{fontSize:10,color:"#9ca3af"}}>{lb}</div>
                           </div>
                         ))}
                       </div>
                       <div style={{display:"flex",flexDirection:"column",gap:8}}>
                         {comRes.map((d:any)=>{
-                          const cor=d.tipo==="placar"?"#f7c948":d.tipo==="vencedor"?"#7eb8ff":"#f87171";
+                          const cor=d.tipo==="placar"?"#16a34a":d.tipo==="vencedor"?"#2563eb":"#b91c1c";
                           const ic=d.tipo==="placar"?"🎯":d.tipo==="vencedor"?"✅":d.tipo==="sem_palpite"?"—":"❌";
-                          let nAc=0,nPal=0;
-                          Object.values(palpitesMap).forEach((ps:any)=>{const p=ps[d.id];if(!p||p.gols1===""||p.gols2==="")return;nPal++;const{tipo}=calcJogo(parseInt(p.gols1),parseInt(p.gols2),parseInt(d.res.gols1),parseInt(d.res.gols2),d.fase||"grupos",d.res.penalti||false);if(tipo==="placar"||tipo==="vencedor")nAc++;});
                           return(
-                            <div key={d.id} className="card" style={{padding:"12px 14px",borderLeft:`3px solid ${cor}`}}>
+                            <div key={d.id} className="card" style={{padding:"14px 16px",borderLeft:`4px solid ${cor}`}}>
                               <div style={{display:"flex",alignItems:"center",gap:10}}>
-                                <div style={{fontSize:14,flexShrink:0}}>{ic}</div>
+                                <div style={{fontSize:16,flexShrink:0}}>{ic}</div>
                                 <div style={{flex:1,minWidth:0}}>
-                                  <div style={{fontSize:11,fontWeight:700}}>{F[d.time1]||""} {d.time1} × {d.time2} {F[d.time2]||""}</div>
-                                  <div style={{fontSize:10,color:"rgba(240,244,255,.4)",marginTop:2}}>
-                                    {d.est&&<span>{d.est} · </span>}Resultado: <strong style={{color:"#f0f4ff"}}>{d.res.gols1}×{d.res.gols2}</strong>{d.res.penalti?" (pên.)":""} · Palpite: <strong style={{color:cor}}>{d.pal?`${d.pal.gols1}×${d.pal.gols2}`:"—"}</strong>
-                                  </div>
+                                  <div style={{fontSize:13,fontWeight:700,color:"#111827"}}>{F[d.time1]||""} {d.time1} × {d.time2} {F[d.time2]||""}</div>
+                                  <div style={{fontSize:12,color:"#9ca3af",marginTop:3}}>Resultado: <strong style={{color:"#374151"}}>{d.res.gols1}×{d.res.gols2}</strong>{d.res.penalti?" (pên.)":""} · Palpite: <strong style={{color:cor}}>{d.pal?`${d.pal.gols1}×${d.pal.gols2}`:"—"}</strong></div>
                                 </div>
-                                <div style={{fontWeight:800,fontSize:13,color:cor,flexShrink:0,fontFamily:"'JetBrains Mono',monospace"}}>{d.pts>0?`+${d.pts}`:d.tipo==="sem_palpite"?"—":"0"}</div>
+                                <div style={{fontWeight:800,fontSize:15,color:cor,flexShrink:0,fontFamily:"'JetBrains Mono',monospace"}}>{d.pts>0?`+${d.pts}`:d.tipo==="sem_palpite"?"—":"0"}</div>
                               </div>
-                              {nPal>0&&(
-                                <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,.05)",display:"flex",alignItems:"center",gap:10}}>
-                                  <div style={{fontSize:10,color:"rgba(240,244,255,.35)",flexShrink:0}}>Bolão:</div>
-                                  <div style={{flex:1,height:4,borderRadius:2,background:"rgba(255,255,255,.08)",overflow:"hidden"}}>
-                                    <div style={{height:"100%",borderRadius:2,background:"linear-gradient(90deg,#4ade80,#f7c948)",width:`${Math.round(nAc/nPal*100)}%`}}/>
-                                  </div>
-                                  <div style={{fontSize:10,color:"#4ade80",fontWeight:700,flexShrink:0}}>{nAc}/{nPal} ({Math.round(nAc/nPal*100)}%)</div>
-                                </div>
-                              )}
                             </div>
                           );
                         })}
@@ -1151,97 +1213,177 @@ export default function App() {
             {/* PIX */}
             {modo==="pix"&&(
               <div>
-                <div style={{marginBottom:16}}><div style={{fontSize:10,color:"rgba(240,244,255,.35)",fontFamily:"'JetBrains Mono',monospace",marginBottom:2}}>PAGAMENTO</div><div style={{fontWeight:800,fontSize:18}}>Cota de Entrada</div></div>
+                <div style={{marginBottom:20}}><div style={{fontSize:11,color:"#9ca3af",marginBottom:2}}>PAGAMENTO</div><div style={{fontWeight:800,fontSize:20,color:"#111827"}}>Cota de Entrada</div></div>
                 {pago?(
-                  <div className="card" style={{textAlign:"center",padding:"32px",border:"1px solid rgba(74,222,128,.25)",background:"rgba(74,222,128,.04)"}}>
-                    <div style={{fontSize:46,marginBottom:10}}>✅</div>
-                    <div style={{fontWeight:800,fontSize:17,color:"#4ade80",marginBottom:5}}>Pagamento confirmado!</div>
-                    <div style={{fontSize:12,color:"rgba(240,244,255,.45)"}}>Você está dentro do bolão. Boa sorte! 🍀</div>
+                  <div className="card" style={{textAlign:"center",padding:"40px",border:"1.5px solid #86efac",background:"#f0fdf4"}}>
+                    <div style={{fontSize:52,marginBottom:12}}>✅</div>
+                    <div style={{fontWeight:800,fontSize:18,color:"#16a34a",marginBottom:6}}>Pagamento confirmado!</div>
+                    <div style={{fontSize:14,color:"#6b7280"}}>Você está dentro do bolão. Boa sorte! 🍀</div>
                   </div>
                 ):(
                   <div>
-                    <div style={{textAlign:"center",marginBottom:14}}><div style={{fontWeight:800,fontSize:34,color:"#f7c948"}}>R$ {CONFIG.valorCota},00</div><div style={{fontSize:12,color:"rgba(240,244,255,.4)",marginTop:2}}>Valor da cota</div></div>
-                    <div className="card" style={{marginBottom:10,border:"1px solid rgba(247,201,72,.2)",background:"rgba(247,201,72,.04)",textAlign:"center"}}>
-                      <div style={{fontSize:10,color:"#f7c948",fontFamily:"'JetBrains Mono',monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:10}}>Escaneie o QR Code</div>
-                      <div style={{display:"inline-block",background:"#fff",borderRadius:12,padding:10,marginBottom:10}}>
+                    <div style={{textAlign:"center",marginBottom:20}}>
+                      <div style={{fontWeight:800,fontSize:40,color:"#16a34a"}}>R$ {CONFIG.valorCota},00</div>
+                      <div style={{fontSize:14,color:"#9ca3af",marginTop:4}}>Valor da cota</div>
+                    </div>
+                    <div className="card" style={{marginBottom:12,border:"1.5px solid #86efac",background:"#f0fdf4",textAlign:"center"}}>
+                      <div style={{fontSize:13,fontWeight:700,color:"#166534",marginBottom:8}}>💳 Pagar via Mercado Pago</div>
+                      <div style={{fontSize:12,color:"#6b7280",marginBottom:14}}>Pix, cartão de crédito ou débito — confirmação automática</div>
+                      <button className="btn-primary" onClick={pagarMP} disabled={mpLoading} style={{fontSize:16}}>{mpLoading?"Gerando link...":"💳 Pagar R$ 10 agora"}</button>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:10,margin:"16px 0"}}>
+                      <div style={{flex:1,height:1,background:"#e5e7eb"}}/>
+                      <span style={{fontSize:12,color:"#9ca3af"}}>ou Pix manual</span>
+                      <div style={{flex:1,height:1,background:"#e5e7eb"}}/>
+                    </div>
+                    <div className="card" style={{marginBottom:10,textAlign:"center"}}>
+                      <div style={{fontSize:12,color:"#9ca3af",marginBottom:10}}>Escaneie o QR Code</div>
+                      <div style={{display:"inline-block",background:"#fff",borderRadius:12,padding:10,marginBottom:10,border:"1px solid #e5e7eb"}}>
                         <img src={`https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=${encodeURIComponent(CONFIG.pixCopiaCola)}`} alt="QR Code Pix" width={190} height={190} style={{display:"block",borderRadius:4}}/>
                       </div>
-                      <div style={{fontSize:11,color:"rgba(240,244,255,.45)"}}>App do banco → Pix → Ler QR Code</div>
+                      <div style={{fontSize:12,color:"#9ca3af"}}>App do banco → Pix → Ler QR Code</div>
                     </div>
                     <div className="card" style={{marginBottom:10}}>
-                      <div style={{fontSize:10,color:"rgba(240,244,255,.35)",fontFamily:"'JetBrains Mono',monospace",marginBottom:6}}>CHAVE PIX ALEATÓRIA</div>
+                      <div style={{fontSize:11,color:"#9ca3af",marginBottom:8}}>CHAVE PIX ALEATÓRIA</div>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
-                        <div style={{flex:1,fontWeight:600,fontSize:11,color:"#f0f4ff",wordBreak:"break-all",fontFamily:"'JetBrains Mono',monospace"}}>{CONFIG.chavePix}</div>
-                        <button onClick={()=>{navigator.clipboard.writeText(CONFIG.chavePix);setCopChave(true);setTimeout(()=>setCopChave(false),2000);}} style={{flexShrink:0,padding:"7px 12px",borderRadius:8,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:11,background:copChave?"rgba(74,222,128,.15)":"rgba(247,201,72,.15)",color:copChave?"#4ade80":"#f7c948",border:copChave?"1px solid rgba(74,222,128,.3)":"1px solid rgba(247,201,72,.3)"}}>
-                          {copChave?"✅ Copiado!":"📋 Copiar"}
-                        </button>
+                        <div style={{flex:1,fontWeight:600,fontSize:12,color:"#374151",wordBreak:"break-all",fontFamily:"'JetBrains Mono',monospace"}}>{CONFIG.chavePix}</div>
+                        <button onClick={()=>{navigator.clipboard.writeText(CONFIG.chavePix);setCopChave(true);setTimeout(()=>setCopChave(false),2000);}} style={{flexShrink:0,padding:"8px 14px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:12,background:copChave?"#dcfce7":"#f3f4f6",color:copChave?"#166534":"#374151",border:"1px solid #e5e7eb"}}>{copChave?"✅ Copiado!":"📋 Copiar"}</button>
                       </div>
-                      <div style={{fontSize:10,color:"rgba(240,244,255,.35)",marginTop:5}}>Favorecido: {CONFIG.nomePix}</div>
+                      <div style={{fontSize:11,color:"#9ca3af",marginTop:6}}>Favorecido: {CONFIG.nomePix}</div>
                     </div>
-                    <div className="card" style={{marginBottom:10}}>
-                      <div style={{fontSize:10,color:"rgba(240,244,255,.35)",fontFamily:"'JetBrains Mono',monospace",marginBottom:6}}>PIX COPIA E COLA</div>
-                      <div style={{fontSize:9,color:"rgba(240,244,255,.4)",wordBreak:"break-all",fontFamily:"'JetBrains Mono',monospace",marginBottom:8,lineHeight:1.5}}>{CONFIG.pixCopiaCola.slice(0,60)}...</div>
-                      <button onClick={()=>{navigator.clipboard.writeText(CONFIG.pixCopiaCola);setCopCola(true);setTimeout(()=>setCopCola(false),2000);}} style={{width:"100%",padding:"9px",borderRadius:8,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:12,background:copCola?"rgba(74,222,128,.15)":"rgba(255,255,255,.06)",color:copCola?"#4ade80":"#f0f4ff",border:copCola?"1px solid rgba(74,222,128,.3)":"1px solid rgba(255,255,255,.12)"}}>
-                        {copCola?"✅ Código copiado!":"📋 Copiar código completo"}
-                      </button>
-                    </div>
-                    <div className="card" style={{fontSize:12,color:"rgba(240,244,255,.55)",lineHeight:1.8}}>
-                      <div style={{fontWeight:700,color:"#f7c948",marginBottom:7}}>📌 Como pagar</div>
-                      <div>1. Escaneie o QR Code <strong style={{color:"#f0f4ff"}}>ou</strong> copie a chave</div>
-                      <div>2. Confirme: <strong style={{color:"#f7c948"}}>R$ {CONFIG.valorCota},00 → {CONFIG.nomePix}</strong></div>
-                      <div>3. Envie o comprovante no WhatsApp</div>
-                      <div>4. O admin confirma seu pagamento</div>
-                      <div style={{marginTop:7,padding:"7px 11px",background:"rgba(248,113,113,.07)",borderRadius:7,color:"#f87171",fontSize:11}}>⚠ Apenas pagos concorrem ao prêmio</div>
+                    <div className="card" style={{fontSize:13,color:"#6b7280",lineHeight:1.9,border:"1.5px solid #fde68a",background:"#fefce8"}}>
+                      <div style={{fontWeight:700,color:"#854d0e",marginBottom:8}}>📌 Pix manual — como pagar</div>
+                      <div>1. Escaneie o QR Code ou copie a chave</div>
+                      <div>2. Confirme: <strong style={{color:"#111827"}}>R$ {CONFIG.valorCota},00 → {CONFIG.nomePix}</strong></div>
+                      <div>3. Envie comprovante no WhatsApp</div>
+                      <div>4. Admin confirma e libera acesso</div>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
+            {/* PERFIL */}
+            {modo==="perfil"&&(
+              <div>
+                <div style={{fontWeight:800,fontSize:20,marginBottom:20,color:"#111827"}}>👤 Meu Perfil</div>
+                <div style={{background:"linear-gradient(135deg,#16a34a,#15803d)",borderRadius:20,padding:"24px",marginBottom:16,color:"#fff",textAlign:"center"}}>
+                  <div style={{width:64,height:64,background:"rgba(255,255,255,.2)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,margin:"0 auto 12px"}}>👤</div>
+                  <div style={{fontWeight:800,fontSize:20,marginBottom:4}}>{usuarioAtual}</div>
+                  <div style={{fontSize:13,opacity:.8}}>{pago?"✅ Pagamento confirmado":"⚠️ Pagamento pendente"}</div>
+                </div>
+                <div style={{display:"flex",gap:10,marginBottom:16}}>
+                  {[["⭐",meusDados?.pontos??0,"Pontos"],["🎯",meusDados?.placares??0,"Exatos"],["✅",meusDados?.acertos??0,"Acertos"],["📊",`${minhaPos>0?minhaPos+"º":"—"}`,"Posição"]].map(([ic,v,lb])=>(
+                    <div key={lb as string} className="card" style={{flex:1,textAlign:"center",padding:"12px 6px"}}>
+                      <div style={{fontSize:18}}>{ic}</div>
+                      <div style={{fontWeight:800,fontSize:18,color:"#16a34a"}}>{v}</div>
+                      <div style={{fontSize:10,color:"#9ca3af",marginTop:1}}>{lb}</div>
+                    </div>
+                  ))}
+                </div>
+                {calcBadges(usuarioAtual||"",ranking,palpitesMap,elim,res,resE).length>0&&(
+                  <div className="card" style={{marginBottom:12}}>
+                    <div style={{fontWeight:700,fontSize:13,color:"#374151",marginBottom:10}}>🏅 Conquistas</div>
+                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                      {calcBadges(usuarioAtual||"",ranking,palpitesMap,elim,res,resE).map(b=>(
+                        <div key={b} style={{padding:"8px 14px",background:"#f0fdf4",border:"1.5px solid #86efac",borderRadius:12,fontSize:13,fontWeight:700,color:"#166534"}}>{b}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* CAMPEÃO */}
+            {modo==="campeao"&&(
+              <div>
+                <div style={{fontWeight:800,fontSize:20,marginBottom:16,color:"#111827"}}>🏆 Palpite de Campeão</div>
+                <div className="card" style={{marginBottom:14,border:"1.5px solid #fde68a",background:"#fefce8"}}>
+                  <div style={{fontWeight:700,fontSize:14,color:"#854d0e",marginBottom:6}}>Bônus +{CONFIG.bonusCampeao} pontos</div>
+                  <div style={{fontSize:13,color:"#92400e",marginBottom:14}}>{campLock()?<span>🔒 Palpite encerrado</span>:<span>{tr(CONFIG.bloqueioCompetidor)} para fechar</span>}</div>
+                  <select value={campAtual} onChange={e=>setCamp(e.target.value)} disabled={campLock()}>
+                    <option value="">— Selecione o campeão —</option>
+                    {TODOS_TIMES.map(t=><option key={t} value={t}>{F[t]} {t}</option>)}
+                  </select>
+                  {campAtual&&<div style={{marginTop:12,padding:"10px 14px",background:"#fff",borderRadius:10,fontSize:14}}>Seu palpite: <strong style={{color:"#16a34a"}}>{F[campAtual]} {campAtual}</strong></div>}
+                </div>
+                <div className="card">
+                  <div style={{fontWeight:700,fontSize:13,color:"#374151",marginBottom:12}}>Palpites do grupo</div>
+                  {Object.entries(usuarios).map(([nome,u]:any)=>(
+                    <div key={nome} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:"1px solid #f3f4f6"}}>
+                      <span style={{flex:1,fontSize:14,color:"#374151",fontWeight:500}}>{nome}</span>
+                      <span style={{fontSize:14}}>{u.camp?`${F[u.camp]||""} ${u.camp}`:<span style={{color:"#9ca3af",fontSize:12}}>—</span>}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* REGRAS */}
             {modo==="regras"&&(
               <div>
-                <div style={{fontWeight:800,fontSize:18,marginBottom:14}}>📋 Regras do Bolão</div>
+                <div style={{fontWeight:800,fontSize:20,marginBottom:16,color:"#111827"}}>📋 Regras do Bolão</div>
                 {[
                   {title:"Pontuação por fase",rows:[["⚽","Grupos — vencedor/empate","+2 pts"],["🎯","Grupos — placar exato","+5 pts"],["⚽","Oitavas — vencedor","+3 pts"],["🎯","Oitavas — placar exato","+8 pts"],["⚽","Quartas — vencedor","+5 pts"],["🎯","Quartas — placar exato","+12 pts"],["⚽","Semifinal — vencedor","+7 pts"],["🎯","Semifinal — placar exato","+15 pts"],["⚽","Final — vencedor","+10 pts"],["🎯","Final — placar exato","+20 pts"]]},
                   {title:"Bônus e regras",rows:[["🏆",`Campeão da Copa (fecha 04/07)`,`+${CONFIG.bonusCampeao} pts`],["🥅","Pênalti: vale o vencedor final","sem placar exato"],["🔒",`Palpites fecham ${CONFIG.minutesBloqueio}min antes do jogo`,"automático"]]},
                   {title:"Desempate",rows:[["1️⃣","Mais placares exatos",""],["2️⃣","Mais acertos",""],["3️⃣","Acertou o campeão",""],["4️⃣","Decisão do admin",""]]},
-                  {title:"Premiação final",rows:premios.dist.map(d=>[MEDAL[d.pos-1],`${d.pos}º lugar — ${d.pct*100}%`,`R$ ${d.valor}`])},
+                  {title:"Premiação — apenas pagos",rows:premios.dist.map(d=>[MEDAL[d.pos-1],`${d.pos}º lugar`,`R$ ${d.valor}`])},
                 ].map((sec,si)=>(
                   <div key={si} className="card" style={{marginBottom:10}}>
-                    <div style={{fontWeight:700,fontSize:10,color:"#f7c948",letterSpacing:1,textTransform:"uppercase",marginBottom:10}}>{sec.title}</div>
+                    <div style={{fontWeight:700,fontSize:12,color:"#16a34a",letterSpacing:.5,textTransform:"uppercase",marginBottom:12}}>{sec.title}</div>
                     {sec.rows.map((r,i)=>(
-                      <div key={i} style={{display:"flex",alignItems:"center",gap:9,padding:"7px 0",borderBottom:i<sec.rows.length-1?"1px solid rgba(255,255,255,.05)":"none"}}>
-                        <span style={{fontSize:14}}>{r[0]}</span><span style={{flex:1,fontSize:12,color:"rgba(240,244,255,.75)"}}>{r[1]}</span>{r[2]&&<span className="badge bg">{r[2]}</span>}
+                      <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:i<sec.rows.length-1?"1px solid #f3f4f6":"none"}}>
+                        <span style={{fontSize:16}}>{r[0]}</span><span style={{flex:1,fontSize:14,color:"#374151"}}>{r[1]}</span>{r[2]&&<span className="badge bgr">{r[2]}</span>}
                       </div>
                     ))}
                   </div>
                 ))}
               </div>
             )}
-          </div>
-        )}
+
+            {/* FEED */}
+            {modo==="feed"&&(
+              <div>
+                <div style={{fontWeight:800,fontSize:20,marginBottom:16,color:"#111827"}}>💬 Feed de Atividade</div>
+                {feed.length===0?(
+                  <div className="card" style={{textAlign:"center",padding:"40px",color:"#9ca3af"}}>
+                    <div style={{fontSize:36,marginBottom:8}}>💬</div>
+                    <div>Nenhuma atividade ainda</div>
+                    <div style={{fontSize:12,marginTop:4}}>As ações do grupo aparecerão aqui</div>
+                  </div>
+                ):(
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {feed.map(f=>(
+                      <div key={f.id} className="card" style={{padding:"12px 16px",display:"flex",alignItems:"center",gap:10}}>
+                        <div style={{width:36,height:36,background:"#f0fdf4",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>⚽</div>
+                        <div style={{flex:1}}><div style={{fontSize:14,color:"#374151"}}>{f.msg}</div><div style={{fontSize:11,color:"#9ca3af",marginTop:2}}>{f.ts}</div></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
         {/* ADMIN */}
         {tela==="admin"&&(
           <div className="fade">
-            <div style={{marginBottom:14,padding:"9px 13px",background:"rgba(248,113,113,.05)",border:"1px solid rgba(248,113,113,.18)",borderRadius:9}}>
-              <span style={{fontWeight:700,fontSize:12,color:"#f87171"}}>🔐 Painel do Administrador</span>
+            <div style={{marginBottom:14,padding:"10px 16px",background:"#fef2f2",border:"1.5px solid #fecaca",borderRadius:12}}>
+              <span style={{fontWeight:700,fontSize:13,color:"#b91c1c"}}>🔐 Painel do Administrador</span>
             </div>
 
             {adminModo==="resultados"&&(
               <div>
-                <div style={{display:"flex",gap:4,marginBottom:12,flexWrap:"wrap"}}>
+                <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
                   {Object.keys(GRUPOS).map(g=><button key={g} className={`gtab ${grupoAtivo===g?"on":"off"}`} onClick={()=>setGrupoAtivo(g)}>{g}</button>)}
                 </div>
                 <div style={{marginBottom:10,padding:"6px 10px",background:"rgba(255,255,255,.03)",borderRadius:7,display:"flex",gap:6,flexWrap:"wrap"}}>
-                  {GRUPOS[grupoAtivo].map(t=><span key={t} style={{fontSize:10,color:"rgba(240,244,255,.55)"}}>{F[t]} {t}</span>)}
+                  {GRUPOS[grupoAtivo].map(t=><span key={t} style={{fontSize:10,color:"#6b7280"}}>{F[t]} {t}</span>)}
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:9}}>
                   {JOGOS_GRUPO.filter(j=>j.g===grupoAtivo).map(j=><JogoCardAdmin key={j.id} jogo={j}/>)}
                 </div>
                 <div style={{marginTop:10,padding:"9px 13px",background:"rgba(74,222,128,.04)",border:"1px solid rgba(74,222,128,.12)",borderRadius:9,display:"flex",justifyContent:"space-between"}}>
-                  <span style={{fontSize:11,color:"rgba(240,244,255,.5)"}}>{Object.keys(res).filter(id=>res[id]?.gols1!==""&&res[id]?.gols1!==undefined).length}/{JOGOS_GRUPO.length} resultados</span>
+                  <span style={{fontSize:11,color:"#6b7280"}}>{Object.keys(res).filter(id=>res[id]?.gols1!==""&&res[id]?.gols1!==undefined).length}/{JOGOS_GRUPO.length} resultados</span>
                   <span className="badge bgr">☁ Supabase</span>
                 </div>
               </div>
@@ -1254,7 +1396,7 @@ export default function App() {
                 </div>
                 {faseAtiva==="final"&&(
                   <div className="card" style={{marginBottom:10,border:"1px solid rgba(247,201,72,.2)"}}>
-                    <div style={{fontWeight:700,fontSize:10,color:"#f7c948",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>🏆 Campeão Real da Copa</div>
+                    <div style={{fontWeight:700,fontSize:10,color:"#16a34a",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>🏆 Campeão Real da Copa</div>
                     <select value={campR} onChange={e=>atualizarCampR(e.target.value)}>
                       <option value="">— Ainda não definido —</option>
                       {TODOS_TIMES.map(t=><option key={t} value={t}>{F[t]} {t}</option>)}
@@ -1264,7 +1406,7 @@ export default function App() {
                 <div style={{display:"flex",flexDirection:"column",gap:12}}>
                   {elim.filter(j=>j.fase===faseAtiva).map(j=>(
                     <div key={j.id}>
-                      <div style={{fontSize:10,color:"rgba(240,244,255,.4)",fontFamily:"'JetBrains Mono',monospace",marginBottom:5}}>{j.label}</div>
+                      <div style={{fontSize:10,color:"#9ca3af",fontFamily:"'JetBrains Mono',monospace",marginBottom:5}}>{j.label}</div>
                       <div style={{display:"flex",gap:7,marginBottom:6}}>
                         <select style={{flex:1,fontSize:12,padding:"7px 10px"}} value={j.time1} onChange={e=>updateElimT(j.id,"time1",e.target.value)}>
                           <option value="">— Time 1 —</option>
@@ -1290,72 +1432,57 @@ export default function App() {
                     <button onClick={()=>{
                       const pagos=Object.entries(usuarios).filter(([,u]:any)=>u.pago).map(([n]:any)=>n);
                       const pendentes=Object.entries(usuarios).filter(([,u]:any)=>!u.pago).map(([n]:any)=>n);
-                      const txt=`💰 BOLÃO COPA 2026 — Pagamentos
-
-✅ Pagos (${pagos.length}):
-${pagos.map(n=>`• ${n}`).join("\n")||"Nenhum"}
-
-⚠️ Pendentes (${pendentes.length}):
-${pendentes.map(n=>`• ${n}`).join("\n")||"Nenhum"}
-
-Total arrecadado: R$ ${Object.values(usuarios).filter((u:any)=>u.pago).length*CONFIG.valorCota}`;
+                      const txt="💰 BOLÃO COPA 2026 — Pagamentos\n\n✅ Pagos ("+pagos.length+"):\n"+(pagos.map((n:string)=>"• "+n).join("\n")||"Nenhum")+"\n\n⚠️ Pendentes ("+pendentes.length+"):\n"+(pendentes.map((n:string)=>"• "+n).join("\n")||"Nenhum");
                       navigator.clipboard.writeText(txt);
                       mostrarToast("✅ Lista copiada para o WhatsApp!");
-                    }} style={{padding:"6px 12px",borderRadius:8,border:"1px solid rgba(74,222,128,.3)",background:"rgba(74,222,128,.1)",color:"#4ade80",fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:11,cursor:"pointer"}}>
+                    }} style={{padding:"7px 14px",borderRadius:8,border:"1.5px solid #86efac",background:"#dcfce7",color:"#166534",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
                       📋 Copiar lista
                     </button>
                   </div>
-                  <div style={{fontSize:11,color:"rgba(240,244,255,.4)"}}>
-                    Total: <span style={{color:"#f7c948",fontWeight:700}}>R$ {premios.total}</span> ·
-                    Pagos: <span style={{color:"#4ade80",fontWeight:700}}>R$ {Object.values(usuarios).filter((u:any)=>u.pago).length*CONFIG.valorCota}</span> ·
-                    Pendente: <span style={{color:"#f87171",fontWeight:700}}>R$ {Object.values(usuarios).filter((u:any)=>!u.pago).length*CONFIG.valorCota}</span>
+                  <div style={{fontSize:11,color:"#9ca3af"}}>
+                    Pagos: <span style={{color:"#16a34a",fontWeight:700}}>R$ {nPagos*CONFIG.valorCota}</span> · Pendente: <span style={{color:"#b91c1c",fontWeight:700}}>R$ {(nPart-nPagos)*CONFIG.valorCota}</span>
                   </div>
                   {/* Barra visual pagos/pendentes */}
                   {nPart>0&&(
                     <div style={{marginTop:8}}>
-                      <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,.08)",overflow:"hidden"}}>
-                        <div style={{height:"100%",borderRadius:3,background:"linear-gradient(90deg,#4ade80,#f7c948)",width:`${Math.round(Object.values(usuarios).filter((u:any)=>u.pago).length/nPart*100)}%`,transition:"width .5s"}}/>
+                      <div style={{height:6,borderRadius:3,background:"#f3f4f6",overflow:"hidden"}}>
+                        <div style={{height:"100%",borderRadius:3,background:"linear-gradient(90deg,#16a34a,#4ade80)",width:`${Math.round(Object.values(usuarios).filter((u:any)=>u.pago).length/nPart*100)}%`,transition:"width .5s"}}/>
                       </div>
-                      <div style={{fontSize:10,color:"rgba(240,244,255,.35)",marginTop:4,textAlign:"right"}}>{Object.values(usuarios).filter((u:any)=>u.pago).length}/{nPart} pagos ({Math.round(Object.values(usuarios).filter((u:any)=>u.pago).length/nPart*100)}%)</div>
+                      <div style={{fontSize:11,color:"#9ca3af",marginTop:4,textAlign:"right"}}>{Object.values(usuarios).filter((u:any)=>u.pago).length}/{nPart} pagos ({Math.round(Object.values(usuarios).filter((u:any)=>u.pago).length/nPart*100)}%)</div>
                     </div>
                   )}
                 </div>
-                {nPart===0&&<div className="card" style={{textAlign:"center",color:"rgba(240,244,255,.35)",padding:"28px"}}>Nenhum participante ainda</div>}
+                {nPart===0&&<div className="card" style={{textAlign:"center",color:"#9ca3af",padding:"36px"}}>Nenhum participante ainda</div>}
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {Object.entries(usuarios).map(([nome,u]:any)=>{
                     const pos=ranking.findIndex(r=>r.nome===nome);
                     const isReset=resetNome===nome;
                     return(
-                      <div key={nome} className="card" style={{padding:"12px 14px"}}>
+                      <div key={nome} className="card" style={{padding:"14px 16px"}}>
                         <div style={{display:"flex",alignItems:"center",gap:10}}>
                           <div style={{fontSize:16,width:26,textAlign:"center",flexShrink:0}}>{pos>=0?MEDAL[pos]||`${pos+1}º`:"—"}</div>
                           <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontWeight:700,fontSize:13}}>{nome}</div>
-                            <div style={{fontSize:10,color:"rgba(240,244,255,.4)",marginTop:2}}>
+                            <div style={{fontWeight:700,fontSize:14,color:"#111827"}}>{nome}</div>
+                            <div style={{fontSize:12,color:"#9ca3af",marginTop:2}}>
                               🏆 {u.camp?`${F[u.camp]||""} ${u.camp}`:"Sem palpite campeão"}
                               {pos>=0&&` · ${ranking[pos]?.pontos||0}pts`}
                             </div>
                           </div>
                           <div style={{display:"flex",gap:6,flexShrink:0}}>
                             <button onClick={()=>{setResetNome(isReset?null:nome);setNovaSenha("");}}
-                              style={{padding:"5px 10px",borderRadius:7,border:"1px solid rgba(255,255,255,.12)",cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:10,background:"rgba(255,255,255,.05)",color:"rgba(240,244,255,.6)"}}>
-                              🔑
-                            </button>
+                              style={{padding:"7px 12px",borderRadius:8,border:"1.5px solid #e5e7eb",cursor:"pointer",fontWeight:700,fontSize:12,background:"#f9fafb",color:"#374151"}}>🔑</button>
                             <button onClick={()=>togglePago(nome)}
-                              style={{padding:"5px 10px",borderRadius:7,cursor:"pointer",fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:10,
-                                background:u.pago?"rgba(74,222,128,.15)":"rgba(248,113,113,.15)",
-                                color:u.pago?"#4ade80":"#f87171",
-                                border:u.pago?"1px solid rgba(74,222,128,.3)":"1px solid rgba(248,113,113,.3)"}}>
+                              style={{padding:"7px 12px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:12,
+                                background:u.pago?"#dcfce7":"#fee2e2",color:u.pago?"#166534":"#b91c1c",
+                                border:u.pago?"1.5px solid #86efac":"1.5px solid #fecaca"}}>
                               {u.pago?"✅ Pago":"⚠ Pendente"}
                             </button>
                           </div>
                         </div>
                         {isReset&&(
                           <div style={{marginTop:10,display:"flex",gap:8}}>
-                            <input className="inp" type="password" placeholder="Nova senha (mín. 4 chars)" value={novaSenha} onChange={e=>setNovaSenha(e.target.value)} style={{fontSize:12,padding:"8px 12px"}}/>
-                            <button onClick={()=>resetarSenha(nome,novaSenha)} style={{padding:"8px 14px",borderRadius:8,border:"none",cursor:"pointer",background:"#f7c948",color:"#0a0f1e",fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:12,flexShrink:0}}>
-                              Salvar
-                            </button>
+                            <input className="inp" type="password" placeholder="Nova senha (mín. 4 chars)" value={novaSenha} onChange={e=>setNovaSenha(e.target.value)}/>
+                            <button onClick={()=>resetarSenha(nome,novaSenha)} style={{padding:"10px 16px",borderRadius:10,border:"none",cursor:"pointer",background:"#16a34a",color:"#fff",fontWeight:700,fontSize:13,flexShrink:0}}>Salvar</button>
                           </div>
                         )}
                       </div>
@@ -1368,6 +1495,22 @@ Total arrecadado: R$ ${Object.values(usuarios).filter((u:any)=>u.pago).length*CO
         )}
 
       </div>
+
+      {/* Bottom Navigation — estilo Mercado Pago */}
+      {tela==="app"&&(
+        <nav className="bottomnav">
+          {[{id:"home",icon:"⚽",label:"Início"},{id:"jogos",icon:"📅",label:"Jogos"},{id:"palpites",icon:"🎯",label:"Palpites"},{id:"ranking",icon:"🏅",label:"Ranking"}].map(item=>(
+            <button key={item.id} className={`navbtn${modo===item.id?" active":""}`} onClick={()=>setModo(item.id)}>
+              <span className="ni">{item.icon}</span>
+              <span className="nl">{item.label}</span>
+            </button>
+          ))}
+          <button className={`navbtn${["pix","perfil","campeao","regras","historico","feed"].includes(modo)?" active":""}`} onClick={()=>setMaisOpen(true)}>
+            <span className="ni">⋯</span>
+            <span className="nl">Mais</span>
+          </button>
+        </nav>
+      )}
     </div>
   );
 }
