@@ -22,20 +22,14 @@ export default function PixQRCode({ usuarioNome, emailAtual, onPago }: Props) {
   async function gerarPix() {
     setStatus("loading");
     setErro("");
-
     try {
       const res = await fetch("/api/create-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nome: usuarioNome, email: emailAtual }),
       });
-
       const data = await res.json();
-
-      if (!res.ok || !data.qrCode) {
-        throw new Error(data.error || "Erro ao gerar QR Code");
-      }
-
+      if (!res.ok || !data.qrCode) throw new Error(data.error || "Erro ao gerar QR Code");
       setQrBase64(data.qrCodeBase64);
       setQrCode(data.qrCode);
       setStatus("aguardando");
@@ -53,12 +47,9 @@ export default function PixQRCode({ usuarioNome, emailAtual, onPago }: Props) {
       try {
         const res = await fetch(`/api/check-payment?nome=${encodeURIComponent(usuarioNome)}`);
         const data = await res.json();
-        if (data.pago) {
-          clearInterval(pollingRef.current);
-          onPago();
-        }
+        if (data.pago) { clearInterval(pollingRef.current); onPago(); }
       } catch {}
-      if (tentativas >= 72) clearInterval(pollingRef.current); // 6 minutos
+      if (tentativas >= 72) clearInterval(pollingRef.current);
     }, 5000);
   }
 
@@ -107,24 +98,45 @@ export default function PixQRCode({ usuarioNome, emailAtual, onPago }: Props) {
         <div style={{fontSize:13,color:"#6b7280"}}>Abra o app do seu banco e pague R$ 10</div>
       </div>
 
-      {/* QR Code */}
-      <div style={{display:"flex",justifyContent:"center",marginBottom:16}}>
-        <div style={{padding:16,background:"#fff",borderRadius:16,border:"1.5px solid #e5e7eb",boxShadow:"0 2px 8px rgba(0,0,0,.06)"}}>
+      {/* QR Code clicável */}
+      <div style={{display:"flex",justifyContent:"center",marginBottom:12}}>
+        <div
+          onClick={copiar}
+          title="Clique para copiar o código Pix"
+          style={{padding:16,background:"#fff",borderRadius:16,border:`1.5px solid ${copiado?"#86efac":"#e5e7eb"}`,boxShadow:"0 2px 8px rgba(0,0,0,.06)",cursor:"pointer",transition:"all .2s",position:"relative"}}
+        >
           <img src={`data:image/png;base64,${qrBase64}`} alt="QR Code Pix" style={{width:220,height:220,display:"block"}}/>
+          <div style={{position:"absolute",inset:0,borderRadius:14,background:"rgba(0,0,0,.0)",display:"flex",alignItems:"center",justifyContent:"center",opacity:0,transition:"opacity .2s"}}
+            onMouseEnter={e=>(e.currentTarget.style.opacity="1")}
+            onMouseLeave={e=>(e.currentTarget.style.opacity="0")}
+          >
+            <div style={{background:"rgba(0,0,0,.6)",color:"#fff",padding:"8px 16px",borderRadius:20,fontSize:13,fontWeight:700}}>
+              📋 Copiar código
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Copia e cola */}
-      <div style={{marginBottom:16}}>
-        <div style={{fontSize:12,color:"#6b7280",marginBottom:6,fontWeight:600}}>Pix Copia e Cola</div>
-        <div style={{display:"flex",gap:8}}>
-          <div style={{flex:1,background:"#f9fafb",border:"1.5px solid #e5e7eb",borderRadius:10,padding:"10px 12px",fontSize:11,color:"#6b7280",fontFamily:"monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-            {qrCode}
-          </div>
-          <button onClick={copiar} style={{padding:"10px 16px",borderRadius:10,border:"1.5px solid #e5e7eb",background:copiado?"#f0fdf4":"#fff",color:copiado?"#16a34a":"#374151",fontWeight:700,fontSize:13,cursor:"pointer",flexShrink:0,transition:"all .2s"}}>
-            {copiado?"✅":"📋"}
-          </button>
+      {/* Feedback de copiado */}
+      {copiado&&(
+        <div style={{textAlign:"center",marginBottom:12}}>
+          <span style={{background:"#dcfce7",color:"#166534",padding:"6px 16px",borderRadius:20,fontSize:13,fontWeight:700}}>
+            ✅ Código copiado!
+          </span>
         </div>
+      )}
+
+      {/* Botão copiar grande */}
+      <button
+        onClick={copiar}
+        style={{width:"100%",padding:"14px",borderRadius:12,border:`1.5px solid ${copiado?"#86efac":"#e5e7eb"}`,background:copiado?"#f0fdf4":"#fff",color:copiado?"#16a34a":"#374151",fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:15,cursor:"pointer",marginBottom:12,transition:"all .2s"}}
+      >
+        {copiado?"✅ Código copiado!":"📋 Copiar código Pix (Copia e Cola)"}
+      </button>
+
+      {/* Código pequeno */}
+      <div style={{background:"#f9fafb",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 12px",fontSize:11,color:"#9ca3af",fontFamily:"monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:16}}>
+        {qrCode}
       </div>
 
       {/* Status aguardando */}
