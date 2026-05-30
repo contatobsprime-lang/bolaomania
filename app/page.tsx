@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -407,7 +408,8 @@ export default function App() {
   const pago=u.pago||false;
   const campAtual=u.camp||"";
   const nPart=Object.keys(usuarios).length;
-  const premios=calcPremios(nPart);
+  const nPagos=Object.values(usuarios).filter((u:any)=>u.pago).length;
+  const premios=calcPremios(nPagos);
   const totSalvos=Object.values(palS).filter((p:any)=>p.gols1!==""&&p.gols1!==undefined&&p.gols2!==""&&p.gols2!==undefined).length;
   const totJogos=JOGOS_GRUPO.length+elim.filter((j:any)=>j.time1).length;
   const pctPal=totJogos>0?Math.round(totSalvos/totJogos*100):0;
@@ -702,7 +704,7 @@ export default function App() {
                     <div style={{fontSize:10,color:"#9ca3af",marginBottom:4}}>Tempo restante</div>
                     <div style={{fontWeight:800,fontSize:20,color:"#16a34a",fontFamily:"'JetBrains Mono',monospace"}}>{tr(jogoSel.dt)}</div>
                   </div>}
-                  <button className="btn-gold" onClick={()=>confirmarPalpite(jogoSel)} disabled={salvando} style={{fontSize:16,padding:"16px"}}>
+                  <button className="btn-primary" onClick={()=>confirmarPalpite(jogoSel)} disabled={salvando} style={{fontSize:16,padding:"16px"}}>
                     {salvando?"Salvando...":"✅ Confirmar Palpite"}
                   </button>
                 </>
@@ -984,7 +986,7 @@ export default function App() {
                   <div className="card" style={{marginBottom:14,background:"rgba(248,113,113,.06)",border:"1px solid rgba(248,113,113,.2)"}}>
                     <div style={{fontWeight:700,color:"#b91c1c",marginBottom:6}}>🔒 Pagamento pendente</div>
                     <div style={{fontSize:12,color:"#6b7280",marginBottom:10}}>Faça o Pix para participar do bolão.</div>
-                    <button className="btn-gold" onClick={()=>setModo("pix")}>Ver dados do Pix →</button>
+                    <button className="btn-primary" onClick={()=>setModo("pix")}>Ver dados do Pix →</button>
                   </div>
                 )}
                 <div className="card" style={{marginBottom:14,border:"1px solid rgba(247,201,72,.2)",background:"rgba(247,201,72,.03)"}}>
@@ -1452,9 +1454,9 @@ export default function App() {
                   {nPart>0&&(
                     <div style={{marginTop:8}}>
                       <div style={{height:6,borderRadius:3,background:"#f3f4f6",overflow:"hidden"}}>
-                        <div style={{height:"100%",borderRadius:3,background:"linear-gradient(90deg,#16a34a,#4ade80)",width:`${Math.round(Object.values(usuarios).filter((u:any)=>u.pago).length/nPart*100)}%`,transition:"width .5s"}}/>
+                        <div style={{height:"100%",borderRadius:3,background:"linear-gradient(90deg,#16a34a,#4ade80)",width:`${Math.round(nPagos/nPart*100)}%`,transition:"width .5s"}}/>
                       </div>
-                      <div style={{fontSize:11,color:"#9ca3af",marginTop:4,textAlign:"right"}}>{Object.values(usuarios).filter((u:any)=>u.pago).length}/{nPart} pagos ({Math.round(Object.values(usuarios).filter((u:any)=>u.pago).length/nPart*100)}%)</div>
+                      <div style={{fontSize:11,color:"#9ca3af",marginTop:4,textAlign:"right"}}>{nPagos}/{nPart} pagos ({nPart>0?Math.round(nPagos/nPart*100):0}%)</div>
                     </div>
                   )}
                 </div>
