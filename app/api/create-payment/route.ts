@@ -1,50 +1,78 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const { nome } = await req.json();
-
-  if (!nome) {
-    return NextResponse.json({ error: "Nome obrigatório" }, { status: 400 });
-  }
-
-  const token = process.env.MP_ACCESS_TOKEN;
-  if (!token) {
-    return NextResponse.json({ error: "Token MP não configurado" }, { status: 500 });
-  }
-
   try {
-    const resp = await fetch("https://api.mercadopago.com/v1/payment_links", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        name: `Bolão Copa 2026 — ${nome}`,
-        items: [{
-          title: `Cota Bolão Copa 2026 — ${nome}`,
-          quantity: 1,
-          unit_price: 10,
-          currency_id: "BRL",
-        }],
-        back_urls: {
-          success: process.env.NEXT_PUBLIC_SITE_URL || "https://seu-site.vercel.app",
-          pending: process.env.NEXT_PUBLIC_SITE_URL || "https://seu-site.vercel.app",
-        },
-        auto_return: "approved",
-      }),
-    });
+    const { nome } = await req.json();
 
-    const data = await resp.json();
-
-    if (data.init_point) {
-      return NextResponse.json({ url: data.init_point });
-    } else {
-      console.error("MP error:", data);
-      return NextResponse.json({ error: "Erro ao gerar link" }, { status: 500 });
+    if (!nome) {
+      return NextResponse.json(
+        { error: "Nome obrigatório" },
+        { status: 400 }
+      );
     }
-  } catch (err) {
-    console.error("MP fetch error:", err);
-    return NextResponse.json({ error: "Erro ao conectar MP" }, { status: 500 });
+
+    const token = process.env.MP_ACCESS_TOKEN;
+
+    if (!token) {
+      return NextResponse.json(
+        { error: "MP_ACCESS_TOKEN não configurado" },
+        { status: 500 }
+      );
+    }
+
+    const response = await fetch(
+      "https://api.mercadopago.com/checkout/preferences",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          items: [
+            {
+              title: `Bolão Copa 2026 - ${nome}`,
+              quantity: 1,
+              currency_id: "BRL",
+              unit_price: 10,
+            },
+          ],
+          back_urls: {
+            success: process.env.NEXT_PUBLIC_SITE_URL,
+            pending: process.env.NEXT_PUBLIC_SITE_URL,
+            failure: process.env.NEXT_PUBLIC_SITE_URL,
+          },
+          auto_return: "approved",
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    console.log("Status MP:", response.status);
+    console.log("Resposta MP:", JSON.stringify(data));
+
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          error: "Erro Mercado Pago",
+          details: data,
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      url: data.init_point,
+    });
+  } catch (error) {
+    console.error("Erro create-payment:", error);
+
+    return NextResponse.json(
+      {
+        error: "Erro interno",
+      },
+      { status: 500 }
+    );
   }
 }
