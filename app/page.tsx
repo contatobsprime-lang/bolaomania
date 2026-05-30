@@ -1497,7 +1497,6 @@ export default function App() {
           </div>
         )}
 
-      </div>
 
       {/* Bottom Navigation — estilo Mercado Pago */}
       {tela==="app"&&(
