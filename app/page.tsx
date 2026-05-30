@@ -21,8 +21,8 @@ const CONFIG = {
   },
 };
 
-// SENHA_ADMIN movida para API Route segura (/api/verify-admin)
 // MP_ACCESS_TOKEN movido para API Route segura (/api/create-payment)
+const ADMIN_EMAIL = "contatobsprime@gmail.com";
 
 const GRUPOS: Record<string,string[]> = {
   A:["México","Coreia do Sul","República Tcheca","África do Sul"],
@@ -290,9 +290,11 @@ export default function App() {
   const [confetis,setConfetis]=useState<any[]>([]);
   const [usuarios,setUsuarios]=useState<any>({});
   const [usuarioAtual,setUsuarioAtual]=useState<string|null>(null);
-  const [loginNome,setLoginNome]=useState(""); const [loginSenha,setLoginSenha]=useState(""); const [loginErro,setLoginErro]=useState("");
-  const [cadNome,setCadNome]=useState(""); const [cadSenha,setCadSenha]=useState(""); const [cadSenha2,setCadSenha2]=useState(""); const [cadErro,setCadErro]=useState("");
-  const [adminSenha,setAdminSenha]=useState(""); const [adminErro,setAdminErro]=useState("");
+  const [emailAtual,setEmailAtual]=useState<string|null>(null);
+  const [isAdmin,setIsAdmin]=useState(false);
+  const [loginEmail,setLoginEmail]=useState(""); const [loginSenha,setLoginSenha]=useState(""); const [loginErro,setLoginErro]=useState("");
+  const [cadNome,setCadNome]=useState(""); const [cadEmail,setCadEmail]=useState(""); const [cadSenha,setCadSenha]=useState(""); const [cadSenha2,setCadSenha2]=useState(""); const [cadErro,setCadErro]=useState("");
+  const [esqueceuEmail,setEsqueceuEmail]=useState(""); const [esqueceuSent,setEsqueceuSent]=useState(false); const [telaEsqueceu,setTelaEsqueceu]=useState(false);
   const [elim,setElim]=useState<any[]>(ELIM_TMPL);
   const [palpitesMap,setPalpitesMap]=useState<any>({});
   const [rascunho,setRascunho]=useState<any>({});
@@ -322,14 +324,20 @@ export default function App() {
   useEffect(()=>{const t=setInterval(()=>setTick(x=>x+1),30000);return()=>clearInterval(t);},[]);
 
   useEffect(()=>{
-    if(typeof window==="undefined") return;
-    const saved=localStorage.getItem("bolao_user");
-    if(saved){
-      supabase.from("usuarios").select("*").eq("nome",saved).single().then(({data})=>{
-        if(data){setUsuarioAtual(data.nome);setUsuarios((prev:any)=>({...prev,[data.nome]:{senha:data.senha,pago:data.pago,camp:data.campeao_palpite||""}}));setTela("app");setModo("home");}
-        else localStorage.removeItem("bolao_user");
-      });
-    }
+    supabase.auth.getSession().then(({data:{session}})=>{
+      if(session?.user){
+        const email=session.user.email||"";
+        setEmailAtual(email);
+        setIsAdmin(email===ADMIN_EMAIL);
+        supabase.from("usuarios").select("*").eq("email",email).single().then(({data})=>{
+          if(data){setUsuarioAtual(data.nome);setUsuarios((prev:any)=>({...prev,[data.nome]:{pago:data.pago,camp:data.campeao_palpite||""}}));setTela("app");setModo("home");}
+        });
+      }
+    });
+    const{data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>{
+      if(!session){setUsuarioAtual(null);setEmailAtual(null);setIsAdmin(false);setTela("login");}
+    });
+    return()=>subscription.unsubscribe();
   },[]);
 
   useEffect(()=>{
@@ -388,7 +396,7 @@ export default function App() {
         supabase.from("eliminatorias").select("*"),
         supabase.from("config").select("*"),
       ]);
-      if(us){const m:any={};us.forEach((u:any)=>{m[u.nome]={senha:u.senha,pago:u.pago,camp:u.campeao_palpite||""};});setUsuarios(m);}
+      if(us){const m:any={};us.forEach((u:any)=>{m[u.nome]={pago:u.pago,camp:u.campeao_palpite||"",email:u.email||""};});setUsuarios(m);}
       if(ps){const m:any={};ps.forEach((p:any)=>{if(!m[p.usuario_nome])m[p.usuario_nome]={};m[p.usuario_nome][p.jogo_id]={gols1:p.gols1?.toString()??"",gols2:p.gols2?.toString()??""};});setPalpitesMap(m);setRascunho(m);}
       if(rs){const m:any={};rs.forEach((r:any)=>{m[r.jogo_id]={gols1:r.gols1?.toString()??"",gols2:r.gols2?.toString()??"",penalti:r.penalti};});setRes(m);}
       if(es&&es.length>0){
@@ -436,29 +444,35 @@ export default function App() {
 
   async function handleLogin(){
     setCarregando(true);setLoginErro("");
-    const{data,error}=await supabase.from("usuarios").select("*").eq("nome",loginNome.trim()).single();
+    const{data,error}=await supabase.auth.signInWithPassword({email:loginEmail.trim(),password:loginSenha});
+    if(error||!data.user){setCarregando(false);setLoginErro("Email ou senha incorretos.");return;}
+    const email=data.user.email||"";
+    setEmailAtual(email);setIsAdmin(email===ADMIN_EMAIL);
+    const{data:u}=await supabase.from("usuarios").select("*").eq("email",email).single();
     setCarregando(false);
-    if(error||!data){setLoginErro("Usuário não encontrado.");return;}
-    if(data.senha!==loginSenha){setLoginErro("Senha incorreta.");return;}
-    setUsuarioAtual(data.nome);setLoginNome("");setLoginSenha("");
-    if(typeof window!=="undefined")localStorage.setItem("bolao_user",data.nome);
-    const jaViu=typeof window!=="undefined"&&localStorage.getItem(`ob_${data.nome}`);
-    if(!jaViu){setOnboarding(true);if(typeof window!=="undefined")localStorage.setItem(`ob_${data.nome}`,"1");}
+    if(!u){setLoginErro("Usuário não encontrado na tabela.");return;}
+    setUsuarioAtual(u.nome);setLoginEmail("");setLoginSenha("");
+    setUsuarios((prev:any)=>({...prev,[u.nome]:{pago:u.pago,camp:u.campeao_palpite||""}}));
+    const jaViu=typeof window!=="undefined"&&localStorage.getItem(`ob_${u.nome}`);
+    if(!jaViu){setOnboarding(true);if(typeof window!=="undefined")localStorage.setItem(`ob_${u.nome}`,"1");}
     setTela("app");setModo("home");
   }
 
   async function handleCadastro(){
-    const nome=cadNome.trim();
+    const nome=cadNome.trim();const email=cadEmail.trim();
     if(!nome){setCadErro("Digite seu nome.");return;}
-    if(cadSenha.length<4){setCadErro("Mínimo 4 caracteres.");return;}
+    if(!email||!email.includes("@")){setCadErro("Digite um email válido.");return;}
+    if(cadSenha.length<6){setCadErro("Mínimo 6 caracteres.");return;}
     if(cadSenha!==cadSenha2){setCadErro("Senhas não conferem.");return;}
     setCarregando(true);setCadErro("");
-    const{error}=await supabase.from("usuarios").insert({nome,senha:cadSenha,pago:false,campeao_palpite:""});
+    const{data,error}=await supabase.auth.signUp({email,password:cadSenha});
+    if(error){setCarregando(false);setCadErro(error.message==="User already registered"?"Email já cadastrado.":error.message);return;}
+    const{error:err2}=await supabase.from("usuarios").insert({nome,email,pago:false,campeao_palpite:""});
     setCarregando(false);
-    if(error){setCadErro(error.code==="23505"?"Nome já cadastrado.":"Erro ao criar conta.");return;}
-    setUsuarios((prev:any)=>({...prev,[nome]:{senha:cadSenha,pago:false,camp:""}}));
-    setUsuarioAtual(nome);setCadNome("");setCadSenha("");setCadSenha2("");
-    if(typeof window!=="undefined")localStorage.setItem("bolao_user",nome);
+    if(err2){setCadErro(err2.code==="23505"?"Nome ou email já cadastrado.":"Erro ao criar conta.");return;}
+    setEmailAtual(email);setIsAdmin(email===ADMIN_EMAIL);
+    setUsuarios((prev:any)=>({...prev,[nome]:{pago:false,camp:""}}));
+    setUsuarioAtual(nome);setCadNome("");setCadEmail("");setCadSenha("");setCadSenha2("");
     setOnboarding(true);if(typeof window!=="undefined")localStorage.setItem(`ob_${nome}`,"1");
     setTela("app");setModo("home");
   }
@@ -553,6 +567,22 @@ export default function App() {
     await supabase.from("eliminatorias").upsert({jogo_id:jId,[campo]:valor},{onConflict:"jogo_id"});
   }
 
+  async function handleEsqueceuSenha(){
+    if(!esqueceuEmail||!esqueceuEmail.includes("@")){mostrarToast("Digite um email válido","err");return;}
+    setCarregando(true);
+    const{error}=await supabase.auth.resetPasswordForEmail(esqueceuEmail,{redirectTo:typeof window!=="undefined"?window.location.origin+"/reset-password":""});
+    setCarregando(false);
+    if(error){mostrarToast("Erro ao enviar email","err");return;}
+    setEsqueceuSent(true);
+  }
+
+  function handleLogout(){
+    supabase.auth.signOut();
+    setUsuarioAtual(null);setEmailAtual(null);setIsAdmin(false);
+    setTela("login");
+    if(typeof window!=="undefined")localStorage.clear();
+  }
+
   async function togglePago(nome:string){
     const novo=!usuarios[nome]?.pago;
     setUsuarios((prev:any)=>({...prev,[nome]:{...prev[nome],pago:novo}}));
@@ -566,11 +596,11 @@ export default function App() {
     mostrarToast("🏆 Campeão real salvo!");
   }
 
-  async function resetarSenha(nome:string,senha:string){
-    if(senha.length<4){mostrarToast("Senha muito curta","err");return;}
-    await supabase.from("usuarios").update({senha}).eq("nome",nome);
-    setUsuarios((prev:any)=>({...prev,[nome]:{...prev[nome],senha}}));
-    setResetNome(null);setNovaSenha("");mostrarToast("🔑 Senha resetada!");
+  async function resetarSenha(nome:string,email:string){
+    if(!email){mostrarToast("Email não encontrado","err");return;}
+    const{error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:typeof window!=="undefined"?window.location.origin:""});
+    if(error){mostrarToast("Erro ao enviar email","err");return;}
+    setResetNome(null);mostrarToast(`📧 Email de reset enviado para ${email}!`);
   }
 
   function exportarRanking(){
@@ -721,8 +751,8 @@ export default function App() {
             <div style={{width:40,height:4,background:"#e5e7eb",borderRadius:2,margin:"0 auto 20px"}}/>
             <div style={{fontWeight:700,fontSize:16,color:"#111827",marginBottom:14}}>Mais opções</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-              {[{id:"pix",icon:"💳",label:"Pix"},{id:"perfil",icon:"👤",label:"Perfil"},{id:"campeao",icon:"🏆",label:"Campeão"},{id:"regras",icon:"📋",label:"Regras"},{id:"historico",icon:"📊",label:"Histórico"},{id:"feed",icon:"💬",label:"Feed"},{id:"admin-login",icon:"🔐",label:"Admin"},{id:"sair",icon:"↩️",label:"Sair"}].map(item=>(
-                <button key={item.id} onClick={()=>{if(item.id==="sair"){setUsuarioAtual(null);setTela("login");setMaisOpen(false);if(typeof window!=="undefined")localStorage.removeItem("bolao_user");}else if(item.id==="admin-login"){setTela("admin-login");setMaisOpen(false);}else{setModo(item.id);setMaisOpen(false);}}}
+              {[{id:"pix",icon:"💳",label:"Pix"},{id:"perfil",icon:"👤",label:"Perfil"},{id:"campeao",icon:"🏆",label:"Campeão"},{id:"regras",icon:"📋",label:"Regras"},{id:"historico",icon:"📊",label:"Histórico"},{id:"feed",icon:"💬",label:"Feed"},...(isAdmin?[{id:"admin",icon:"🔐",label:"Admin"}]:[]),{id:"sair",icon:"↩️",label:"Sair"}].map(item=>(
+                <button key={item.id} onClick={()=>{if(item.id==="sair"){handleLogout();setMaisOpen(false);}else if(item.id==="admin"){if(isAdmin){setTela("admin");setMaisOpen(false);}else{mostrarToast("Acesso restrito","err");setMaisOpen(false);}}else{setModo(item.id);setMaisOpen(false);}}}
                   style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,padding:"20px 12px",background:modo===item.id?"#f0fdf4":"#f9fafb",border:`1.5px solid ${modo===item.id?"#16a34a":"#e5e7eb"}`,borderRadius:16,cursor:"pointer",transition:"all .2s"}}>
                   <span style={{fontSize:30}}>{item.icon}</span>
                   <span style={{fontSize:13,fontWeight:600,color:modo===item.id?"#16a34a":"#374151"}}>{item.label}</span>
@@ -752,7 +782,7 @@ export default function App() {
 
       <div style={{maxWidth:700,margin:"0 auto",padding:"16px 14px"}}>
 
-        {tela==="login"&&(
+        {tela==="login"&&!telaEsqueceu&&(
           <div className="fade" style={{maxWidth:360,margin:"0 auto",paddingTop:24}}>
             <div style={{textAlign:"center",marginBottom:32}}>
               <div style={{width:80,height:80,background:"linear-gradient(135deg,#16a34a,#15803d)",borderRadius:24,display:"flex",alignItems:"center",justifyContent:"center",fontSize:42,margin:"0 auto 16px"}}>⚽</div>
@@ -762,50 +792,64 @@ export default function App() {
             <div className="card" style={{marginBottom:12,padding:"24px"}}>
               <div style={{fontWeight:700,fontSize:13,color:"#16a34a",letterSpacing:.5,textTransform:"uppercase",marginBottom:16}}>Entrar</div>
               <div style={{display:"flex",flexDirection:"column",gap:12}}>
-                <input className="inp" placeholder="Seu nome" value={loginNome} onChange={e=>setLoginNome(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
+                <input className="inp" type="email" placeholder="Seu email" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
                 <input className="inp" type="password" placeholder="Senha" value={loginSenha} onChange={e=>setLoginSenha(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
                 {loginErro&&<div style={{color:"#b91c1c",fontSize:13,background:"#fef2f2",padding:"8px 12px",borderRadius:8}}>{loginErro}</div>}
                 <button className="btn-primary" onClick={handleLogin} disabled={carregando}>{carregando?"Entrando...":"Entrar"}</button>
+                <button onClick={()=>{setTelaEsqueceu(true);setEsqueceuEmail(loginEmail);}} style={{background:"none",border:"none",color:"#9ca3af",fontSize:13,cursor:"pointer",textAlign:"center"}}>Esqueci minha senha</button>
               </div>
             </div>
             <button className="btn-ghost" onClick={()=>{setLoginErro("");setTela("cadastro");}}>Criar conta nova →</button>
           </div>
         )}
 
+        {tela==="login"&&telaEsqueceu&&(
+          <div className="fade" style={{maxWidth:360,margin:"0 auto",paddingTop:24}}>
+            <div style={{textAlign:"center",marginBottom:32}}>
+              <div style={{width:80,height:80,background:"linear-gradient(135deg,#16a34a,#15803d)",borderRadius:24,display:"flex",alignItems:"center",justifyContent:"center",fontSize:42,margin:"0 auto 16px"}}>🔑</div>
+              <h1 style={{fontSize:22,fontWeight:800,marginBottom:6,color:"#111827"}}>Recuperar senha</h1>
+              <p style={{color:"#9ca3af",fontSize:14}}>Enviaremos um link para seu email</p>
+            </div>
+            {!esqueceuSent?(
+              <div className="card" style={{marginBottom:12,padding:"24px"}}>
+                <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                  <input className="inp" type="email" placeholder="Seu email" value={esqueceuEmail} onChange={e=>setEsqueceuEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleEsqueceuSenha()}/>
+                  <button className="btn-primary" onClick={handleEsqueceuSenha} disabled={carregando}>{carregando?"Enviando...":"Enviar link de recuperação"}</button>
+                </div>
+              </div>
+            ):(
+              <div className="card" style={{textAlign:"center",padding:"32px",border:"1.5px solid #86efac",background:"#f0fdf4"}}>
+                <div style={{fontSize:48,marginBottom:12}}>📧</div>
+                <div style={{fontWeight:700,fontSize:16,color:"#16a34a",marginBottom:8}}>Email enviado!</div>
+                <div style={{fontSize:13,color:"#6b7280"}}>Verifique sua caixa de entrada e clique no link para redefinir sua senha.</div>
+              </div>
+            )}
+            <button className="btn-ghost" style={{marginTop:12}} onClick={()=>{setTelaEsqueceu(false);setEsqueceuSent(false);}}>← Voltar</button>
+          </div>
+        )}
+
         {tela==="cadastro"&&(
           <div className="fade" style={{maxWidth:360,margin:"0 auto",paddingTop:24}}>
             <div style={{textAlign:"center",marginBottom:28}}>
-              <div style={{fontSize:42,marginBottom:10}}>👤</div>
+              <div style={{width:72,height:72,background:"linear-gradient(135deg,#16a34a,#15803d)",borderRadius:20,display:"flex",alignItems:"center",justifyContent:"center",fontSize:36,margin:"0 auto 12px"}}>👤</div>
               <h2 style={{fontSize:22,fontWeight:800,color:"#111827"}}>Criar conta</h2>
               <p style={{color:"#9ca3af",fontSize:14,marginTop:4}}>Cota: <span style={{color:"#16a34a",fontWeight:700}}>R$ {CONFIG.valorCota}</span></p>
             </div>
             <div className="card" style={{marginBottom:12,padding:"24px"}}>
               <div style={{display:"flex",flexDirection:"column",gap:12}}>
                 <input className="inp" placeholder="Seu nome completo" value={cadNome} onChange={e=>setCadNome(e.target.value)}/>
-                <input className="inp" type="password" placeholder="Criar senha (mín. 4 chars)" value={cadSenha} onChange={e=>setCadSenha(e.target.value)}/>
+                <input className="inp" type="email" placeholder="Seu email" value={cadEmail} onChange={e=>setCadEmail(e.target.value)}/>
+                <input className="inp" type="password" placeholder="Criar senha (mín. 6 chars)" value={cadSenha} onChange={e=>setCadSenha(e.target.value)}/>
                 <input className="inp" type="password" placeholder="Confirmar senha" value={cadSenha2} onChange={e=>setCadSenha2(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleCadastro()}/>
                 {cadErro&&<div style={{color:"#b91c1c",fontSize:13,background:"#fef2f2",padding:"8px 12px",borderRadius:8}}>{cadErro}</div>}
                 <button className="btn-primary" onClick={handleCadastro} disabled={carregando}>{carregando?"Criando...":"Criar conta e entrar"}</button>
               </div>
             </div>
-            <button className="btn-ghost" style={{width:"100%"}} onClick={()=>{setCadErro("");setTela("login");}}>← Voltar</button>
+            <button className="btn-ghost" onClick={()=>{setCadErro("");setTela("login");}}>← Voltar para login</button>
           </div>
         )}
 
-        {tela==="admin-login"&&(
-          <div className="fade" style={{maxWidth:320,margin:"0 auto",paddingTop:40}}>
-            <div className="card">
-              <div style={{fontWeight:800,fontSize:15,marginBottom:12}}>🔐 Área do Admin</div>
-              <div style={{display:"flex",flexDirection:"column",gap:9}}>
-                <input className="inp" type="password" placeholder="Senha do administrador" value={adminSenha} onChange={e=>setAdminSenha(e.target.value)}
-                  onKeyDown={async e=>{if(e.key==="Enter"){const r=await fetch("/api/verify-admin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({senha:adminSenha})});const d=await r.json();if(d.ok){setAdminErro("");setAdminSenha("");setTela("admin");}else setAdminErro("Senha incorreta.");}}}/>
-                {adminErro&&<div style={{color:"#b91c1c",fontSize:13,background:"#fef2f2",padding:"8px 12px",borderRadius:8}}>{adminErro}</div>}
-                <button className="btn-primary" onClick={async()=>{const r=await fetch("/api/verify-admin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({senha:adminSenha})});const d=await r.json();if(d.ok){setAdminErro("");setAdminSenha("");setTela("admin");}else setAdminErro("Senha incorreta.");}}>Entrar</button>
-              </div>
-            </div>
-            <button className="btn-ghost" style={{width:"100%",marginTop:10}} onClick={()=>setTela("login")}>← Voltar</button>
-          </div>
-        )}
+
 
         {tela==="app"&&(
           <div className="fade">
@@ -1094,10 +1138,7 @@ export default function App() {
                     )}
                   </div>
                 )}
-                <div style={{marginTop:10,padding:"9px 14px",background:"rgba(247,201,72,.04)",border:"1px solid rgba(247,201,72,.1)",borderRadius:9,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <span style={{fontSize:11,color:"#6b7280"}}>{totSalvos} palpites salvos no banco</span>
-                  <span className="badge bg">☁ Supabase</span>
-                </div>
+
               </div>
             )}
 
@@ -1122,7 +1163,7 @@ export default function App() {
                   </div>
                 )}
                 <div className="card" style={{marginBottom:14,border:"1.5px solid #fde68a",background:"#fefce8"}}>
-                  <div style={{fontWeight:700,fontSize:13,color:"#854d0e",marginBottom:10}}>💰 Premiação — {nPagos} pagos · R$ {premios.total} no total</div>
+                  <div style={{fontWeight:700,fontSize:13,color:"#854d0e",marginBottom:10}}>💰 Premiação</div>
                   <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                     {premios.dist.map(d=>(
                       <div key={d.pos} style={{flex:"1 1 60px",textAlign:"center",padding:"10px 8px",background:"#fff",borderRadius:10,border:"1px solid #fde68a"}}>
@@ -1241,32 +1282,14 @@ export default function App() {
                       <div style={{fontSize:12,color:"#6b7280",marginBottom:14}}>Pix, cartão de crédito ou débito — confirmação automática</div>
                       <button className="btn-primary" onClick={pagarMP} disabled={mpLoading} style={{fontSize:16}}>{mpLoading?"Gerando link...":"💳 Pagar R$ 10 agora"}</button>
                     </div>
-                    <div style={{display:"flex",alignItems:"center",gap:10,margin:"16px 0"}}>
-                      <div style={{flex:1,height:1,background:"#e5e7eb"}}/>
-                      <span style={{fontSize:12,color:"#9ca3af"}}>ou Pix manual</span>
-                      <div style={{flex:1,height:1,background:"#e5e7eb"}}/>
-                    </div>
-                    <div className="card" style={{marginBottom:10,textAlign:"center"}}>
-                      <div style={{fontSize:12,color:"#9ca3af",marginBottom:10}}>Escaneie o QR Code</div>
-                      <div style={{display:"inline-block",background:"#fff",borderRadius:12,padding:10,marginBottom:10,border:"1px solid #e5e7eb"}}>
-                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=${encodeURIComponent(CONFIG.pixCopiaCola)}`} alt="QR Code Pix" width={190} height={190} style={{display:"block",borderRadius:4}}/>
+                      <div className="card" style={{marginBottom:12,border:"1.5px solid #e5e7eb",background:"#f9fafb"}}>
+                      <div style={{fontSize:13,color:"#6b7280",lineHeight:1.8}}>
+                        <div style={{fontWeight:700,color:"#111827",marginBottom:8,fontSize:15}}>Como funciona</div>
+                        <div>1. Clique em <strong>"Pagar agora"</strong></div>
+                        <div>2. Escolha Pix, cartão ou débito</div>
+                        <div>3. Confirme o pagamento</div>
+                        <div>4. Seu acesso é liberado automaticamente ✅</div>
                       </div>
-                      <div style={{fontSize:12,color:"#9ca3af"}}>App do banco → Pix → Ler QR Code</div>
-                    </div>
-                    <div className="card" style={{marginBottom:10}}>
-                      <div style={{fontSize:11,color:"#9ca3af",marginBottom:8}}>CHAVE PIX ALEATÓRIA</div>
-                      <div style={{display:"flex",alignItems:"center",gap:8}}>
-                        <div style={{flex:1,fontWeight:600,fontSize:12,color:"#374151",wordBreak:"break-all",fontFamily:"'JetBrains Mono',monospace"}}>{CONFIG.chavePix}</div>
-                        <button onClick={()=>{navigator.clipboard.writeText(CONFIG.chavePix);setCopChave(true);setTimeout(()=>setCopChave(false),2000);}} style={{flexShrink:0,padding:"8px 14px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:12,background:copChave?"#dcfce7":"#f3f4f6",color:copChave?"#166534":"#374151",border:"1px solid #e5e7eb"}}>{copChave?"✅ Copiado!":"📋 Copiar"}</button>
-                      </div>
-                      <div style={{fontSize:11,color:"#9ca3af",marginTop:6}}>Favorecido: {CONFIG.nomePix}</div>
-                    </div>
-                    <div className="card" style={{fontSize:13,color:"#6b7280",lineHeight:1.9,border:"1.5px solid #fde68a",background:"#fefce8"}}>
-                      <div style={{fontWeight:700,color:"#854d0e",marginBottom:8}}>📌 Pix manual — como pagar</div>
-                      <div>1. Escaneie o QR Code ou copie a chave</div>
-                      <div>2. Confirme: <strong style={{color:"#111827"}}>R$ {CONFIG.valorCota},00 → {CONFIG.nomePix}</strong></div>
-                      <div>3. Envie comprovante no WhatsApp</div>
-                      <div>4. Admin confirma e libera acesso</div>
                     </div>
                   </div>
                 )}
@@ -1277,10 +1300,15 @@ export default function App() {
             {modo==="perfil"&&(
               <div>
                 <div style={{fontWeight:800,fontSize:20,marginBottom:20,color:"#111827"}}>👤 Meu Perfil</div>
-                <div style={{background:"linear-gradient(135deg,#16a34a,#15803d)",borderRadius:20,padding:"24px",marginBottom:16,color:"#fff",textAlign:"center"}}>
-                  <div style={{width:64,height:64,background:"rgba(255,255,255,.2)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,margin:"0 auto 12px"}}>👤</div>
-                  <div style={{fontWeight:800,fontSize:20,marginBottom:4}}>{usuarioAtual}</div>
-                  <div style={{fontSize:13,opacity:.8}}>{pago?"✅ Pagamento confirmado":"⚠️ Pagamento pendente"}</div>
+                <div style={{background:"linear-gradient(135deg,#16a34a,#15803d)",borderRadius:20,padding:"24px",marginBottom:16,color:"#fff",display:"flex",alignItems:"center",gap:16}}>
+                  <div style={{width:64,height:64,background:"rgba(255,255,255,.2)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,fontWeight:800,letterSpacing:-1,flexShrink:0}}>
+                    {(usuarioAtual||"?").slice(0,2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{fontWeight:800,fontSize:20,marginBottom:4}}>{usuarioAtual}</div>
+                    <div style={{fontSize:12,opacity:.8}}>{emailAtual}</div>
+                    <div style={{fontSize:12,opacity:.8,marginTop:2}}>{pago?"✅ Pagamento confirmado":"⚠️ Pagamento pendente"}</div>
+                  </div>
                 </div>
                 <div style={{display:"flex",gap:10,marginBottom:16}}>
                   {[["⭐",meusDados?.pontos??0,"Pontos"],["🎯",meusDados?.placares??0,"Exatos"],["✅",meusDados?.acertos??0,"Acertos"],["📊",`${minhaPos>0?minhaPos+"º":"—"}`,"Posição"]].map(([ic,v,lb])=>(
@@ -1477,12 +1505,12 @@ export default function App() {
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{fontWeight:700,fontSize:14,color:"#111827"}}>{nome}</div>
                             <div style={{fontSize:12,color:"#9ca3af",marginTop:2}}>
-                              🏆 {u.camp?`${F[u.camp]||""} ${u.camp}`:"Sem palpite campeão"}
+                              {u.email||""} · 🏆 {u.camp?`${F[u.camp]||""} ${u.camp}`:"Sem campeão"}
                               {pos>=0&&` · ${ranking[pos]?.pontos||0}pts`}
                             </div>
                           </div>
                           <div style={{display:"flex",gap:6,flexShrink:0}}>
-                            <button onClick={()=>{setResetNome(isReset?null:nome);setNovaSenha("");}}
+                            <button onClick={()=>setResetNome(isReset?null:nome)}
                               style={{padding:"7px 12px",borderRadius:8,border:"1.5px solid #e5e7eb",cursor:"pointer",fontWeight:700,fontSize:12,background:"#f9fafb",color:"#374151"}}>🔑</button>
                             <button onClick={()=>togglePago(nome)}
                               style={{padding:"7px 12px",borderRadius:8,cursor:"pointer",fontWeight:700,fontSize:12,
@@ -1493,9 +1521,9 @@ export default function App() {
                           </div>
                         </div>
                         {isReset&&(
-                          <div style={{marginTop:10,display:"flex",gap:8}}>
-                            <input className="inp" type="password" placeholder="Nova senha (mín. 4 chars)" value={novaSenha} onChange={e=>setNovaSenha(e.target.value)}/>
-                            <button onClick={()=>resetarSenha(nome,novaSenha)} style={{padding:"10px 16px",borderRadius:10,border:"none",cursor:"pointer",background:"#16a34a",color:"#fff",fontWeight:700,fontSize:13,flexShrink:0}}>Salvar</button>
+                          <div style={{marginTop:10,padding:"10px 14px",background:"#fefce8",border:"1.5px solid #fde68a",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
+                            <div style={{fontSize:12,color:"#92400e"}}>Enviar email de reset para <strong>{usuarios[nome]?.email||"—"}</strong>?</div>
+                            <button onClick={()=>resetarSenha(nome,usuarios[nome]?.email||"")} style={{padding:"8px 14px",borderRadius:8,border:"none",cursor:"pointer",background:"#16a34a",color:"#fff",fontWeight:700,fontSize:12,flexShrink:0}}>Enviar</button>
                           </div>
                         )}
                       </div>
