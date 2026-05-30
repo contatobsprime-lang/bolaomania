@@ -1367,6 +1367,9 @@ export default function App() {
               </div>
             )}
 
+          </div>
+        )}
+
         {/* ADMIN */}
         {tela==="admin"&&(
           <div className="fade">
