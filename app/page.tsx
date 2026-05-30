@@ -21,8 +21,8 @@ const CONFIG = {
   },
 };
 
-const SENHA_ADMIN = process.env.NEXT_PUBLIC_ADMIN_SENHA || "admin123";
-const MP_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MP_ACCESS_TOKEN || "";
+// SENHA_ADMIN movida para API Route segura (/api/verify-admin)
+// MP_ACCESS_TOKEN movido para API Route segura (/api/create-payment)
 
 const GRUPOS: Record<string,string[]> = {
   A:["México","Coreia do Sul","República Tcheca","África do Sul"],
@@ -360,17 +360,20 @@ export default function App() {
   }
 
   async function pagarMP(){
-    if(!MP_ACCESS_TOKEN){mostrarToast("Token MP não configurado","err");return;}
     setMpLoading(true);
     try{
-      const resp=await fetch("https://api.mercadopago.com/v1/payment_links",{
+      const resp=await fetch("/api/create-payment",{
         method:"POST",
-        headers:{"Content-Type":"application/json","Authorization":`Bearer ${MP_ACCESS_TOKEN}`},
-        body:JSON.stringify({name:`Bolão Copa 2026 — ${usuarioAtual}`,items:[{title:"Cota Bolão Copa 2026",quantity:1,unit_price:CONFIG.valorCota,currency_id:"BRL"}],back_urls:{success:typeof window!=="undefined"?window.location.href:""},auto_return:"approved"})
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({nome:usuarioAtual})
       });
       const data=await resp.json();
-      if(data.init_point){window.open(data.init_point,"_blank");mostrarToast("🔗 Link MP aberto! Após pagamento, aguarde confirmação.");}
-      else mostrarToast("Erro ao gerar link MP","err");
+      if(data.url){
+        window.open(data.url,"_blank");
+        mostrarToast("🔗 Link MP aberto! Após pagamento, aguarde confirmação.");
+      } else {
+        mostrarToast("Erro ao gerar link MP","err");
+      }
     }catch{mostrarToast("Erro ao conectar MP","err");}
     setMpLoading(false);
   }
@@ -799,9 +802,9 @@ export default function App() {
               <div style={{fontWeight:800,fontSize:15,marginBottom:12}}>🔐 Área do Admin</div>
               <div style={{display:"flex",flexDirection:"column",gap:9}}>
                 <input className="inp" type="password" placeholder="Senha do administrador" value={adminSenha} onChange={e=>setAdminSenha(e.target.value)}
-                  onKeyDown={e=>{if(e.key==="Enter"){if(adminSenha===SENHA_ADMIN){setAdminErro("");setAdminSenha("");setTela("admin");}else setAdminErro("Senha incorreta.");}}}/>
-                {adminErro&&<div style={{color:"#b91c1c",fontSize:12}}>{adminErro}</div>}
-                <button className="btn-gold" onClick={()=>{if(adminSenha===SENHA_ADMIN){setAdminErro("");setAdminSenha("");setTela("admin");}else setAdminErro("Senha incorreta.");}}>Entrar</button>
+                  onKeyDown={async e=>{if(e.key==="Enter"){const r=await fetch("/api/verify-admin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({senha:adminSenha})});const d=await r.json();if(d.ok){setAdminErro("");setAdminSenha("");setTela("admin");}else setAdminErro("Senha incorreta.");}}}/>
+                {adminErro&&<div style={{color:"#b91c1c",fontSize:13,background:"#fef2f2",padding:"8px 12px",borderRadius:8}}>{adminErro}</div>}
+                <button className="btn-primary" onClick={async()=>{const r=await fetch("/api/verify-admin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({senha:adminSenha})});const d=await r.json();if(d.ok){setAdminErro("");setAdminSenha("");setTela("admin");}else setAdminErro("Senha incorreta.");}}>Entrar</button>
               </div>
             </div>
             <button className="btn-ghost" style={{width:"100%",marginTop:10}} onClick={()=>setTela("login")}>← Voltar</button>
@@ -1511,6 +1514,5 @@ export default function App() {
           </button>
         </nav>
       )}
-    </div>
-  );
+    </div>);
 }
