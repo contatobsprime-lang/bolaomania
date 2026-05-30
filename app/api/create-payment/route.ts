@@ -21,6 +21,15 @@ export async function POST(req: NextRequest) {
           unit_price: 10,
           currency_id: "BRL",
         }],
+        payment_methods: {
+          excluded_payment_types: [
+            { id: "credit_card" },
+            { id: "debit_card" },
+            { id: "ticket" },
+            { id: "account_money" },
+          ],
+          default_payment_method_id: "pix",
+        },
         back_urls: {
           success: process.env.NEXT_PUBLIC_SITE_URL || "https://bolao-copa-2026.vercel.app",
           pending: process.env.NEXT_PUBLIC_SITE_URL || "https://bolao-copa-2026.vercel.app",
