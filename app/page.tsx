@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import PixQRCode from "@/components/PixQRCode";
 
 const CONFIG = {
   valorCota: 10,
@@ -283,6 +284,7 @@ select:focus{border-color:#16a34a}select option{background:#fff;color:#111827}se
 
 export default function App() {
   const [tela, setTela] = useState("login");
+  const [sessaoCarregando, setSessaoCarregando] = useState(true);
   const [onboarding, setOnboarding] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -330,8 +332,16 @@ export default function App() {
         setEmailAtual(email);
         setIsAdmin(email === ADMIN_EMAIL);
         supabase.from("usuarios").select("*").eq("email", email).single().then(({ data }) => {
-          if (data) { setUsuarioAtual(data.nome); setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "" } })); setTela("app"); setModo("home"); }
+          if (data) {
+            setUsuarioAtual(data.nome);
+            setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "" } }));
+            setTela("app");
+            setModo("home");
+          }
+          setSessaoCarregando(false);
         });
+      } else {
+        setSessaoCarregando(false);
       }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -669,6 +679,15 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: "#f5f7fa", color: "#111827", fontFamily: "'Inter',sans-serif", userSelect: "none", WebkitUserSelect: "none", paddingBottom: tela === "app" ? "72px" : "0" }}>
       <style>{CSS}</style>
+
+      {sessaoCarregando && (
+        <div style={{ position: "fixed", inset: 0, background: "#f5f7fa", zIndex: 99999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
+          <div style={{ width: 72, height: 72, background: "#16a34a", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40 }}>⚽</div>
+          <div style={{ width: 40, height: 40, border: "3px solid #e5e7eb", borderTopColor: "#16a34a", borderRadius: "50%", animation: "spin .8s linear infinite" }} />
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+          <div style={{ fontSize: 14, color: "#9ca3af" }}>Carregando...</div>
+        </div>
+      )}
 
       {confetis.map(c => <div key={c.id} className="cf" style={{ left: c.l, animationDelay: c.d }}>{c.e}</div>)}
 
@@ -1296,7 +1315,10 @@ export default function App() {
             {/* PIX */}
             {modo === "pix" && (
               <div>
-                <div style={{ marginBottom: 20 }}><div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 2 }}>PAGAMENTO</div><div style={{ fontWeight: 800, fontSize: 20, color: "#111827" }}>Cota de Entrada</div></div>
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 2 }}>PAGAMENTO</div>
+                  <div style={{ fontWeight: 800, fontSize: 20, color: "#111827" }}>Cota de Entrada</div>
+                </div>
                 {pago ? (
                   <div className="card" style={{ textAlign: "center", padding: "40px", border: "1.5px solid #86efac", background: "#f0fdf4" }}>
                     <div style={{ fontSize: 52, marginBottom: 12 }}>✅</div>
@@ -1304,27 +1326,22 @@ export default function App() {
                     <div style={{ fontSize: 14, color: "#6b7280" }}>Você está dentro do bolão. Boa sorte! 🍀</div>
                   </div>
                 ) : (
-                  <div>
+                  <>
                     <div style={{ textAlign: "center", marginBottom: 20 }}>
                       <div style={{ fontWeight: 800, fontSize: 40, color: "#16a34a" }}>R$ {CONFIG.valorCota},00</div>
                       <div style={{ fontSize: 14, color: "#9ca3af", marginTop: 4 }}>Valor da cota</div>
                     </div>
-                    <div className="card" style={{ marginBottom: 12, border: "1.5px solid #86efac", background: "#f0fdf4", textAlign: "center", padding: "24px" }}>
-                      <div style={{ fontSize: 32, marginBottom: 8 }}>🏦</div>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: "#166534", marginBottom: 6 }}>Pagamento via Pix</div>
-                      <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 16, lineHeight: 1.6 }}>Você será direcionado para o checkout do Mercado Pago onde o pagamento é feito exclusivamente via <strong>Pix</strong>. A liberação é automática após confirmação.</div>
-                      <button className="btn-primary" onClick={pagarMP} disabled={mpLoading} style={{ fontSize: 16, padding: "16px" }}>{mpLoading ? "Gerando link..." : "Pagar R$ 10 via Pix"}</button>
-                    </div>
-                    <div className="card" style={{ marginBottom: 12 }}>
-                      <div style={{ fontWeight: 700, color: "#111827", marginBottom: 10, fontSize: 14 }}>Como funciona</div>
-                      <div style={{ fontSize: 13, color: "#6b7280", lineHeight: 2 }}>
-                        <div>1️⃣ Clique em <strong>"Pagar via Pix"</strong></div>
-                        <div>2️⃣ Escaneie o QR Code no Mercado Pago</div>
-                        <div>3️⃣ Confirme no app do seu banco</div>
-                        <div>4️⃣ Acesso liberado automaticamente ✅</div>
-                      </div>
-                    </div>
-                  </div>
+                    <PixQRCode
+                      usuarioNome={usuarioAtual || ""}
+                      emailAtual={emailAtual}
+                      onPago={() => {
+                        setUsuarios((prev: any) => ({ ...prev, [usuarioAtual || ""]: { ...prev[usuarioAtual || ""], pago: true } }));
+                        dispararConfete();
+                        mostrarToast("🎉 Pagamento confirmado! Bem-vindo ao bolão!");
+                        setTimeout(() => setModo("home"), 2000);
+                      }}
+                    />
+                  </>
                 )}
               </div>
             )}
@@ -1445,25 +1462,17 @@ export default function App() {
               <span style={{ fontWeight: 700, fontSize: 13, color: "#b91c1c" }}>🔐 Painel do Administrador</span>
             </div>
 
-            {adminModo === "resultados" && (
-              <div>
-                <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-                  {Object.keys(GRUPOS).map(g => <button key={g} className={`gtab ${grupoAtivo === g ? "on" : "off"}`} onClick={() => setGrupoAtivo(g)}>{g}</button>)}
-                </div>
-                <div style={{ marginBottom: 10, padding: "6px 10px", background: "rgba(255,255,255,.03)", borderRadius: 7, display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {GRUPOS[grupoAtivo].map(t => <span key={t} style={{ fontSize: 10, color: "#6b7280" }}>{F[t]} {t}</span>)}
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                  {JOGOS_GRUPO.filter(j => j.g === grupoAtivo).map(j => <JogoCardAdmin key={j.id} jogo={j} />)}
-                </div>
-                <div style={{ marginTop: 10, padding: "9px 13px", background: "rgba(74,222,128,.04)", border: "1px solid rgba(74,222,128,.12)", borderRadius: 9, display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 11, color: "#6b7280" }}>{Object.keys(res).filter(id => res[id]?.gols1 !== "" && res[id]?.gols1 !== undefined).length}/{JOGOS_GRUPO.length} resultados</span>
-                  <span className="badge bgr">☁ Supabase</span>
-                </div>
-              </div>
-            )}
+            {/* ABAS ADMIN */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+              {[{ id: "resultados", label: "📋 Grupos" }, { id: "elim", label: "🏆 Eliminatórias" }, { id: "usuarios", label: "👥 Usuários" }].map(m => (
+                <button key={m.id} onClick={() => setAdminModo(m.id)}
+                  style={{ flex: 1, padding: "10px 8px", borderRadius: 10, border: `1.5px solid ${adminModo === m.id ? "#16a34a" : "#e5e7eb"}`, background: adminModo === m.id ? "#f0fdf4" : "#fff", color: adminModo === m.id ? "#16a34a" : "#374151", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
+                  {m.label}
+                </button>
+              ))}
+            </div>
 
-            {adminModo === "elim" && (
+            {adminModo === "resultados" && (
               <div>
                 <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
                   {["oitavas", "quartas", "semi", "final"].map(f => <button key={f} className={`ftab ${faseAtiva === f ? "on" : "off"}`} onClick={() => setFaseAtiva(f)}>{FASE_L[f]}</button>)}
