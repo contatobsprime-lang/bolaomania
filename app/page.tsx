@@ -408,6 +408,20 @@ export default function App() {
   },[]);
 
   useEffect(()=>{carregarTudo();const r=setInterval(carregarTudo,60000);return()=>clearInterval(r);},[carregarTudo]);
+
+useEffect(()=>{
+  if(pago||!usuarioAtual)return;
+  const poll=setInterval(async()=>{
+    const{data}=await supabase.from("usuarios").select("pago").eq("nome",usuarioAtual).single();
+    if(data?.pago){
+      setUsuarios((prev:any)=>({...prev,[usuarioAtual]:{...prev[usuarioAtual],pago:true}}));
+      dispararConfete();
+      mostrarToast("🎉 Pagamento confirmado! Bem-vindo ao bolão!");
+      clearInterval(poll);
+    }
+  },5000);
+  return()=>clearInterval(poll);
+},[pago,usuarioAtual]);
   useEffect(()=>{if(usuarioAtual)setRascunho((prev:any)=>({...prev,[usuarioAtual]:{...(palpitesMap[usuarioAtual]||{})}}));},[usuarioAtual]);
 
   const palS=palpitesMap[usuarioAtual||""]||{};
