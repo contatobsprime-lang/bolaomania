@@ -6,9 +6,6 @@ import PixQRCode from "@/components/PixQRCode";
 
 const CONFIG = {
     valorCota: 10,
-    chavePix: "ab08302c-9d0d-43ac-933a-dafedeaf0b50",
-    nomePix: "Bruno Souza",
-    pixCopiaCola: "00020126360014br.gov.bcb.pix0114+5547999931877520400005303986540510.005802BR5911Bruno Souza6009Sao Paulo62240520daqr120444386078858563042950",
     bonusCampeao: 20,
     minutesBloqueio: 30,
     bloqueioCompetidor: "2026-07-04T18:00:00",
