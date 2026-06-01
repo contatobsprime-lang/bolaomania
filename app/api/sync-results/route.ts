@@ -6,19 +6,20 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// ID da Copa do Mundo 2026 na API-Football
-const LEAGUE_ID = 1; // FIFA World Cup
-const SEASON = 2026;
+const FD_BASE = "https://api.football-data.org/v4";
+const FD_KEY = process.env.API_FOOTBALL_KEY!;
+
+// ─── Mapeamento de nomes para português ──────────────────────────────────────
 
 const NOMES: Record<string, string> = {
   "Mexico": "México", "South Korea": "Coreia do Sul", "Czech Republic": "República Tcheca",
   "Czechia": "República Tcheca", "South Africa": "África do Sul", "Canada": "Canadá",
-  "Switzerland": "Suíça", "Qatar": "Catar", "Bosnia": "Bósnia",
+  "Switzerland": "Suíça", "Qatar": "Catar", "Bosnia-Herzegovina": "Bósnia",
   "Bosnia and Herzegovina": "Bósnia", "Brazil": "Brasil", "Morocco": "Marrocos",
   "Scotland": "Escócia", "Haiti": "Haiti", "United States": "Estados Unidos",
   "USA": "Estados Unidos", "Australia": "Austrália", "Paraguay": "Paraguai",
   "Turkey": "Turquia", "Germany": "Alemanha", "Ecuador": "Equador",
-  "Ivory Coast": "Costa do Marfim", "Cote d'Ivoire": "Costa do Marfim", "Curacao": "Curaçao",
+  "Ivory Coast": "Costa do Marfim", "Cote d'Ivoire": "Costa do Marfim", "Curaçao": "Curaçao",
   "Netherlands": "Países Baixos", "Japan": "Japão", "Tunisia": "Tunísia",
   "Sweden": "Suécia", "Belgium": "Bélgica", "Iran": "Irã", "Egypt": "Egito",
   "New Zealand": "Nova Zelândia", "Spain": "Espanha", "Uruguay": "Uruguai",
@@ -27,7 +28,28 @@ const NOMES: Record<string, string> = {
   "Austria": "Áustria", "Algeria": "Argélia", "Jordan": "Jordânia", "Portugal": "Portugal",
   "Colombia": "Colômbia", "Uzbekistan": "Uzbequistão", "DR Congo": "RD Congo",
   "England": "Inglaterra", "Croatia": "Croácia", "Panama": "Panamá", "Ghana": "Gana",
+  "Korea Republic": "Coreia do Sul",
 };
+
+// ─── Mapeamento de stage para fase do bolão ───────────────────────────────────
+
+const STAGE_FASE: Record<string, string> = {
+  "LAST_32": "16avos",
+  "LAST_16": "oitavas",
+  "QUARTER_FINALS": "quartas",
+  "SEMI_FINALS": "semi",
+  "FINAL": "final",
+};
+
+const STAGE_LABEL: Record<string, string> = {
+  "LAST_32": "16avos",
+  "LAST_16": "Oitavas",
+  "QUARTER_FINALS": "Quartas",
+  "SEMI_FINALS": "Semi",
+  "FINAL": "Final",
+};
+
+// ─── Mapeamento de jogos de grupo ─────────────────────────────────────────────
 
 const JOGOS_BOLAO: Record<string, number> = {
   "México-África do Sul": 1, "Coreia do Sul-República Tcheca": 2,
@@ -57,124 +79,146 @@ const JOGOS_BOLAO: Record<string, number> = {
   "Croácia-Gana": 72,
 };
 
-function nomePT(nome: string): string {
+function nomePT(nome: string | null): string {
+  if (!nome) return "";
   return NOMES[nome] || nome;
+}
+
+async function fetchFD(path: string) {
+  const resp = await fetch(`${FD_BASE}${path}`, {
+    headers: { "X-Auth-Token": FD_KEY },
+    next: { revalidate: 0 },
+  });
+  if (!resp.ok) throw new Error(`football-data error: ${resp.status} ${await resp.text()}`);
+  return resp.json();
 }
 
 export async function GET() {
   try {
-    const apiKey = process.env.API_FOOTBALL_KEY;
-    if (!apiKey) return NextResponse.json({ error: "API_FOOTBALL_KEY não configurada" }, { status: 500 });
-
-    // Busca todos os jogos finalizados da Copa 2026
-    const resp = await fetch(
-      `https://v3.football.api-sports.io/fixtures?league=${LEAGUE_ID}&season=${SEASON}&status=FT`,
-      {
-        headers: {
-          "x-apisports-key": apiKey,
-          "x-rapidapi-key": apiKey,
-        },
-        next: { revalidate: 0 },
-      }
-    );
-
-    if (!resp.ok) {
-      const err = await resp.text();
-      return NextResponse.json({ error: `API error: ${err}` }, { status: 500 });
-    }
-
-    const data = await resp.json();
-    const fixtures = data.response || [];
-
-    if (fixtures.length === 0) {
-      return NextResponse.json({ ok: true, sincronizados: 0, msg: "Nenhum jogo finalizado ainda" });
-    }
+    if (!FD_KEY) return NextResponse.json({ error: "API_FOOTBALL_KEY não configurada" }, { status: 500 });
 
     let sincronizados = 0;
-    let erros: string[] = [];
+    const erros: string[] = [];
 
-    for (const fixture of fixtures) {
-      const homeRaw = fixture.teams?.home?.name;
-      const awayRaw = fixture.teams?.away?.name;
-      const gols1 = fixture.goals?.home;
-      const gols2 = fixture.goals?.away;
-      const round: string = fixture.league?.round || "";
+    // ─── 1. Jogos de grupo finalizados ───────────────────────────────────────
+
+    const grupoData = await fetchFD("/competitions/WC/matches?season=2026&stage=GROUP_STAGE&status=FINISHED");
+    const grupoMatches = grupoData.matches || [];
+
+    for (const m of grupoMatches) {
+      const home = nomePT(m.homeTeam?.name);
+      const away = nomePT(m.awayTeam?.name);
+      const gols1 = m.score?.fullTime?.home;
+      const gols2 = m.score?.fullTime?.away;
 
       if (gols1 === null || gols1 === undefined || gols2 === null || gols2 === undefined) continue;
 
-      const home = nomePT(homeRaw);
-      const away = nomePT(awayRaw);
-
-      // Verifica pênaltis
-      const penHome = fixture.score?.penalty?.home;
-      const penAway = fixture.score?.penalty?.away;
-      const penalti = penHome !== null && penHome !== undefined;
-
-      // Fase grupos — busca pelo par de times
       const chave = `${home}-${away}`;
       const jogoId = JOGOS_BOLAO[chave];
 
-      if (jogoId) {
-        // Jogo de grupos
-        const { error } = await supabase
-          .from("resultados")
-          .upsert({ jogo_id: jogoId, gols1, gols2, penalti: false }, { onConflict: "jogo_id" });
-        if (!error) sincronizados++;
-        else erros.push(`Grupo ${chave}: ${error.message}`);
-      } else {
-        // Fase eliminatória — busca na tabela eliminatorias pelo par de times
-        const { data: elim } = await supabase
+      if (!jogoId) {
+        erros.push(`Jogo de grupo não encontrado: ${chave}`);
+        continue;
+      }
+
+      const { error } = await supabase
+        .from("resultados")
+        .upsert({ jogo_id: jogoId, gols1, gols2, penalti: false }, { onConflict: "jogo_id" });
+
+      if (!error) sincronizados++;
+      else erros.push(`Grupo ${chave}: ${error.message}`);
+    }
+
+    // ─── 2. Jogos eliminatórios ───────────────────────────────────────────────
+
+    const stages = ["LAST_32", "LAST_16", "QUARTER_FINALS", "SEMI_FINALS", "FINAL"];
+
+    for (const stage of stages) {
+      const elimData = await fetchFD(`/competitions/WC/matches?season=2026&stage=${stage}`);
+      const matches = elimData.matches || [];
+
+      for (const m of matches) {
+        const home = nomePT(m.homeTeam?.name);
+        const away = nomePT(m.awayTeam?.name);
+        const fase = STAGE_FASE[stage];
+        const label = STAGE_LABEL[stage];
+        const dataHora = m.utcDate;
+        const apiId = m.id;
+
+        // Upsert do jogo (times podem ainda ser null antes da fase de grupos acabar)
+        const { error: upsertErr } = await supabase
           .from("eliminatorias")
-          .select("jogo_id")
-          .eq("time1", home)
-          .eq("time2", away)
-          .single();
+          .upsert(
+            {
+              id: apiId,
+              fase,
+              label,
+              time1: home || null,
+              time2: away || null,
+              data_hora: dataHora,
+              gols1: null,
+              gols2: null,
+              penalti: false,
+            },
+            { onConflict: "id", ignoreDuplicates: false }
+          );
 
-        if (elim) {
-          const { error } = await supabase
-            .from("eliminatorias")
-            .update({ gols1, gols2, penalti })
-            .eq("jogo_id", elim.jogo_id);
-          if (!error) sincronizados++;
-          else erros.push(`Elim ${chave}: ${error.message}`);
-        } else {
-          // Tenta inserir os times nas eliminatorias se ainda não estão lá
-          // Detecta fase pelo round
-          let fase = "oitavas";
-          if (round.toLowerCase().includes("quarter")) fase = "quartas";
-          else if (round.toLowerCase().includes("semi")) fase = "semi";
-          else if (round.toLowerCase().includes("final") && !round.toLowerCase().includes("semi")) fase = "final";
+        if (upsertErr) {
+          erros.push(`Upsert elim ${home}×${away} (${fase}): ${upsertErr.message}`);
+          continue;
+        }
 
-          erros.push(`Time não encontrado em eliminatorias: ${home} × ${away} (${fase})`);
+        // Atualiza resultado se jogo finalizado
+        if (m.status === "FINISHED") {
+          const gols1 = m.score?.fullTime?.home;
+          const gols2 = m.score?.fullTime?.away;
+          const penHome = m.score?.penalties?.home;
+          const penAway = m.score?.penalties?.away;
+          const penalti = penHome !== null && penHome !== undefined;
+
+          if (gols1 !== null && gols1 !== undefined && gols2 !== null && gols2 !== undefined) {
+            const { error: resErr } = await supabase
+              .from("eliminatorias")
+              .update({ gols1, gols2, penalti, time1: home, time2: away })
+              .eq("id", apiId);
+
+            if (!resErr) sincronizados++;
+            else erros.push(`Resultado elim ${home}×${away}: ${resErr.message}`);
+          }
         }
       }
     }
 
-    // Atualiza campeão automaticamente se a final terminou
-    const finalFixture = fixtures.find((f: any) => {
-      const round = f.league?.round?.toLowerCase() || "";
-      return round.includes("final") && !round.includes("semi") && !round.includes("3rd");
-    });
+    // ─── 3. Campeão ──────────────────────────────────────────────────────────
 
-    if (finalFixture) {
-      const gols1 = finalFixture.goals?.home;
-      const gols2 = finalFixture.goals?.away;
-      const penHome = finalFixture.score?.penalty?.home;
-      const penAway = finalFixture.score?.penalty?.away;
+    const finalData = await fetchFD("/competitions/WC/matches?season=2026&stage=FINAL&status=FINISHED");
+    const finalMatch = finalData.matches?.[0];
+
+    if (finalMatch) {
+      const gols1 = finalMatch.score?.fullTime?.home;
+      const gols2 = finalMatch.score?.fullTime?.away;
+      const penHome = finalMatch.score?.penalties?.home;
+      const penAway = finalMatch.score?.penalties?.away;
 
       let campeao = "";
       if (penHome !== null && penHome !== undefined) {
-        campeao = penHome > penAway ? nomePT(finalFixture.teams.home.name) : nomePT(finalFixture.teams.away.name);
-      } else {
-        campeao = gols1 > gols2 ? nomePT(finalFixture.teams.home.name) : nomePT(finalFixture.teams.away.name);
+        campeao = penHome > penAway
+          ? nomePT(finalMatch.homeTeam?.name)
+          : nomePT(finalMatch.awayTeam?.name);
+      } else if (gols1 !== null && gols2 !== null) {
+        campeao = gols1 > gols2
+          ? nomePT(finalMatch.homeTeam?.name)
+          : nomePT(finalMatch.awayTeam?.name);
       }
 
       if (campeao) {
-        await supabase.from("config").upsert({ chave: "campeao_real", valor: campeao }, { onConflict: "chave" });
+        await supabase
+          .from("config")
+          .upsert({ chave: "campeao_real", valor: campeao }, { onConflict: "chave" });
       }
     }
 
-    return NextResponse.json({ ok: true, sincronizados, total: fixtures.length, erros });
+    return NextResponse.json({ ok: true, sincronizados, erros });
 
   } catch (err) {
     console.error("Sync error:", err);
