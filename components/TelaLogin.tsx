@@ -11,13 +11,14 @@ interface Props {
 }
 
 export default function TelaLogin({ onLogin, onCadastro }: Props) {
-  const [loginEmail, setLoginEmail]       = useState("");
-  const [loginSenha, setLoginSenha]       = useState("");
-  const [loginErro, setLoginErro]         = useState("");
-  const [carregando, setCarregando]       = useState(false);
-  const [telaEsqueceu, setTelaEsqueceu]   = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginSenha, setLoginSenha] = useState("");
+  const [loginErro, setLoginErro] = useState("");
+  const [carregando, setCarregando] = useState(false);
+  const [telaEsqueceu, setTelaEsqueceu] = useState(false);
   const [esqueceuEmail, setEsqueceuEmail] = useState("");
-  const [esqueceuSent, setEsqueceuSent]   = useState(false);
+  const [esqueceuSent, setEsqueceuSent] = useState(false);
+  const [esqueceuErro, setEsqueceuErro] = useState("");
 
   async function handleLogin() {
     setCarregando(true); setLoginErro("");
@@ -33,7 +34,11 @@ export default function TelaLogin({ onLogin, onCadastro }: Props) {
   }
 
   async function handleEsqueceuSenha() {
-    setCarregando(true);
+    if (!esqueceuEmail.trim() || !esqueceuEmail.includes("@")) {
+      setEsqueceuErro("Digite um email válido.");
+      return;
+    }
+    setCarregando(true); setEsqueceuErro("");
     await supabase.auth.resetPasswordForEmail(esqueceuEmail.trim());
     setCarregando(false);
     setEsqueceuSent(true);
@@ -50,6 +55,7 @@ export default function TelaLogin({ onLogin, onCadastro }: Props) {
         <div className="card" style={{ marginBottom: 12, padding: "24px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <input className="inp" type="email" placeholder="Seu email" value={esqueceuEmail} onChange={e => setEsqueceuEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleEsqueceuSenha()} />
+            {esqueceuErro && <div style={{ color: "#b91c1c", fontSize: 13, background: "#fef2f2", padding: "8px 12px", borderRadius: 8 }}>{esqueceuErro}</div>}  {/* ← AQUI */}
             <button className="btn-primary" onClick={handleEsqueceuSenha} disabled={carregando}>{carregando ? "Enviando..." : "Enviar link de recuperação"}</button>
           </div>
         </div>
