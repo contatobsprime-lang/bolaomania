@@ -1,13 +1,21 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+
 import { supabase } from "@/lib/supabase";
+
 import PixQRCode from "@/components/PixQRCode";
+
 import { CONFIG, ADMIN_EMAIL, GRUPOS, TODOS_TIMES, F, MEDAL, FASE_L, ELIM_TMPL } from "@/lib/constantes";
+
 import { JOGOS_GRUPO } from "@/data/jogos-grupo";
+
 import type { Jogo, Palpite, Resultado, Usuario, DetJogo, RankingEntry, ToastTipo, Modo, StatusFiltro, HistRodada } from "@/lib/types";
+
 import { lock, campLock, fmtD, fmtDLong, fmtH, tr, statusJ } from "@/lib/utils";
+
 import { calcJogo, calcTudo, calcPremios, desempate, calcBadges, pts } from "@/lib/calculos";
+
 import TelaLogin from "@/components/TelaLogin";
 
 const CSS = `
