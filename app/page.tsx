@@ -128,12 +128,23 @@ export default function App() {
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session?.user) {
-                const email = session.user.email || "";
-                setEmailAtual(email);
-                setIsAdmin(email === ADMIN_EMAIL);
-                supabase.from("usuarios").select("*").eq("email", email).single().then(({ data }) => {
-                    if (data) { setUsuarioAtual(data.nome); setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "", email: data.email || "" } })); setTela("app"); setModo("home"); }
-                    setSessaoCarregando(false);
+                // Verifica se é uma sessão de recuperação de senha
+                supabase.auth.getUser().then(({ data: { user } }) => {
+                    if (user?.aud === "authenticated" && session.access_token) {
+                        const hash = typeof window !== "undefined" ? window.location.hash : "";
+                        if (hash.includes("type=recovery")) {
+                            setTela("recuperar");
+                            setSessaoCarregando(false);
+                            return;
+                        }
+                    }
+                    const email = session.user!.email || "";
+                    setEmailAtual(email);
+                    setIsAdmin(email === ADMIN_EMAIL);
+                    supabase.from("usuarios").select("*").eq("email", email).single().then(({ data }) => {
+                        if (data) { setUsuarioAtual(data.nome); setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "", email: data.email || "" } })); setTela("app"); setModo("home"); }
+                        setSessaoCarregando(false);
+                    });
                 });
             } else { setSessaoCarregando(false); }
         });
