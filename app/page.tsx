@@ -10,13 +10,17 @@ import { CONFIG, ADMIN_EMAIL, GRUPOS, TODOS_TIMES, F, MEDAL, FASE_L, ELIM_TMPL }
 
 import { JOGOS_GRUPO } from "@/data/jogos-grupo";
 
-import type { Jogo, Palpite, Resultado, Usuario, DetJogo, RankingEntry, ToastTipo, Modo, StatusFiltro, HistRodada } from "@/lib/types";
+import type { Jogo, Palpite, Resultado, Usuario, DetJogo, RankingEntry, ToastTipo, Modo, StatusFiltro, HistRodada, Tela } from "@/lib/types";
 
 import { lock, campLock, fmtD, fmtDLong, fmtH, tr, statusJ } from "@/lib/utils";
 
 import { calcJogo, calcTudo, calcPremios, desempate, calcBadges, pts } from "@/lib/calculos";
 
 import TelaLogin from "@/components/TelaLogin";
+
+import TelaCadastro from "@/components/TelaCadastro";
+import TelaRecuperarSenha from "@/components/TelaRecuperarSenha";
+
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
@@ -77,7 +81,7 @@ select:focus{border-color:#16a34a}select option{background:#fff;color:#111827}se
 `;
 
 export default function App() {
-    const [tela, setTela] = useState("login");
+    const [tela, setTela] = useState<Tela>("login");
     const [onboarding, setOnboarding] = useState(false);
     const [carregando, setCarregando] = useState(false);
     const [salvando, setSalvando] = useState(false);
@@ -134,6 +138,10 @@ export default function App() {
             } else { setSessaoCarregando(false); }
         });
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (_event === "PASSWORD_RECOVERY") {
+                setTela("recuperar");
+                return;
+            }
             if (!session) { setUsuarioAtual(null); setEmailAtual(null); setIsAdmin(false); setTela("login"); }
         });
         return () => subscription.unsubscribe();
@@ -626,30 +634,23 @@ export default function App() {
                         onCadastro={() => setTela("cadastro")}
                     />
                 )}
+                {tela === "recuperar" && (
+                    <TelaRecuperarSenha onSucesso={() => setTela("login")} />
+                )}
 
                 {tela === "cadastro" && (
-                    <div className="fade" style={{ maxWidth: 360, margin: "0 auto", paddingTop: 24 }}>
-                        <div style={{ textAlign: "center", marginBottom: 28 }}>
-                            <div style={{ width: 72, height: 72, background: "linear-gradient(135deg,#16a34a,#15803d)", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 12px" }}>👤</div>
-                            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#111827" }}>Criar conta</h2>
-                            <p style={{ color: "#9ca3af", fontSize: 14, marginTop: 4 }}>Cota: <span style={{ color: "#16a34a", fontWeight: 700 }}>R$ {CONFIG.valorCota}</span></p>
-                        </div>
-                        <div className="card" style={{ marginBottom: 12, padding: "24px" }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                                <input className="inp" placeholder="Seu nome completo" value={cadNome} onChange={e => setCadNome(e.target.value)} />
-                                <input className="inp" type="email" placeholder="Seu email" value={cadEmail} onChange={e => setCadEmail(e.target.value)} />
-                                <input className="inp" type="password" placeholder="Criar senha (mín. 6 chars)" value={cadSenha} onChange={e => setCadSenha(e.target.value)} />
-                                <input className="inp" type="password" placeholder="Confirmar senha" value={cadSenha2} onChange={e => setCadSenha2(e.target.value)} onKeyDown={e => e.key === "Enter" && handleCadastro()} />
-                                {cadErro && <div style={{ color: "#b91c1c", fontSize: 13, background: "#fef2f2", padding: "8px 12px", borderRadius: 8 }}>{cadErro}</div>}
-                                <button className="btn-primary" onClick={handleCadastro} disabled={carregando}>{carregando ? "Criando..." : "Criar conta e entrar"}</button>
-                                <p style={{ fontSize: 11, color: "#9ca3af", textAlign: "center", lineHeight: 1.6 }}>
-                                    Ao criar sua conta você concorda com nossa{" "}
-                                    <a href="/privacidade" target="_blank" style={{ color: "#16a34a", textDecoration: "underline" }}>Política de Privacidade</a>
-                                </p>
-                            </div>
-                        </div>
-                        <button className="btn-ghost" onClick={() => { setCadErro(""); setTela("login"); }}>← Voltar para login</button>
-                    </div>
+                    <TelaCadastro
+                        onCadastro={(nome, email, isAdmin) => {
+                            setUsuarioAtual(nome);
+                            setEmailAtual(email);
+                            setIsAdmin(isAdmin);
+                            setUsuarios((prev: Record<string, { pago: boolean; camp: string }>) => ({ ...prev, [nome]: { pago: false, camp: "" } }));
+                            setOnboarding(true);
+                            setTela("app");
+                            setModo("home");
+                        }}
+                        onVoltar={() => setTela("login")}
+                    />
                 )}
 
 

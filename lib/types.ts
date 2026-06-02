@@ -56,11 +56,10 @@ export interface RankingEntry {
 // ─── UI ──────────────────────────────────────────────────────────────────────
 
 export type ToastTipo = "ok" | "err";
-
 export type Modo =
   | "home" | "jogos" | "palpites" | "ranking"
   | "historico" | "pix" | "perfil" | "campeao"
   | "regras" | "feed";
-
+export type Tela = "login" | "cadastro" | "recuperar" | "admin" | "app";
 export type StatusFiltro = "proximos" | "aovivo" | "terminados";
 export type HistRodada = number | "todas";
