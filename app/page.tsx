@@ -5,7 +5,10 @@ import { supabase } from "@/lib/supabase";
 import PixQRCode from "@/components/PixQRCode";
 import { CONFIG, ADMIN_EMAIL, GRUPOS, TODOS_TIMES, F, MEDAL, FASE_L, ELIM_TMPL } from "@/lib/constantes";
 import { JOGOS_GRUPO } from "@/data/jogos-grupo";
-import { lock, calcJogo, calcTudo, fmtD, fmtH, fmtDLong, tr, statusJ, calcPremios, desempate, campLock, pts, calcBadges } from "@/lib/utils";
+import type { Jogo, Palpite, Resultado, Usuario, DetJogo, RankingEntry, ToastTipo, Modo, StatusFiltro, HistRodada } from "@/lib/types";
+import { lock, campLock, fmtD, fmtDLong, fmtH, tr, statusJ } from "@/lib/utils";
+import { calcJogo, calcTudo, calcPremios, desempate, calcBadges, pts } from "@/lib/calculos";
+import TelaLogin from "@/components/TelaLogin";
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
@@ -602,50 +605,18 @@ export default function App() {
 
             <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 14px" }}>
 
-                {tela === "login" && !telaEsqueceu && (
-                    <div className="fade" style={{ maxWidth: 360, margin: "0 auto", paddingTop: 24 }}>
-                        <div style={{ textAlign: "center", marginBottom: 32 }}>
-                            <div style={{ width: 80, height: 80, background: "linear-gradient(135deg,#16a34a,#15803d)", borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 42, margin: "0 auto 16px" }}>⚽</div>
-                            <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-1px", marginBottom: 6, color: "#111827" }}>Bolão Copa 2026</h1>
-                            <p style={{ color: "#9ca3af", fontSize: 14 }}>EUA · México · Canadá · Jun–Jul 2026</p>
-                        </div>
-                        <div className="card" style={{ marginBottom: 12, padding: "24px" }}>
-                            <div style={{ fontWeight: 700, fontSize: 13, color: "#16a34a", letterSpacing: .5, textTransform: "uppercase", marginBottom: 16 }}>Entrar</div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                                <input className="inp" type="email" placeholder="Seu email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} />
-                                <input className="inp" type="password" placeholder="Senha" value={loginSenha} onChange={e => setLoginSenha(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} />
-                                {loginErro && <div style={{ color: "#b91c1c", fontSize: 13, background: "#fef2f2", padding: "8px 12px", borderRadius: 8 }}>{loginErro}</div>}
-                                <button className="btn-primary" onClick={handleLogin} disabled={carregando}>{carregando ? "Entrando..." : "Entrar"}</button>
-                                <button onClick={() => { setTelaEsqueceu(true); setEsqueceuEmail(loginEmail); }} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 13, cursor: "pointer", textAlign: "center" }}>Esqueci minha senha</button>
-                            </div>
-                        </div>
-                        <button className="btn-ghost" onClick={() => { setLoginErro(""); setTela("cadastro"); }}>Criar conta nova →</button>
-                    </div>
-                )}
-
-                {tela === "login" && telaEsqueceu && (
-                    <div className="fade" style={{ maxWidth: 360, margin: "0 auto", paddingTop: 24 }}>
-                        <div style={{ textAlign: "center", marginBottom: 32 }}>
-                            <div style={{ width: 80, height: 80, background: "linear-gradient(135deg,#16a34a,#15803d)", borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 42, margin: "0 auto 16px" }}>🔑</div>
-                            <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, color: "#111827" }}>Recuperar senha</h1>
-                            <p style={{ color: "#9ca3af", fontSize: 14 }}>Enviaremos um link para seu email</p>
-                        </div>
-                        {!esqueceuSent ? (
-                            <div className="card" style={{ marginBottom: 12, padding: "24px" }}>
-                                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                                    <input className="inp" type="email" placeholder="Seu email" value={esqueceuEmail} onChange={e => setEsqueceuEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleEsqueceuSenha()} />
-                                    <button className="btn-primary" onClick={handleEsqueceuSenha} disabled={carregando}>{carregando ? "Enviando..." : "Enviar link de recuperação"}</button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="card" style={{ textAlign: "center", padding: "32px", border: "1.5px solid #86efac", background: "#f0fdf4" }}>
-                                <div style={{ fontSize: 48, marginBottom: 12 }}>📧</div>
-                                <div style={{ fontWeight: 700, fontSize: 16, color: "#16a34a", marginBottom: 8 }}>Email enviado!</div>
-                                <div style={{ fontSize: 13, color: "#6b7280" }}>Verifique sua caixa de entrada e clique no link para redefinir sua senha.</div>
-                            </div>
-                        )}
-                        <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => { setTelaEsqueceu(false); setEsqueceuSent(false); }}>← Voltar</button>
-                    </div>
+                {tela === "login" && (
+                    <TelaLogin
+                        onLogin={(nome, email, isAdmin, u) => {
+                            setUsuarioAtual(nome);
+                            setEmailAtual(email);
+                            setIsAdmin(isAdmin);
+                            setUsuarios((prev: Record<string, { pago: boolean; camp: string }>) => ({ ...prev, [nome]: { pago: u.pago, camp: u.campeao_palpite || "" } }));
+                            setTela("app");
+                            setModo("home");
+                        }}
+                        onCadastro={() => setTela("cadastro")}
+                    />
                 )}
 
                 {tela === "cadastro" && (
