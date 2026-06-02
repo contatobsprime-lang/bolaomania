@@ -21,6 +21,13 @@ import TelaLogin from "@/components/TelaLogin";
 import TelaCadastro from "@/components/TelaCadastro";
 import TelaRecuperarSenha from "@/components/TelaRecuperarSenha";
 import TelaJogos from "@/components/TelaJogos";
+import TelaPalpites from "@/components/TelaPalpites";
+import TelaRanking from "@/components/TelaRanking";
+import TelaHistorico from "@/components/TelaHistorico";
+import TelaPix from "@/components/TelaPix";
+import TelaPerfil from "@/components/TelaPerfil";
+import TelaCampeao from "@/components/TelaCampeao";
+import TelaAdmin from "@/components/TelaAdmin";
 
 
 const CSS = `
@@ -782,332 +789,99 @@ export default function App() {
 
                         {/* PALPITES */}
                         {modo === "palpites" && (
-                            <div>
-                                {!pago && (
-                                    <div className="card" style={{ marginBottom: 14, background: "rgba(248,113,113,.06)", border: "1px solid rgba(248,113,113,.2)" }}>
-                                        <div style={{ fontWeight: 700, color: "#b91c1c", marginBottom: 6 }}>🔒 Pagamento pendente</div>
-                                        <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 10 }}>Faça o Pix para participar do bolão.</div>
-                                        <button className="btn-primary" onClick={() => setModo("pix")}>Ver dados do Pix →</button>
-                                    </div>
-                                )}
-                                <div className="card" style={{ marginBottom: 14, border: "1px solid rgba(247,201,72,.2)", background: "rgba(247,201,72,.03)" }}>
-                                    <div style={{ fontWeight: 700, fontSize: 11, color: "#16a34a", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>🏆 Campeão da Copa</div>
-                                    <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
-                                        +{CONFIG.bonusCampeao} pts bônus ·{" "}
-                                        {campLock()
-                                            ? <span style={{ color: "#b91c1c" }}>🔒 Bloqueado — palpite encerrado</span>
-                                            : <span style={{ color: "#16a34a", fontWeight: 700 }}>{tr(CONFIG.bloqueioCompetidor)} para fechar</span>}
-                                    </div>
-                                    <select value={campAtual} onChange={e => setCamp(e.target.value)} disabled={campLock()}>
-                                        <option value="">— Selecione o campeão —</option>
-                                        {TODOS_TIMES.map(t => <option key={t} value={t}>{F[t]} {t}</option>)}
-                                    </select>
-                                    {campAtual && <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280" }}>Seu palpite: <strong style={{ color: "#16a34a" }}>{F[campAtual]} {campAtual}</strong></div>}
-                                </div>
-                                <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
-                                    {["grupos", "oitavas", "quartas", "semi", "final"].map(f => <button key={f} className={`ftab ${faseAtiva === f ? "on" : "off"}`} onClick={() => setFaseAtiva(f)}>{FASE_L[f]}</button>)}
-                                </div>
-                                {faseAtiva === "grupos" && (
-                                    <>
-                                        <div style={{ display: "flex", gap: 4, marginBottom: 10, flexWrap: "wrap" }}>
-                                            {Object.keys(GRUPOS).map(g => <button key={g} className={`gtab ${grupoAtivo === g ? "on" : "off"}`} onClick={() => setGrupoAtivo(g)}>{g}</button>)}
-                                        </div>
-                                        <div style={{ marginBottom: 10, padding: "6px 10px", background: "rgba(255,255,255,.03)", borderRadius: 7, display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                            {GRUPOS[grupoAtivo].map(t => <span key={t} style={{ fontSize: 10, color: "#6b7280" }}>{F[t]} {t}</span>)}
-                                        </div>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                                            {JOGOS_GRUPO.filter(j => j.g === grupoAtivo).map(j => {
-                                                const r = res[j.id] || {}; const tR = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
-                                                const pL = palR[j.id] || {}; const pSv = palS[j.id] || {}; const lk = lock(j.dt);
-                                                const tPL = pL.gols1 !== "" && pL.gols1 !== undefined && pL.gols2 !== "" && pL.gols2 !== undefined;
-                                                const mod = !lk && (pL.gols1 !== pSv.gols1 || pL.gols2 !== pSv.gols2) && tPL;
-                                                let aV = false, aP = false;
-                                                if (tR && pSv.gols1 !== undefined && pSv.gols1 !== "") { const { tipo } = calcJogo(parseInt(pSv.gols1), parseInt(pSv.gols2), parseInt(r.gols1), parseInt(r.gols2), j.fase || "grupos", r.penalti || false); aV = tipo === "vencedor"; aP = tipo === "placar"; }
-                                                const bc = aP ? "#16a34a" : aV ? "#2563eb" : "transparent";
-                                                return (
-                                                    <div key={j.id} className="card" style={{ position: "relative", overflow: "hidden", padding: "13px", border: `1px solid ${bc === "transparent" ? "#f3f4f6" : bc + "44"}` }}>
-                                                        {bc !== "transparent" && <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: bc }} />}
-                                                        <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 4 }}>
-                                                            {lk && !tPL && <span className="badge br">🔒</span>}
-                                                            {aP && <span className="badge bg">🎯 Exato!</span>}
-                                                            {aV && <span className="badge bb">✅</span>}
-                                                            {mod && <span className="badge" style={{ background: "rgba(251,191,36,.15)", color: "#fbbf24", border: "1px solid rgba(251,191,36,.3)" }}>✏️</span>}
-                                                        </div>
-                                                        <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 9 }}>📍 {j.est} · {fmtH(j.dt)}</div>
-                                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flex: 1, minWidth: 0 }}>
-                                                                <span style={{ fontSize: 22 }}>{F[j.time1]}</span>
-                                                                <span style={{ fontSize: 10, fontWeight: 700, color: "#374151", textAlign: "center" }}>{j.time1}</span>
-                                                            </div>
-                                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "0 8px", flexShrink: 0 }}>
-                                                                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                                                                    <input type="number" min={0} max={30} disabled={lk} id={`g1_${j.id}`} className={`si${tPL ? " f" : ""}`} value={pL.gols1 ?? ""}
-                                                                        onChange={e => { setPalLocal(j.id, "gols1", e.target.value, j.dt); if (e.target.value !== "") { const nx = document.getElementById(`g2_${j.id}`); if (nx) nx.focus(); } }} placeholder="—" />
-                                                                    <span style={{ color: "#d1d5db", fontSize: 13 }}>×</span>
-                                                                    <input id={`g2_${j.id}`} type="number" min={0} max={30} disabled={lk} className={`si${tPL ? " f" : ""}`} value={pL.gols2 ?? ""}
-                                                                        onChange={e => { setPalLocal(j.id, "gols2", e.target.value, j.dt); if (e.target.value !== "") { const prox = JOGOS_GRUPO.filter(jj => jj.g === grupoAtivo && jj.id > j.id && !lock(jj.dt))[0]; if (prox) { const nx = document.getElementById(`g1_${prox.id}`); if (nx) nx.focus(); } else { setJogoSel(j); } } }} placeholder="—" />
-                                                                </div>
-                                                                {tR && <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>Resultado: <strong>{r.gols1}×{r.gols2}</strong>{r.penalti ? " (pên.)" : ""}</div>}
-                                                            </div>
-                                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flex: 1, minWidth: 0 }}>
-                                                                <span style={{ fontSize: 22 }}>{F[j.time2]}</span>
-                                                                <span style={{ fontSize: 10, fontWeight: 700, color: "#374151", textAlign: "center" }}>{j.time2}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                        <button onClick={salvarGrupo} disabled={salvando} style={{ marginTop: 13, width: "100%", padding: "13px", borderRadius: 12, border: "none", cursor: salvando ? "not-allowed" : "pointer", background: temRasc ? "#16a34a" : "#f3f4f6", color: temRasc ? "#fff" : "#9ca3af", fontFamily: "'Inter',sans-serif", fontWeight: 700, fontSize: 14, transition: "all .2s" }}>
-                                            {salvando ? "Salvando..." : temRasc ? `Salvar palpites — Grupo ${grupoAtivo}` : "Palpites salvos ✓"}
-                                        </button>
-                                    </>
-                                )}
-                                {faseAtiva !== "grupos" && (
-                                    <div>
-                                        {elim.filter(j => j.fase === faseAtiva && j.time1).length === 0 && <div className="card" style={{ textAlign: "center", color: "#d1d5db", padding: "28px" }}>Fase ainda não definida pelo admin</div>}
-                                        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                                            {elim.filter(j => j.fase === faseAtiva && j.time1).map(j => {
-                                                const pL = palR[j.id] || {}; const lk = lock(j.dt); const tPL = pL.gols1 !== "" && pL.gols1 !== undefined && pL.gols2 !== "" && pL.gols2 !== undefined;
-                                                return (
-                                                    <div key={j.id} className="card" style={{ padding: "13px" }}>
-                                                        <div style={{ fontSize: 9, color: "#9ca3af", marginBottom: 9 }}>{j.label} · {fmtD(j.dt)} {fmtH(j.dt)} · {j.est}</div>
-                                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                                            <div style={{ textAlign: "center", flex: 1 }}><div style={{ fontSize: 22 }}>{F[j.time1] || "🏳️"}</div><div style={{ fontSize: 10, fontWeight: 700, color: "#374151" }}>{j.time1}</div></div>
-                                                            <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "0 8px" }}>
-                                                                <input type="number" min={0} max={30} disabled={lk} className={`si${tPL ? " f" : ""}`} value={pL.gols1 ?? ""} onChange={e => setPalLocal(j.id, "gols1", e.target.value, j.dt)} placeholder="—" />
-                                                                <span style={{ color: "#d1d5db", fontSize: 13 }}>×</span>
-                                                                <input type="number" min={0} max={30} disabled={lk} className={`si${tPL ? " f" : ""}`} value={pL.gols2 ?? ""} onChange={e => setPalLocal(j.id, "gols2", e.target.value, j.dt)} placeholder="—" />
-                                                            </div>
-                                                            <div style={{ textAlign: "center", flex: 1 }}><div style={{ fontSize: 22 }}>{F[j.time2] || "🏳️"}</div><div style={{ fontSize: 10, fontWeight: 700, color: "#374151" }}>{j.time2}</div></div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                        {elim.filter(j => j.fase === faseAtiva && j.time1).length > 0 && (
-                                            <button onClick={salvarElim} disabled={salvando} style={{ marginTop: 13, width: "100%", padding: "13px", borderRadius: 12, border: "none", cursor: "pointer", background: temRasc ? "#16a34a" : "#f3f4f6", color: temRasc ? "#fff" : "#9ca3af", fontFamily: "'Inter',sans-serif", fontWeight: 700, fontSize: 14 }}>
-                                                {salvando ? "Salvando..." : temRasc ? `Salvar palpites — ${FASE_L[faseAtiva]}` : "Palpites salvos ✓"}
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-
-                            </div>
+                            <TelaPalpites
+                                pago={pago}
+                                campAtual={campAtual}
+                                faseAtiva={faseAtiva}
+                                grupoAtivo={grupoAtivo}
+                                elim={elim}
+                                palR={palR}
+                                palS={palS}
+                                res={res}
+                                resE={resE}
+                                salvando={salvando}
+                                temRasc={temRasc}
+                                setModo={setModo}
+                                setFaseAtiva={setFaseAtiva}
+                                setGrupoAtivo={setGrupoAtivo}
+                                setJogoSel={setJogoSel}
+                                setCamp={setCamp}
+                                setPalLocal={setPalLocal}
+                                salvarGrupo={salvarGrupo}
+                                salvarElim={salvarElim}
+                            />
                         )}
 
-                        {/* RANKING */}
                         {modo === "ranking" && (
-                            <div>
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                                    <div>
-                                        <div style={{ fontSize: 10, color: "#9ca3af", fontFamily: "'JetBrains Mono',monospace", marginBottom: 2 }}>AO VIVO</div>
-                                        <div style={{ fontWeight: 800, fontSize: 18 }}>Classificação Geral</div>
-                                    </div>
-                                    <button onClick={exportarRanking} className="btn-ghost" style={{ fontSize: 11, padding: "6px 12px" }}>{copRank ? "✅ Copiado!" : "📤 WhatsApp"}</button>
-                                </div>
-                                {minhaPos > 0 && (
-                                    <div style={{ background: "linear-gradient(135deg,#16a34a,#15803d)", borderRadius: 16, padding: "16px", marginBottom: 14, color: "#fff", display: "flex", alignItems: "center", gap: 14 }}>
-                                        <div style={{ fontSize: 28 }}>{MEDAL[minhaPos - 1] || `${minhaPos}º`}</div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 700, fontSize: 16 }}>{usuarioAtual} <span style={{ fontSize: 12, opacity: .8 }}>(você)</span></div>
-                                            <div style={{ fontSize: 13, opacity: .8 }}>{meusDados?.pontos || 0} pts · {meusDados?.acertos || 0} acertos · {meusDados?.placares || 0} exatos</div>
-                                        </div>
-
-                                    </div>
-                                )}
-                                <div className="card" style={{ marginBottom: 14, border: "1.5px solid #fde68a", background: "#fefce8" }}>
-                                    <div style={{ fontWeight: 700, fontSize: 13, color: "#854d0e", marginBottom: 10 }}>💰 Premiação</div>
-                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                                        {premios.dist.map(d => (
-                                            <div key={d.pos} style={{ flex: "1 1 60px", textAlign: "center", padding: "10px 8px", background: "#fff", borderRadius: 10, border: "1px solid #fde68a" }}>
-                                                <div style={{ fontSize: 18 }}>{MEDAL[d.pos - 1]}</div>
-                                                <div style={{ fontWeight: 800, fontSize: 15, color: "#16a34a" }}>R$ {d.valor}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                    {ranking.map((p, i) => {
-                                        const isMe = p.nome === usuarioAtual; const premio = premios.dist.find(d => d.pos === i + 1);
-                                        const badges = calcBadges(p.nome, ranking, palpitesMap, elim, res, resE);
-                                        return (
-                                            <div key={p.nome} className="card" style={{ border: `1.5px solid ${isMe ? "#86efac" : "#e5e7eb"}`, background: isMe ? "#f0fdf4" : "#fff", cursor: "pointer", position: "relative", overflow: "hidden", padding: "14px 16px" }}
-                                                onClick={() => setDetUser(detUser === p.nome ? null : p.nome)}>
-                                                {isMe && <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: "100%", background: "#16a34a", borderRadius: "2px 0 0 2px" }} />}
-                                                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                                    <div style={{ fontSize: 20, width: 28, textAlign: "center", flexShrink: 0, fontWeight: 700 }}>{MEDAL[i] || `${i + 1}º`}</div>
-                                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div style={{ fontWeight: 700, fontSize: 15, color: "#111827", marginBottom: 4 }}>{p.nome} {isMe && <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>(você)</span>}</div>
-                                                        <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
-                                                            <span className="badge bb">✅ {p.acertos}</span>
-                                                            <span className="badge bp">🎯 {p.placares}</span>
-                                                            {p.campeao && <span className="badge bg">{F[p.campeao]}</span>}
-                                                            {!p.pago && <span className="badge br">Pendente</span>}
-                                                            {badges.map(b => <span key={b} className="badge bgr">{b}</span>)}
-                                                        </div>
-                                                        {detUser === p.nome && (
-                                                            <div style={{ marginTop: 10, fontSize: 12, color: "#6b7280", lineHeight: 1.8, background: "#f9fafb", borderRadius: 8, padding: "8px 10px" }}>
-                                                                {p.bonusCampeao > 0 && <div>🏆 Bônus campeão: +{p.bonusCampeao}pts</div>}
-                                                                <div>Desempate: {p.placares} placares → {p.acertos} acertos</div>
-                                                                {premio && <div style={{ color: "#16a34a", fontWeight: 700 }}>💰 Prêmio: R$ {premio.valor}</div>}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                                        <div style={{ fontSize: 26, fontWeight: 800, color: "#16a34a", fontFamily: "'JetBrains Mono',monospace" }}>{p.pontos}</div>
-                                                        <div style={{ fontSize: 11, color: "#9ca3af" }}>pts</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                            <TelaRanking
+                                minhaPos={minhaPos}
+                                meusDados={meusDados}
+                                usuarioAtual={usuarioAtual}
+                                ranking={ranking}
+                                premios={premios}
+                                palpitesMap={palpitesMap}
+                                elim={elim}
+                                res={res}
+                                resE={resE}
+                                MEDAL={MEDAL}
+                                F={F}
+                                exportarRanking={exportarRanking}
+                                copRank={copRank}
+                            />
                         )}
-
                         {/* HISTÓRICO */}
                         {modo === "historico" && (
-                            <div>
-                                <div style={{ marginBottom: 16 }}>
-                                    <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 10, color: "#111827" }}>📊 Meu Histórico</div>
-                                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                        {(["todas", 1, 2, 3] as const).map(r => <button key={r} className={`gtab ${histRodada === r ? "on" : "off"}`} onClick={() => setHistRodada(r)}>{r === "todas" ? "Todas" : `Rodada ${r}`}</button>)}
-                                    </div>
-                                </div>
-                                {(() => {
-                                    const dados = calcTudo(palS, elim, res, resE, campAtual, campR);
-                                    let comRes = dados.det.filter((d: any) => d.res);
-                                    if (histRodada !== "todas") comRes = comRes.filter((d: any) => d.r === histRodada);
-                                    if (comRes.length === 0) return <div className="card" style={{ textAlign: "center", padding: "40px", color: "#9ca3af" }}>Nenhum jogo encerrado nesta rodada</div>;
-                                    const ac = comRes.filter((d: any) => d.tipo === "placar" || d.tipo === "vencedor").length;
-                                    const pct = comRes.length > 0 ? Math.round(ac / comRes.length * 100) : 0;
-                                    return (
-                                        <>
-                                            <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-                                                {[["🎯", comRes.filter((d: any) => d.tipo === "placar").length, "Exatos", "#16a34a"], ["✅", comRes.filter((d: any) => d.tipo === "vencedor").length, "Acertos", "#2563eb"], ["❌", comRes.filter((d: any) => d.tipo === "erro" || d.tipo === "sem_palpite").length, "Erros", "#b91c1c"], ["📊", `${pct}%`, "Taxa", "#16a34a"]].map(([ic, v, lb, cor]: any) => (
-                                                    <div key={lb} className="card" style={{ flex: "1 1 60px", textAlign: "center", padding: "12px 6px" }}>
-                                                        <div style={{ fontSize: 18 }}>{ic}</div><div style={{ fontWeight: 800, fontSize: 18, color: cor }}>{v}</div><div style={{ fontSize: 10, color: "#9ca3af" }}>{lb}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                                {comRes.map((d: any) => {
-                                                    const cor = d.tipo === "placar" ? "#16a34a" : d.tipo === "vencedor" ? "#2563eb" : "#b91c1c";
-                                                    const ic = d.tipo === "placar" ? "🎯" : d.tipo === "vencedor" ? "✅" : d.tipo === "sem_palpite" ? "—" : "❌";
-                                                    return (
-                                                        <div key={d.id} className="card" style={{ padding: "14px 16px", borderLeft: `4px solid ${cor}` }}>
-                                                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                                                <div style={{ fontSize: 16, flexShrink: 0 }}>{ic}</div>
-                                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                                    <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{F[d.time1] || ""} {d.time1} × {d.time2} {F[d.time2] || ""}</div>
-                                                                    <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 3 }}>Resultado: <strong style={{ color: "#374151" }}>{d.res.gols1}×{d.res.gols2}</strong>{d.res.penalti ? " (pên.)" : ""} · Palpite: <strong style={{ color: cor }}>{d.pal ? `${d.pal.gols1}×${d.pal.gols2}` : "—"}</strong></div>
-                                                                </div>
-                                                                <div style={{ fontWeight: 800, fontSize: 15, color: cor, flexShrink: 0, fontFamily: "'JetBrains Mono',monospace" }}>{d.pts > 0 ? `+${d.pts}` : d.tipo === "sem_palpite" ? "—" : "0"}</div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </>
-                                    );
-                                })()}
-                            </div>
+                            <TelaHistorico
+                                palS={palS}
+                                elim={elim}
+                                res={res}
+                                resE={resE}
+                                campAtual={campAtual}
+                                campR={campR}
+                                F={F}
+                            />
                         )}
 
                         {/* PIX */}
                         {modo === "pix" && (
-                            <div>
-                                <div style={{ marginBottom: 20 }}>
-                                    <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 2 }}>PAGAMENTO</div>
-                                    <div style={{ fontWeight: 800, fontSize: 20, color: "#111827" }}>Cota de Entrada</div>
-                                </div>
-                                {pago ? (
-                                    <div className="card" style={{ textAlign: "center", padding: "40px", border: "1.5px solid #86efac", background: "#f0fdf4" }}>
-                                        <div style={{ fontSize: 52, marginBottom: 12 }}>✅</div>
-                                        <div style={{ fontWeight: 800, fontSize: 18, color: "#16a34a", marginBottom: 6 }}>Pagamento confirmado!</div>
-                                        <div style={{ fontSize: 14, color: "#6b7280" }}>Você está dentro do bolão. Boa sorte! 🍀</div>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div style={{ textAlign: "center", marginBottom: 20 }}>
-                                            <div style={{ fontWeight: 800, fontSize: 40, color: "#16a34a" }}>R$ {CONFIG.valorCota},00</div>
-                                            <div style={{ fontSize: 14, color: "#9ca3af", marginTop: 4 }}>Valor da cota</div>
-                                        </div>
-                                        <PixQRCode
-                                            usuarioNome={usuarioAtual || ""}
-                                            emailAtual={emailAtual}
-                                            onPago={() => {
-                                                setUsuarios((prev: any) => ({ ...prev, [usuarioAtual || ""]: { ...prev[usuarioAtual || ""], pago: true } }));
-                                                dispararConfete();
-                                                mostrarToast("🎉 Pagamento confirmado! Bem-vindo ao bolão!");
-                                                setTimeout(() => setModo("home"), 2000);
-                                            }}
-                                        />
-                                    </>
-                                )}
-                            </div>
+                            <TelaPix
+                                pago={pago}
+                                usuarioAtual={usuarioAtual}
+                                emailAtual={emailAtual}
+                                onPago={() => {
+                                    setUsuarios((prev: Record<string, { pago: boolean; camp: string }>) => ({ ...prev, [usuarioAtual || ""]: { ...prev[usuarioAtual || ""], pago: true } }));
+                                    dispararConfete();
+                                    mostrarToast("🎉 Pagamento confirmado! Bem-vindo ao bolão!");
+                                    setTimeout(() => setModo("home"), 2000);
+                                }}
+                            />
                         )}
 
                         {/* PERFIL */}
                         {modo === "perfil" && (
-                            <div>
-                                <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 20, color: "#111827" }}>👤 Meu Perfil</div>
-                                <div style={{ background: "linear-gradient(135deg,#16a34a,#15803d)", borderRadius: 20, padding: "24px", marginBottom: 16, color: "#fff", display: "flex", alignItems: "center", gap: 16 }}>
-                                    <div style={{ width: 64, height: 64, background: "rgba(255,255,255,.2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 800, letterSpacing: -1, flexShrink: 0 }}>
-                                        {(usuarioAtual || "?").slice(0, 2).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 4 }}>{usuarioAtual}</div>
-                                        <div style={{ fontSize: 12, opacity: .8 }}>{emailAtual}</div>
-                                        <div style={{ fontSize: 12, opacity: .8, marginTop: 2 }}>{pago ? "✅ Pagamento confirmado" : "⚠️ Pagamento pendente"}</div>
-                                    </div>
-                                </div>
-                                <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-                                    {[["⭐", meusDados?.pontos ?? 0, "Pontos"], ["🎯", meusDados?.placares ?? 0, "Exatos"], ["✅", meusDados?.acertos ?? 0, "Acertos"], ["📊", `${minhaPos > 0 ? minhaPos + "º" : "—"}`, "Posição"]].map(([ic, v, lb]) => (
-                                        <div key={lb as string} className="card" style={{ flex: 1, textAlign: "center", padding: "12px 6px" }}>
-                                            <div style={{ fontSize: 18 }}>{ic}</div>
-                                            <div style={{ fontWeight: 800, fontSize: 18, color: "#16a34a" }}>{v}</div>
-                                            <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 1 }}>{lb}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                                {calcBadges(usuarioAtual || "", ranking, palpitesMap, elim, res, resE).length > 0 && (
-                                    <div className="card" style={{ marginBottom: 12 }}>
-                                        <div style={{ fontWeight: 700, fontSize: 13, color: "#374151", marginBottom: 10 }}>🏅 Conquistas</div>
-                                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                                            {calcBadges(usuarioAtual || "", ranking, palpitesMap, elim, res, resE).map(b => (
-                                                <div key={b} style={{ padding: "8px 14px", background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: 12, fontSize: 13, fontWeight: 700, color: "#166534" }}>{b}</div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            <TelaPerfil
+                                usuarioAtual={usuarioAtual}
+                                emailAtual={emailAtual}
+                                pago={pago}
+                                meusDados={meusDados}
+                                minhaPos={minhaPos}
+                                ranking={ranking}
+                                palpitesMap={palpitesMap}
+                                elim={elim}
+                                res={res}
+                                resE={resE}
+                            />
                         )}
 
                         {/* CAMPEÃO */}
                         {modo === "campeao" && (
-                            <div>
-                                <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 16, color: "#111827" }}>🏆 Palpite de Campeão</div>
-                                <div className="card" style={{ marginBottom: 14, border: "1.5px solid #fde68a", background: "#fefce8" }}>
-                                    <div style={{ fontWeight: 700, fontSize: 14, color: "#854d0e", marginBottom: 6 }}>Bônus +{CONFIG.bonusCampeao} pontos</div>
-                                    <div style={{ fontSize: 13, color: "#92400e", marginBottom: 14 }}>{campLock() ? <span>🔒 Palpite encerrado</span> : <span>{tr(CONFIG.bloqueioCompetidor)} para fechar</span>}</div>
-                                    <select value={campAtual} onChange={e => setCamp(e.target.value)} disabled={campLock()}>
-                                        <option value="">— Selecione o campeão —</option>
-                                        {TODOS_TIMES.map(t => <option key={t} value={t}>{F[t]} {t}</option>)}
-                                    </select>
-                                    {campAtual && <div style={{ marginTop: 12, padding: "10px 14px", background: "#fff", borderRadius: 10, fontSize: 14 }}>Seu palpite: <strong style={{ color: "#16a34a" }}>{F[campAtual]} {campAtual}</strong></div>}
-                                </div>
-                                <div className="card">
-                                    <div style={{ fontWeight: 700, fontSize: 13, color: "#374151", marginBottom: 12 }}>Palpites do grupo</div>
-                                    {Object.entries(usuarios).map(([nome, u]: any) => (
-                                        <div key={nome} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: "1px solid #f3f4f6" }}>
-                                            <span style={{ flex: 1, fontSize: 14, color: "#374151", fontWeight: 500 }}>{nome}</span>
-                                            <span style={{ fontSize: 14 }}>{u.camp ? `${F[u.camp] || ""} ${u.camp}` : <span style={{ color: "#9ca3af", fontSize: 12 }}>—</span>}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <TelaCampeao
+                                campAtual={campAtual}
+                                setCamp={setCamp}
+                                usuarios={usuarios}
+                                TODOS_TIMES={TODOS_TIMES}
+                                F={F}
+                            />
                         )}
 
                         {/* REGRAS */}
@@ -1160,142 +934,27 @@ export default function App() {
 
                 {/* ADMIN */}
                 {tela === "admin" && (
-                    <div className="fade">
-                        <div style={{ marginBottom: 14, padding: "10px 16px", background: "#fef2f2", border: "1.5px solid #fecaca", borderRadius: 12 }}>
-                            <span style={{ fontWeight: 700, fontSize: 13, color: "#b91c1c" }}>🔐 Painel do Administrador</span>
-                        </div>
-                        <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-                            {[{ id: "resultados", label: "📋 Grupos" }, { id: "elim", label: "🏆 Eliminatórias" }, { id: "usuarios", label: "👥 Usuários" }].map(m => (
-                                <button key={m.id} onClick={() => setAdminModo(m.id)}
-                                    style={{ flex: 1, padding: "10px 8px", borderRadius: 10, border: `1.5px solid ${adminModo === m.id ? "#16a34a" : "#e5e7eb"}`, background: adminModo === m.id ? "#f0fdf4" : "#fff", color: adminModo === m.id ? "#16a34a" : "#374151", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
-                                    {m.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        {adminModo === "resultados" && (
-                            <div>
-                                <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-                                    {Object.keys(GRUPOS).map(g => <button key={g} className={`gtab ${grupoAtivo === g ? "on" : "off"}`} onClick={() => setGrupoAtivo(g)}>{g}</button>)}
-                                </div>
-                                <div style={{ marginBottom: 10, padding: "6px 10px", background: "rgba(255,255,255,.03)", borderRadius: 7, display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                    {GRUPOS[grupoAtivo].map(t => <span key={t} style={{ fontSize: 10, color: "#6b7280" }}>{F[t]} {t}</span>)}
-                                </div>
-                                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                                    {JOGOS_GRUPO.filter(j => j.g === grupoAtivo).map(j => <JogoCardAdmin key={j.id} jogo={j} />)}
-                                </div>
-                                <div style={{ marginTop: 10, padding: "9px 13px", background: "rgba(74,222,128,.04)", border: "1px solid rgba(74,222,128,.12)", borderRadius: 9, display: "flex", justifyContent: "space-between" }}>
-                                    <span style={{ fontSize: 11, color: "#6b7280" }}>{Object.keys(res).filter(id => res[id]?.gols1 !== "" && res[id]?.gols1 !== undefined).length}/{JOGOS_GRUPO.length} resultados</span>
-                                    <span className="badge bgr">☁ Supabase</span>
-                                </div>
-                            </div>
-                        )}
-
-                        {adminModo === "elim" && (
-                            <div>
-                                <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
-                                    {["oitavas", "quartas", "semi", "final"].map(f => <button key={f} className={`ftab ${faseAtiva === f ? "on" : "off"}`} onClick={() => setFaseAtiva(f)}>{FASE_L[f]}</button>)}
-                                </div>
-                                {faseAtiva === "final" && (
-                                    <div className="card" style={{ marginBottom: 10, border: "1px solid rgba(247,201,72,.2)" }}>
-                                        <div style={{ fontWeight: 700, fontSize: 10, color: "#16a34a", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>🏆 Campeão Real da Copa</div>
-                                        <select value={campR} onChange={e => atualizarCampR(e.target.value)}>
-                                            <option value="">— Ainda não definido —</option>
-                                            {TODOS_TIMES.map(t => <option key={t} value={t}>{F[t]} {t}</option>)}
-                                        </select>
-                                    </div>
-                                )}
-                                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                                    {elim.filter(j => j.fase === faseAtiva).map(j => (
-                                        <div key={j.id}>
-                                            <div style={{ fontSize: 10, color: "#9ca3af", fontFamily: "'JetBrains Mono',monospace", marginBottom: 5 }}>{j.label}</div>
-                                            <div style={{ display: "flex", gap: 7, marginBottom: 6 }}>
-                                                <select style={{ flex: 1, fontSize: 12, padding: "7px 10px" }} value={j.time1} onChange={e => updateElimT(j.id, "time1", e.target.value)}>
-                                                    <option value="">— Time 1 —</option>
-                                                    {TODOS_TIMES.map(t => <option key={t} value={t}>{F[t]} {t}</option>)}
-                                                </select>
-                                                <select style={{ flex: 1, fontSize: 12, padding: "7px 10px" }} value={j.time2} onChange={e => updateElimT(j.id, "time2", e.target.value)}>
-                                                    <option value="">— Time 2 —</option>
-                                                    {TODOS_TIMES.map(t => <option key={t} value={t}>{F[t]} {t}</option>)}
-                                                </select>
-                                            </div>
-                                            {j.time1 && j.time2 && <JogoCardAdmin jogo={j} isElim />}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {adminModo === "usuarios" && (
-                            <div>
-                                <div style={{ marginBottom: 12 }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                                        <div style={{ fontWeight: 700, fontSize: 14 }}>{nPart} participantes</div>
-                                        <button onClick={() => {
-                                            const pagos = Object.entries(usuarios).filter(([, u]: any) => u.pago).map(([n]: any) => n);
-                                            const pendentes = Object.entries(usuarios).filter(([, u]: any) => !u.pago).map(([n]: any) => n);
-                                            const txt = "💰 BOLÃO COPA 2026 — Pagamentos\n\n✅ Pagos (" + pagos.length + "):\n" + (pagos.map((n: string) => "• " + n).join("\n") || "Nenhum") + "\n\n⚠️ Pendentes (" + pendentes.length + "):\n" + (pendentes.map((n: string) => "• " + n).join("\n") || "Nenhum");
-                                            navigator.clipboard.writeText(txt);
-                                            mostrarToast("✅ Lista copiada para o WhatsApp!");
-                                        }} style={{ padding: "7px 14px", borderRadius: 8, border: "1.5px solid #86efac", background: "#dcfce7", color: "#166534", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}>
-                                            📋 Copiar lista
-                                        </button>
-                                    </div>
-                                    <div style={{ fontSize: 11, color: "#9ca3af" }}>
-                                        Pagos: <span style={{ color: "#16a34a", fontWeight: 700 }}>R$ {nPagos * CONFIG.valorCota}</span> · Pendente: <span style={{ color: "#b91c1c", fontWeight: 700 }}>R$ {(nPart - nPagos) * CONFIG.valorCota}</span>
-                                    </div>
-                                    {/* Barra visual pagos/pendentes */}
-                                    {nPart > 0 && (
-                                        <div style={{ marginTop: 8 }}>
-                                            <div style={{ height: 6, borderRadius: 3, background: "#f3f4f6", overflow: "hidden" }}>
-                                                <div style={{ height: "100%", borderRadius: 3, background: "linear-gradient(90deg,#16a34a,#4ade80)", width: `${Math.round(nPagos / nPart * 100)}%`, transition: "width .5s" }} />
-                                            </div>
-                                            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4, textAlign: "right" }}>{nPagos}/{nPart} pagos ({nPart > 0 ? Math.round(nPagos / nPart * 100) : 0}%)</div>
-                                        </div>
-                                    )}
-                                </div>
-                                {nPart === 0 && <div className="card" style={{ textAlign: "center", color: "#9ca3af", padding: "36px" }}>Nenhum participante ainda</div>}
-                                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                    {Object.entries(usuarios).map(([nome, u]: any) => {
-                                        const pos = ranking.findIndex(r => r.nome === nome);
-                                        const isReset = resetNome === nome;
-                                        return (
-                                            <div key={nome} className="card" style={{ padding: "14px 16px" }}>
-                                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                                    <div style={{ fontSize: 16, width: 26, textAlign: "center", flexShrink: 0 }}>{pos >= 0 ? MEDAL[pos] || `${pos + 1}º` : "—"}</div>
-                                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div style={{ fontWeight: 700, fontSize: 14, color: "#111827" }}>{nome}</div>
-                                                        <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>
-                                                            {u.email || ""} · 🏆 {u.camp ? `${F[u.camp] || ""} ${u.camp}` : "Sem campeão"}
-                                                            {pos >= 0 && ` · ${ranking[pos]?.pontos || 0}pts`}
-                                                        </div>
-                                                    </div>
-                                                    <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                                                        <button onClick={() => setResetNome(isReset ? null : nome)}
-                                                            style={{ padding: "7px 12px", borderRadius: 8, border: "1.5px solid #e5e7eb", cursor: "pointer", fontWeight: 700, fontSize: 12, background: "#f9fafb", color: "#374151" }}>🔑</button>
-                                                        <button onClick={() => togglePago(nome)}
-                                                            style={{
-                                                                padding: "7px 12px", borderRadius: 8, cursor: "pointer", fontWeight: 700, fontSize: 12,
-                                                                background: u.pago ? "#dcfce7" : "#fee2e2", color: u.pago ? "#166534" : "#b91c1c",
-                                                                border: u.pago ? "1.5px solid #86efac" : "1.5px solid #fecaca"
-                                                            }}>
-                                                            {u.pago ? "✅ Pago" : "⚠ Pendente"}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                {isReset && (
-                                                    <div style={{ marginTop: 10, padding: "10px 14px", background: "#fefce8", border: "1.5px solid #fde68a", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                                                        <div style={{ fontSize: 12, color: "#92400e" }}>Enviar email de reset para <strong>{usuarios[nome]?.email || "—"}</strong>?</div>
-                                                        <button onClick={() => resetarSenha(nome, usuarios[nome]?.email || "")} style={{ padding: "8px 14px", borderRadius: 8, border: "none", cursor: "pointer", background: "#16a34a", color: "#fff", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>Enviar</button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    <TelaAdmin
+                        adminModo={adminModo}
+                        setAdminModo={setAdminModo}
+                        grupoAtivo={grupoAtivo}
+                        setGrupoAtivo={setGrupoAtivo}
+                        faseAtiva={faseAtiva}
+                        setFaseAtiva={setFaseAtiva}
+                        res={res}
+                        elim={elim}
+                        updateElimT={updateElimT}
+                        campR={campR}
+                        atualizarCampR={atualizarCampR}
+                        usuarios={usuarios}
+                        ranking={ranking}
+                        nPart={nPart}
+                        nPagos={nPagos}
+                        togglePago={togglePago}
+                        resetarSenha={resetarSenha}
+                        mostrarToast={mostrarToast}
+                        F={F}
+                    />
                 )}
 
             </div>
