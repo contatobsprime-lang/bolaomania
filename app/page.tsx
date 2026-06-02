@@ -126,9 +126,15 @@ export default function App() {
     useEffect(() => { const t = setInterval(() => setTick(x => x + 1), 30000); return () => clearInterval(t); }, []);
 
     useEffect(() => {
+        // Verifica se é link de recuperação de senha
+        const hash = typeof window !== "undefined" ? window.location.hash : "";
+        if (hash.includes("type=recovery")) {
+            setTela("recuperar");
+            setSessaoCarregando(false);
+            return; 
+        }
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session?.user) {
-                // Verifica se é uma sessão de recuperação de senha
                 supabase.auth.getUser().then(({ data: { user } }) => {
                     if (user?.aud === "authenticated" && session.access_token) {
                         const hash = typeof window !== "undefined" ? window.location.hash : "";
