@@ -31,7 +31,7 @@ import TelaAdmin from "@/components/TelaAdmin";
 import TelaRegras from "@/components/TelaRegras";
 import TelaFeed from "@/components/TelaFeed";
 import TelaHome from "@/components/TelaHome";
-
+import TelaMais from "@/components/TelaMais";
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
@@ -137,34 +137,27 @@ export default function App() {
     useEffect(() => { const t = setInterval(() => setTick(x => x + 1), 30000); return () => clearInterval(t); }, []);
 
     useEffect(() => {
-        // Verifica se é link de recuperação de senha
         const hash = typeof window !== "undefined" ? window.location.hash : "";
-        if (hash.includes("type=recovery")) {
+        const search = typeof window !== "undefined" ? window.location.search : "";
+
+        if (hash.includes("type=recovery") || search.includes("type=recovery")) {
             setTela("recuperar");
             setSessaoCarregando(false);
-            return;
-        }
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session?.user) {
-                supabase.auth.getUser().then(({ data: { user } }) => {
-                    if (user?.aud === "authenticated" && session.access_token) {
-                        const hash = typeof window !== "undefined" ? window.location.hash : "";
-                        if (hash.includes("type=recovery")) {
-                            setTela("recuperar");
-                            setSessaoCarregando(false);
-                            return;
-                        }
-                    }
-                    const email = session.user!.email || "";
+        } else {
+            // Só faz getSession se NÃO for link de recuperação
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session?.user) {
+                    const email = session.user.email || "";
                     setEmailAtual(email);
                     setIsAdmin(email === ADMIN_EMAIL);
                     supabase.from("usuarios").select("*").eq("email", email).single().then(({ data }) => {
                         if (data) { setUsuarioAtual(data.nome); setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "", email: data.email || "" } })); setTela("app"); setModo("home"); }
                         setSessaoCarregando(false);
                     });
-                });
-            } else { setSessaoCarregando(false); }
-        });
+                } else { setSessaoCarregando(false); }
+            });
+        }
+
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             if (_event === "PASSWORD_RECOVERY") {
                 setTela("recuperar");
@@ -612,22 +605,15 @@ export default function App() {
             )}
 
             {/* Tela Mais */}
-            {maisOpen && (
-                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 9995, display: "flex", alignItems: "flex-end" }} onClick={() => setMaisOpen(false)}>
-                    <div style={{ background: "#fff", borderRadius: "24px 24px 0 0", width: "100%", padding: "20px 16px 36px" }} onClick={e => e.stopPropagation()}>
-                        <div style={{ width: 40, height: 4, background: "#e5e7eb", borderRadius: 2, margin: "0 auto 20px" }} />
-                        <div style={{ fontWeight: 700, fontSize: 16, color: "#111827", marginBottom: 14 }}>Mais opções</div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                            {[{ id: "pix", icon: "💳", label: "Pix" }, { id: "perfil", icon: "👤", label: "Perfil" }, { id: "campeao", icon: "🏆", label: "Campeão" }, { id: "regras", icon: "📋", label: "Regras" }, { id: "historico", icon: "📊", label: "Histórico" }, { id: "feed", icon: "💬", label: "Feed" }, ...(isAdmin ? [{ id: "admin", icon: "🔐", label: "Admin" }] : []), { id: "sair", icon: "↩️", label: "Sair" }].map(item => (
-                                <button key={item.id} onClick={() => { if (item.id === "sair") { handleLogout(); setMaisOpen(false); } else if (item.id === "admin") { if (isAdmin) { setTela("admin"); setMaisOpen(false); } else { mostrarToast("Acesso restrito", "err"); setMaisOpen(false); } } else { setModo(item.id); setMaisOpen(false); } }}
-                                    style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: "20px 12px", background: modo === item.id ? "#f0fdf4" : "#f9fafb", border: `1.5px solid ${modo === item.id ? "#16a34a" : "#e5e7eb"}`, borderRadius: 16, cursor: "pointer", transition: "all .2s" }}>
-                                    <span style={{ fontSize: 30 }}>{item.icon}</span>
-                                    <span style={{ fontSize: 13, fontWeight: 600, color: modo === item.id ? "#16a34a" : "#374151" }}>{item.label}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+            {modo === "mais" && (
+                <TelaMais
+                    modo={modo}
+                    isAdmin={isAdmin}
+                    setModo={setModo}
+                    setTela={setTela}
+                    handleLogout={handleLogout}
+                    mostrarToast={mostrarToast}
+                />
             )}
 
             <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
