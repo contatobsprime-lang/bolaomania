@@ -618,19 +618,6 @@ export default function App() {
                     </div>
                 </div>
             )}
-
-            {/* Tela Mais */}
-            {modo === "mais" && (
-                <TelaMais
-                    modo={modo}
-                    isAdmin={isAdmin}
-                    setModo={setModo}
-                    setTela={setTela}
-                    handleLogout={handleLogout}
-                    mostrarToast={mostrarToast}
-                />
-            )}
-
             <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { if (tela === "admin") { setTela("app"); irParaHome(); } else irParaHome(); }}>
                     <div style={{ width: 36, height: 36, background: "#16a34a", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚽</div>
@@ -638,6 +625,17 @@ export default function App() {
                         <div style={{ fontWeight: 800, fontSize: 15, color: "#111827", letterSpacing: "-.3px" }}>Bolão Copa 2026</div>
                     </div>
                 </div>
+                {/* Tela Mais */}
+                {modo === "mais" && (
+                    <TelaMais
+                        modo={modo}
+                        isAdmin={isAdmin}
+                        setModo={setModo}
+                        setTela={setTela}
+                        handleLogout={handleLogout}
+                        mostrarToast={mostrarToast}
+                    />
+                )}
                 {tela === "app" && (
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {!pago && <span className="badge br" onClick={() => setModo("pix")} style={{ cursor: "pointer" }}>💳 Pagar</span>}
