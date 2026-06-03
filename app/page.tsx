@@ -151,7 +151,7 @@ export default function App() {
                     setEmailAtual(email);
                     setIsAdmin(email === ADMIN_EMAIL);
                     supabase.from("usuarios").select("*").eq("email", email).single().then(({ data }) => {
-                        if (data) { setUsuarioAtual(data.nome); setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "", email: data.email || "" } })); setTela("app"); setModo("home"); }
+                        if (data) { setUsuarioAtual(data.nome); setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "", email: data.email || "" } })); setTela("app"); const modoSalvo = localStorage.getItem("modoAtual") || "home"; setModo(modoSalvo); }
                         setSessaoCarregando(false);
                     });
                 } else { setSessaoCarregando(false); }
@@ -245,7 +245,7 @@ export default function App() {
             .subscribe();
         return () => { clearInterval(r); supabase.removeChannel(canal); };
     }, [carregarTudo]);
-    
+
     useEffect(() => { if (usuarioAtual) setRascunho((prev: any) => ({ ...prev, [usuarioAtual]: { ...(palpitesMap[usuarioAtual] || {}) } })); }, [usuarioAtual]);
 
     const palS = palpitesMap[usuarioAtual || ""] || {};
@@ -269,6 +269,9 @@ export default function App() {
 
     useEffect(() => {
         window.scrollTo(0, 0);
+    }, [modo]);
+    useEffect(() => {
+        localStorage.setItem("modoAtual", modo);
     }, [modo]);
 
     const campAtual = u.camp || "";
