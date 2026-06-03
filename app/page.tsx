@@ -851,20 +851,7 @@ export default function App() {
             </div>
 
             {/* Bottom Navigation — estilo Mercado Pago */}
-            {tela === "app" && (
-                <nav className="bottomnav">
-                    {[{ id: "home", icon: "⚽", label: "Início" }, { id: "jogos", icon: "📅", label: "Jogos" }, { id: "palpites", icon: "🎯", label: "Palpites" }, { id: "ranking", icon: "🏅", label: "Ranking" }].map(item => (
-                        <button key={item.id} className={`navbtn${modo === item.id ? " active" : ""}`} onClick={() => setModo(item.id)}>
-                            <span className="ni">{item.icon}</span>
-                            <span className="nl">{item.label}</span>
-                        </button>
-                    ))}
-                    <button className={`navbtn${["pix", "perfil", "campeao", "regras", "historico", "feed"].includes(modo) ? " active" : ""}`} onClick={() => setMaisOpen(true)}>
-                        <span className="ni">⋯</span>
-                        <span className="nl">Mais</span>
-                    </button>
-                </nav>
-            )}
+            {tela === "app" && <NavBar modo={modo} isAdmin={isAdmin} setModo={setModo} />}
         </div>
     );
 }
