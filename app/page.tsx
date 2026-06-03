@@ -115,7 +115,7 @@ export default function App() {
     const [grupoAtivo, setGrupoAtivo] = useState("A");
     const [faseAtiva, setFaseAtiva] = useState("grupos");
     const [modo, setModo] = useState(() =>
-        typeof window !== "undefined" ? sessionStorage.getItem("modo") || "home" : "home"
+        typeof window !== "undefined" ? localStorage.getItem("modoAtual") || "home" : "home"
     );
     const [adminModo, setAdminModo] = useState("resultados");
     const [copChave, setCopChave] = useState(false);
