@@ -133,6 +133,11 @@ export default function App() {
     const [feed, setFeed] = useState<any[]>([]);
     const [, setTick] = useState(0);
     const [sessaoCarregando, setSessaoCarregando] = useState(true);
+    const irParaHome = () => {
+        const modoSalvo = localStorage.getItem("modoAtual") || "home";
+        setModo(modoSalvo);
+    };
+
 
     useEffect(() => { const t = setInterval(() => setTick(x => x + 1), 30000); return () => clearInterval(t); }, []);
 
@@ -315,7 +320,7 @@ export default function App() {
         setUsuarios((prev: any) => ({ ...prev, [u.nome]: { pago: u.pago, camp: u.campeao_palpite || "" } }));
         const jaViu = typeof window !== "undefined" && localStorage.getItem(`ob_${u.nome}`);
         if (!jaViu) { setOnboarding(true); if (typeof window !== "undefined") localStorage.setItem(`ob_${u.nome}`, "1"); }
-        setTela("app"); setModo("home");
+        setTela("app"); irParaHome();
     }
 
     async function handleCadastro() {
@@ -334,7 +339,7 @@ export default function App() {
         setUsuarios((prev: any) => ({ ...prev, [nome]: { pago: false, camp: "" } }));
         setUsuarioAtual(nome); setCadNome(""); setCadEmail(""); setCadSenha(""); setCadSenha2("");
         setOnboarding(true); if (typeof window !== "undefined") localStorage.setItem(`ob_${nome}`, "1");
-        setTela("app"); setModo("home");
+        setTela("app"); irParaHome();
     }
 
     function setPalLocal(jogoId: number, campo: string, valor: string, dt: string) {
@@ -627,7 +632,7 @@ export default function App() {
             )}
 
             <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { if (tela === "admin") { setTela("app"); setModo("home"); } else setModo("home"); }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { if (tela === "admin") { setTela("app"); irParaHome(); } else irParaHome(); }}>
                     <div style={{ width: 36, height: 36, background: "#16a34a", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚽</div>
                     <div>
                         <div style={{ fontWeight: 800, fontSize: 15, color: "#111827", letterSpacing: "-.3px" }}>Bolão Copa 2026</div>
@@ -639,7 +644,7 @@ export default function App() {
                     </div>
                 )}
                 {tela === "admin" && (
-                    <button style={{ padding: "7px 14px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#374151" }} onClick={() => { setTela("app"); setModo("home"); }}>← Voltar</button>
+                    <button style={{ padding: "7px 14px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#374151" }} onClick={() => { setTela("app"); irParaHome(); }}>← Voltar</button>
                 )}
             </div>
 
@@ -653,7 +658,7 @@ export default function App() {
                             setIsAdmin(isAdmin);
                             setUsuarios((prev: Record<string, { pago: boolean; camp: string }>) => ({ ...prev, [nome]: { pago: u.pago, camp: u.campeao_palpite || "" } }));
                             setTela("app");
-                            setModo("home");
+                            irParaHome();
                         }}
                         onCadastro={() => setTela("cadastro")}
                     />
@@ -671,7 +676,7 @@ export default function App() {
                             setUsuarios((prev: Record<string, { pago: boolean; camp: string }>) => ({ ...prev, [nome]: { pago: false, camp: "" } }));
                             setOnboarding(true);
                             setTela("app");
-                            setModo("home");
+                            irParaHome();
                         }}
                         onVoltar={() => setTela("login")}
                     />
@@ -787,7 +792,7 @@ export default function App() {
                                     setUsuarios((prev: Record<string, { pago: boolean; camp: string }>) => ({ ...prev, [usuarioAtual || ""]: { ...prev[usuarioAtual || ""], pago: true } }));
                                     dispararConfete();
                                     mostrarToast("🎉 Pagamento confirmado! Bem-vindo ao bolão!");
-                                    setTimeout(() => setModo("home"), 2000);
+                                    setTimeout(() => irParaHome(), 2000);
                                 }}
                             />
                         )}
