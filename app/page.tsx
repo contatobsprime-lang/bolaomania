@@ -28,6 +28,9 @@ import TelaPix from "@/components/TelaPix";
 import TelaPerfil from "@/components/TelaPerfil";
 import TelaCampeao from "@/components/TelaCampeao";
 import TelaAdmin from "@/components/TelaAdmin";
+import TelaRegras from "@/components/TelaRegras";
+import TelaFeed from "@/components/TelaFeed";
+import TelaHome from "@/components/TelaHome";
 
 
 const CSS = `
@@ -685,89 +688,25 @@ export default function App() {
 
                         {/* HOME */}
                         {modo === "home" && (
-                            <div>
-                                <div style={{ background: "linear-gradient(135deg,#16a34a,#15803d)", borderRadius: 20, padding: "20px", marginBottom: 16, color: "#fff", display: "flex", alignItems: "center", gap: 14 }}>
-                                    <div style={{ width: 52, height: 52, background: "rgba(255,255,255,.2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, flexShrink: 0, letterSpacing: -1 }}>
-                                        {(usuarioAtual || "?").slice(0, 2).toUpperCase()}
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: 13, opacity: .8, marginBottom: 2 }}>Olá,</div>
-                                        <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 2 }}>{usuarioAtual}</div>
-                                        <div style={{ fontSize: 12, opacity: .8 }}>{pago ? "✅ Você está no bolão!" : "⚠️ Pagamento pendente"}</div>
-                                    </div>
-                                </div>
-                                <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
-                                    {[["⭐", meusDados?.pontos ?? 0, "Pontos", "#16a34a"], ["🎯", totSalvos, "Palpites", "#2563eb"], ["🥇", meusDados?.placares ?? 0, "Exatos", "#16a34a"]].map(([ic, v, lb, cor]: any) => (
-                                        <div key={lb} className="card" style={{ flex: 1, textAlign: "center", padding: "12px 8px" }}>
-                                            <div style={{ fontSize: 20 }}>{ic}</div>
-                                            <div style={{ fontWeight: 800, fontSize: 20, color: cor }}>{v}</div>
-                                            <div style={{ fontSize: 10, color: "#9ca3af" }}>{lb}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                                {minhaPos > 0 && (
-                                    <div className="card" style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
-                                        <div style={{ fontSize: 26 }}>{MEDAL[minhaPos - 1] || `${minhaPos}º`}</div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 700, fontSize: 14, color: "#111827" }}>Posição no ranking</div>
-                                            <div style={{ fontSize: 11, color: "#9ca3af" }}>de {nPart} participantes · {meusDados?.pontos || 0} pts</div>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="card" style={{ marginBottom: 14 }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                                        <span style={{ fontSize: 12, fontWeight: 700 }}>Progresso dos palpites</span>
-                                        <span style={{ fontSize: 12, color: "#16a34a", fontWeight: 700 }}>{totSalvos}/{totJogos} ({pctPal}%)</span>
-                                    </div>
-                                    <div style={{ height: 8, borderRadius: 4, background: "#f3f4f6", overflow: "hidden" }}>
-                                        <div style={{ height: "100%", borderRadius: 4, background: "linear-gradient(90deg,#16a34a,#4ade80)", width: `${pctPal}%`, transition: "width .5s" }} />
-                                    </div>
-                                </div>
-                                {countdown && (
-                                    <div className="card" style={{ marginBottom: 14, border: "1.5px solid #86efac", background: "#f0fdf4" }}>
-                                        <div style={{ fontSize: 12, color: "#166534", fontWeight: 600, marginBottom: 4 }}>⏱ Próximo palpite pendente</div>
-                                        <div style={{ fontWeight: 700, fontSize: 14, color: "#16a34a" }}>{countdown}</div>
-                                    </div>
-                                )}
-                                <div style={{ marginBottom: 10 }}>
-                                    <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <span>Próximos Jogos</span>
-                                        <button onClick={() => setModo("jogos")} style={{ fontSize: 11, color: "#16a34a", background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontWeight: 600 }}>Ver todos →</button>
-                                    </div>
-                                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                        {JOGOS_GRUPO.filter(j => { const r = res[j.id] || {}; const tR = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== ""; return !tR && new Date(j.dt).getTime() > Date.now(); }).slice(0, 3).map(j => {
-                                            const pJ = palS[j.id]; const tP = pJ && pJ.gols1 !== "" && pJ.gols2 !== ""; const lk = lock(j.dt);
-                                            return (
-                                                <div key={j.id} onClick={() => { if (!lk) setJogoSel(j); }} className="card"
-                                                    style={{ padding: "14px 16px", cursor: lk ? "default" : "pointer", border: `1.5px solid ${tP ? "#86efac" : "#e5e7eb"}` }}>
-                                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: tP || lk ? 0 : 10 }}>
-                                                        <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
-                                                            <span style={{ fontSize: 24 }}>{F[j.time1] || "🏳️"}</span>
-                                                            <div style={{ flex: 1 }}>
-                                                                <div style={{ fontWeight: 700, fontSize: 13, color: "#111827" }}>{j.time1} × {j.time2} <span style={{ fontSize: 20 }}>{F[j.time2] || "🏳️"}</span></div>
-                                                                <div style={{ fontSize: 12, color: "#6b7280" }}>{fmtDLong(j.dt)} · {fmtH(j.dt)}</div>
-                                                            </div>
-                                                        </div>
-                                                        {lk ? <span className="badge br">🔒</span> : tP ? <span className="badge bgr">✓ {pJ?.gols1}×{pJ?.gols2}</span> : null}
-                                                    </div>
-                                                    {!lk && !tP && (
-                                                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                                            <input type="number" min={0} max={30} className={`si${(palR[j.id]?.gols1 !== undefined && palR[j.id]?.gols1 !== "") ? " f" : ""}`} style={{ width: 56, height: 56 }}
-                                                                value={palR[j.id]?.gols1 ?? ""} onClick={e => e.stopPropagation()}
-                                                                onChange={e => { setPalLocal(j.id, "gols1", e.target.value, j.dt); if (e.target.value !== "") { const nx = document.getElementById(`hg2_${j.id}`); if (nx) nx.focus(); } }} placeholder="0" />
-                                                            <span style={{ color: "#d1d5db", fontWeight: 700 }}>×</span>
-                                                            <input type="number" min={0} max={30} id={`hg2_${j.id}`} className={`si${(palR[j.id]?.gols2 !== undefined && palR[j.id]?.gols2 !== "") ? " f" : ""}`} style={{ width: 56, height: 56 }}
-                                                                value={palR[j.id]?.gols2 ?? ""} onClick={e => e.stopPropagation()}
-                                                                onChange={e => { setPalLocal(j.id, "gols2", e.target.value, j.dt); if (e.target.value !== "") { const btn = document.getElementById(`hbtn_${j.id}`); if (btn) btn.focus(); } }} placeholder="0" />
-                                                            <button id={`hbtn_${j.id}`} className="btn-primary" style={{ flex: 1, padding: "14px 8px", fontSize: 14 }} onClick={async e => { e.stopPropagation(); await confirmarPalpite(j); }} onKeyDown={async e => { if (e.key === "Enter") await confirmarPalpite(j); }}>Confirmar</button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
+                            <TelaHome
+                                usuarioAtual={usuarioAtual}
+                                pago={pago}
+                                meusDados={meusDados}
+                                minhaPos={minhaPos}
+                                nPart={nPart}
+                                totSalvos={totSalvos}
+                                totJogos={totJogos}
+                                pctPal={pctPal}
+                                countdown={countdown}
+                                res={res}
+                                palS={palS}
+                                palR={palR}
+                                F={F}
+                                setModo={setModo}
+                                setJogoSel={setJogoSel}
+                                setPalLocal={setPalLocal}
+                                confirmarPalpite={confirmarPalpite}
+                            />
                         )}
 
                         {/* JOGOS */}
@@ -886,47 +825,12 @@ export default function App() {
 
                         {/* REGRAS */}
                         {modo === "regras" && (
-                            <div>
-                                <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 16, color: "#111827" }}>📋 Regras do Bolão</div>
-                                {[
-                                    { title: "Pontuação por fase", rows: [["⚽", "Grupos — vencedor/empate", "+2 pts"], ["🎯", "Grupos — placar exato", "+5 pts"], ["⚽", "Oitavas — vencedor", "+3 pts"], ["🎯", "Oitavas — placar exato", "+8 pts"], ["⚽", "Quartas — vencedor", "+5 pts"], ["🎯", "Quartas — placar exato", "+12 pts"], ["⚽", "Semifinal — vencedor", "+7 pts"], ["🎯", "Semifinal — placar exato", "+15 pts"], ["⚽", "Final — vencedor", "+10 pts"], ["🎯", "Final — placar exato", "+20 pts"]] },
-                                    { title: "Bônus e regras", rows: [["🏆", `Campeão da Copa (fecha 04/07)`, `+${CONFIG.bonusCampeao} pts`], ["🥅", "Pênalti: vale o vencedor final", "sem placar exato"], ["🔒", `Palpites fecham ${CONFIG.minutesBloqueio}min antes do jogo`, "automático"]] },
-                                    { title: "Desempate", rows: [["1️⃣", "Mais placares exatos", ""], ["2️⃣", "Mais acertos", ""], ["3️⃣", "Acertou o campeão", ""], ["4️⃣", "Decisão do admin", ""]] },
-                                    { title: "Premiação — apenas pagos", rows: premios.dist.map(d => [MEDAL[d.pos - 1], `${d.pos}º lugar`, `R$ ${d.valor}`]) },
-                                ].map((sec, si) => (
-                                    <div key={si} className="card" style={{ marginBottom: 10 }}>
-                                        <div style={{ fontWeight: 700, fontSize: 12, color: "#16a34a", letterSpacing: .5, textTransform: "uppercase", marginBottom: 12 }}>{sec.title}</div>
-                                        {sec.rows.map((r, i) => (
-                                            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: i < sec.rows.length - 1 ? "1px solid #f3f4f6" : "none" }}>
-                                                <span style={{ fontSize: 16 }}>{r[0]}</span><span style={{ flex: 1, fontSize: 14, color: "#374151" }}>{r[1]}</span>{r[2] && <span className="badge bgr">{r[2]}</span>}
-                                            </div>
-                                        ))}
-                                    </div>
-                                ))}
-                            </div>
+                            <TelaRegras premios={premios} />
                         )}
 
                         {/* FEED */}
                         {modo === "feed" && (
-                            <div>
-                                <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 16, color: "#111827" }}>💬 Feed de Atividade</div>
-                                {feed.length === 0 ? (
-                                    <div className="card" style={{ textAlign: "center", padding: "40px", color: "#9ca3af" }}>
-                                        <div style={{ fontSize: 36, marginBottom: 8 }}>💬</div>
-                                        <div>Nenhuma atividade ainda</div>
-                                        <div style={{ fontSize: 12, marginTop: 4 }}>As ações do grupo aparecerão aqui</div>
-                                    </div>
-                                ) : (
-                                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                        {feed.map(f => (
-                                            <div key={f.id} className="card" style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
-                                                <div style={{ width: 36, height: 36, background: "#f0fdf4", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>⚽</div>
-                                                <div style={{ flex: 1 }}><div style={{ fontSize: 14, color: "#374151" }}>{f.msg}</div><div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{f.ts}</div></div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                            <TelaFeed feed={feed} />
                         )}
 
                     </div>
@@ -942,6 +846,7 @@ export default function App() {
                         faseAtiva={faseAtiva}
                         setFaseAtiva={setFaseAtiva}
                         res={res}
+                        resE={resE}
                         elim={elim}
                         updateElimT={updateElimT}
                         campR={campR}

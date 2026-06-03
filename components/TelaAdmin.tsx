@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import type { Jogo, RankingEntry } from "@/lib/types";
-import { CONFIG, GRUPOS, JOGOS_GRUPO, TODOS_TIMES, FASE_L, MEDAL } from "@/lib/constantes";
-import JogoCardAdmin from "./JogoCardAdmin";
+import { CONFIG, GRUPOS, TODOS_TIMES, FASE_L, MEDAL } from "@/lib/constantes";
+import { JOGOS_GRUPO } from "@/data/jogos-grupo";
+import { fmtD, fmtH } from "@/lib/utils";
 
 interface Props {
   adminModo: string;
@@ -13,6 +14,7 @@ interface Props {
   faseAtiva: string;
   setFaseAtiva: (f: string) => void;
   res: Record<number, { gols1: string; gols2: string; penalti?: boolean }>;
+  resE: Record<number, { gols1: string; gols2: string; penalti?: boolean }>;
   elim: Jogo[];
   updateElimT: (id: number, field: string, value: string) => void;
   campR: string;
@@ -29,7 +31,7 @@ interface Props {
 
 export default function TelaAdmin({
   adminModo, setAdminModo, grupoAtivo, setGrupoAtivo, faseAtiva, setFaseAtiva,
-  res, elim, updateElimT, campR, atualizarCampR, usuarios, ranking, nPart, nPagos,
+  res, resE, elim, updateElimT, campR, atualizarCampR, usuarios, ranking, nPart, nPagos,
   togglePago, resetarSenha, mostrarToast, F
 }: Props) {
   const [resetNome, setResetNome] = useState<string | null>(null);
@@ -57,11 +59,37 @@ export default function TelaAdmin({
             {GRUPOS[grupoAtivo].map(t => <span key={t} style={{ fontSize: 10, color: "#6b7280" }}>{F[t]} {t}</span>)}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            {JOGOS_GRUPO.filter(j => j.g === grupoAtivo).map(j => <JogoCardAdmin key={j.id} jogo={j} />)}
+            {JOGOS_GRUPO.filter((j: Jogo) => j.g === grupoAtivo).map((j: Jogo) => {
+              const r = res[j.id] || {};
+              const temRes = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
+              return (
+                <div key={j.id} className="card" style={{ padding: "12px", border: `1.5px solid ${temRes ? "#86efac" : "#e5e7eb"}` }}>
+                  <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 8, fontFamily: "'JetBrains Mono',monospace" }}>
+                    📍 {j.est} · {fmtD(j.dt)} {fmtH(j.dt)}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ textAlign: "center", flex: 1 }}>
+                      <div style={{ fontSize: 26 }}>{F[j.time1] || "🏳️"}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#374151" }}>{j.time1 || "A definir"}</div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "0 8px", flexShrink: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <input type="number" min={0} max={30} className={`si r${temRes ? " f" : ""}`} value={r.gols1 ?? ""} onChange={e => {/* setResAdmin */}} placeholder="—" />
+                        <span style={{ color: "#d1d5db", fontSize: 14 }}>×</span>
+                        <input type="number" min={0} max={30} className={`si r${temRes ? " f" : ""}`} value={r.gols2 ?? ""} onChange={e => {/* setResAdmin */}} placeholder="—" />
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "center", flex: 1 }}>
+                      <div style={{ fontSize: 26 }}>{F[j.time2] || "🏳️"}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#374151" }}>{j.time2 || "A definir"}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
           <div style={{ marginTop: 10, padding: "9px 13px", background: "rgba(74,222,128,.04)", border: "1px solid rgba(74,222,128,.12)", borderRadius: 9, display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 11, color: "#6b7280" }}>{Object.keys(res).filter(id => res[id]?.gols1 !== "" && res[id]?.gols1 !== undefined).length}/{JOGOS_GRUPO.length} resultados</span>
-            <span className="badge bgr">☁ Supabase</span>
+<span style={{ fontSize: 11, color: "#6b7280" }}>{Object.entries(res).filter(([, r]) => r.gols1 !== "" && r.gols1 !== undefined).length}/{JOGOS_GRUPO.length} resultados</span>            <span className="badge bgr">☁ Supabase</span>
           </div>
         </div>
       )}
@@ -94,7 +122,35 @@ export default function TelaAdmin({
                     {TODOS_TIMES.map(t => <option key={t} value={t}>{F[t]} {t}</option>)}
                   </select>
                 </div>
-                {j.time1 && j.time2 && <JogoCardAdmin jogo={j} isElim />}
+                {j.time1 && j.time2 && (
+                  <div className="card" style={{ padding: "12px", border: `1.5px solid ${(resE[j.id]?.gols1 !== undefined && resE[j.id]?.gols1 !== "" && resE[j.id]?.gols2 !== undefined && resE[j.id]?.gols2 !== "") ? "#86efac" : "#e5e7eb"}` }}>
+                    <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 8, fontFamily: "'JetBrains Mono',monospace" }}>
+                      📍 {j.est || ""} · {fmtD(j.dt)} {fmtH(j.dt)}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ textAlign: "center", flex: 1 }}>
+                        <div style={{ fontSize: 26 }}>{F[j.time1] || "🏳️"}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#374151" }}>{j.time1}</div>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "0 8px", flexShrink: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <input type="number" min={0} max={30} className="si r" value={resE[j.id]?.gols1 ?? ""} onChange={e => {/* setResEAdmin */}} placeholder="—" />
+                          <span style={{ color: "#d1d5db", fontSize: 14 }}>×</span>
+                          <input type="number" min={0} max={30} className="si r" value={resE[j.id]?.gols2 ?? ""} onChange={e => {/* setResEAdmin */}} placeholder="—" />
+                        </div>
+                        {j.fase !== "grupos" && (
+                          <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6b7280", cursor: "pointer" }}>
+                            <input type="checkbox" checked={resE[j.id]?.penalti || false} onChange={e => {/* setResEAdmin */}} style={{ width: 14, height: 14 }} /> Pênalti
+                          </label>
+                        )}
+                      </div>
+                      <div style={{ textAlign: "center", flex: 1 }}>
+                        <div style={{ fontSize: 26 }}>{F[j.time2] || "🏳️"}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#374151" }}>{j.time2}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
