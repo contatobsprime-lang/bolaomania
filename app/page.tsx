@@ -245,12 +245,14 @@ export default function App() {
             .subscribe();
         return () => { clearInterval(r); supabase.removeChannel(canal); };
     }, [carregarTudo]);
+    
     useEffect(() => { if (usuarioAtual) setRascunho((prev: any) => ({ ...prev, [usuarioAtual]: { ...(palpitesMap[usuarioAtual] || {}) } })); }, [usuarioAtual]);
 
     const palS = palpitesMap[usuarioAtual || ""] || {};
     const palR = rascunho[usuarioAtual || ""] || {};
     const u = usuarios[usuarioAtual || ""] || {};
     const pago = u.pago || false;
+
     useEffect(() => {
         if (pago || !usuarioAtual) return;
         const poll = setInterval(async () => {
@@ -264,6 +266,11 @@ export default function App() {
         }, 5000);
         return () => clearInterval(poll);
     }, [pago, usuarioAtual]);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [modo]);
+
     const campAtual = u.camp || "";
     const nPart = Object.keys(usuarios).length;
     const nPagos = Object.values(usuarios).filter((u: any) => u.pago).length;
@@ -633,7 +640,7 @@ export default function App() {
                 )}
             </div>
 
-            <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 14px" }}>
+            <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 14px", position: "relative", zIndex: 1 }}>
 
                 {tela === "login" && (
                     <TelaLogin
