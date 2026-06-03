@@ -6,7 +6,7 @@ interface Props {
   setModo: (m: string) => void;
 }
 
-export default function NavBar({ modo, isAdmin }: Props) {
+export default function NavBar({ modo, isAdmin, setModo }: Props) {
   const mainItems = [
     { id: "home", icon: "⚽", label: "Início" },
     { id: "jogos", icon: "📅", label: "Jogos" },

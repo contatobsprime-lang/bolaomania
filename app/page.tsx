@@ -32,6 +32,7 @@ import TelaRegras from "@/components/TelaRegras";
 import TelaFeed from "@/components/TelaFeed";
 import TelaHome from "@/components/TelaHome";
 import TelaMais from "@/components/TelaMais";
+import NavBar from "@/components/NavBar";
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
@@ -128,7 +129,6 @@ export default function App() {
     const [jogoSel, setJogoSel] = useState<any | null>(null);
     const [countdown, setCountdown] = useState("");
     const [histRodada, setHistRodada] = useState<number | "todas">("todas");
-    const [maisOpen, setMaisOpen] = useState(false);
     const [mpLoading, setMpLoading] = useState(false);
     const [feed, setFeed] = useState<any[]>([]);
     const [, setTick] = useState(0);
