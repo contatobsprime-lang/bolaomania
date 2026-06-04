@@ -1,5 +1,6 @@
 "use client";
 
+import "@/styles/app.css";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import PixQRCode from "@/components/PixQRCode";
@@ -25,42 +26,6 @@ import TelaFeed from "@/components/TelaFeed";
 import TelaHome from "@/components/TelaHome";
 import TelaMais from "@/components/TelaMais";
 import NavBar from "@/components/NavBar";
-
-const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
-*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#f0f2f5}::-webkit-scrollbar-thumb{background:#16a34a;border-radius:2px}
-input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
-input[type=number]{-moz-appearance:textfield}
-body{background:#f5f7fa;color:#111827;font-family:'Inter',sans-serif;}
-.fade{animation:fadeIn .25s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@keyframes confetti{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(-100px) rotate(720deg);opacity:0}}
-.cf{position:fixed;bottom:80px;animation:confetti 1.2s ease forwards;pointer-events:none;font-size:22px;z-index:9999}
-.btn-primary{background:#16a34a;color:#fff;border:none;border-radius:12px;padding:15px 24px;font-family:'Inter',sans-serif;font-weight:700;font-size:16px;cursor:pointer;transition:all .2s;width:100%}
-.btn-primary:hover{background:#15803d}.btn-primary:disabled{opacity:.5;cursor:not-allowed}
-.btn-ghost{background:#fff;color:#374151;border:1.5px solid #e5e7eb;border-radius:12px;padding:13px 18px;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;cursor:pointer;transition:all .2s;width:100%}
-.btn-ghost:hover{border-color:#16a34a;color:#16a34a}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.inp{background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;color:#111827;font-family:'Inter',sans-serif;font-size:16px;outline:none;width:100%;transition:border .2s}
-.inp:focus{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.08)}
-.si{width:62px;height:62px;background:#fff;border:2px solid #e5e7eb;border-radius:12px;color:#16a34a;font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;text-align:center;outline:none;transition:all .2s}
-.si:focus{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.08)}.si.f{border-color:#16a34a;background:#f0fdf4}
-.si.r{color:#16a34a}.si.r.f{border-color:#16a34a;background:#f0fdf4}.si:disabled{opacity:.35;cursor:not-allowed;background:#f9fafb}
-.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace}
-.bg{background:#fef9c3;color:#854d0e;border:1px solid #fde68a}
-.bb{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
-.bgr{background:#dcfce7;color:#166534;border:1px solid #86efac}
-.br{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
-.bp{background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe}
-.bottomnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;align-items:stretch;z-index:200;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -2px 12px rgba(0,0,0,.06)}
-.navbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 2px 8px;cursor:pointer;border:none;background:transparent;transition:color .15s;gap:3px;font-family:'Inter',sans-serif;min-height:58px}
-.navbtn .ni{font-size:22px;line-height:1}
-.navbtn .nl{font-size:10px;font-weight:600;color:#9ca3af}
-.navbtn.active .nl{color:#16a34a;font-weight:700}
-.navbtn.active .ni{filter:drop-shadow(0 0 4px rgba(22,163,74,.4))}
-.skeleton{background:#e5e7eb;border-radius:8px;animation:pulse 1.5s ease-in-out infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-.pull-refresh{position:relative;top:0;transition:top .3s ease}
-`;
 
 export default function App() {
     const [tela, setTela] = useState<Tela>("login");
@@ -466,15 +431,6 @@ export default function App() {
         await supabase.from("eliminatorias").upsert({ jogo_id: jId, [campo]: valor }, { onConflict: "jogo_id" });
     }
 
-    async function handleEsqueceuSenha() {
-        if (!esqueceuEmail || !esqueceuEmail.includes("@")) { mostrarToast("Digite um email válido", "err"); return; }
-        setCarregando(true);
-        const { error } = await supabase.auth.resetPasswordForEmail(esqueceuEmail, { redirectTo: typeof window !== "undefined" ? window.location.origin + "/reset-password" : "" });
-        setCarregando(false);
-        if (error) { mostrarToast("Erro ao enviar email", "err"); return; }
-        setEsqueceuSent(true);
-    }
-
     function handleLogout() {
         supabase.auth.signOut();
         setUsuarioAtual(null); setEmailAtual(null); setIsAdmin(false);
@@ -546,8 +502,6 @@ export default function App() {
 
     return (
         <div style={{ minHeight: "100vh", background: "#f5f7fa", color: "#111827", fontFamily: "'Inter',sans-serif", userSelect: "none", WebkitUserSelect: "none", paddingBottom: tela === "app" ? "72px" : "0" }}>
-            <style>{CSS}</style>
-
             {/* BANNER FIXO NO TOPO */}
             <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { if (tela === "admin") { setTela("app"); irParaHome(); } else irParaHome(); }}>
@@ -571,7 +525,6 @@ export default function App() {
                 <div style={{ position: "fixed", inset: 0, background: "#f5f7fa", zIndex: 99999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
                     <div style={{ width: 72, height: 72, background: "#16a34a", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40 }}>⚽</div>
                     <div style={{ width: 40, height: 40, border: "3px solid #e5e7eb", borderTopColor: "#16a34a", borderRadius: "50%", animation: "spin .8s linear infinite" }} />
-                    <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
                     <div style={{ fontSize: 14, color: "#9ca3af" }}>Carregando...</div>
                 </div>
             )}
