@@ -1,23 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-
 import { supabase } from "@/lib/supabase";
-
 import PixQRCode from "@/components/PixQRCode";
-
 import { CONFIG, ADMIN_EMAIL, GRUPOS, TODOS_TIMES, F, MEDAL, FASE_L, ELIM_TMPL } from "@/lib/constantes";
-
 import { JOGOS_GRUPO } from "@/data/jogos-grupo";
-
 import type { Jogo, Palpite, Resultado, Usuario, DetJogo, RankingEntry, ToastTipo, Modo, StatusFiltro, HistRodada, Tela } from "@/lib/types";
-
 import { lock, campLock, fmtD, fmtDLong, fmtH, tr, statusJ } from "@/lib/utils";
-
 import { calcJogo, calcTudo, calcPremios, desempate, calcBadges, pts } from "@/lib/calculos";
 
 import TelaLogin from "@/components/TelaLogin";
-
 import TelaCadastro from "@/components/TelaCadastro";
 import TelaRecuperarSenha from "@/components/TelaRecuperarSenha";
 import TelaJogos from "@/components/TelaJogos";
@@ -46,50 +38,28 @@ body{background:#f5f7fa;color:#111827;font-family:'Inter',sans-serif;}
 .cf{position:fixed;bottom:80px;animation:confetti 1.2s ease forwards;pointer-events:none;font-size:22px;z-index:9999}
 .btn-primary{background:#16a34a;color:#fff;border:none;border-radius:12px;padding:15px 24px;font-family:'Inter',sans-serif;font-weight:700;font-size:16px;cursor:pointer;transition:all .2s;width:100%}
 .btn-primary:hover{background:#15803d}.btn-primary:disabled{opacity:.5;cursor:not-allowed}
-.btn-gold{background:#16a34a;color:#fff;border:none;border-radius:12px;padding:15px 24px;font-family:'Inter',sans-serif;font-weight:700;font-size:16px;cursor:pointer;transition:all .2s;width:100%}
-.btn-gold:hover{background:#15803d}.btn-gold:disabled{opacity:.5;cursor:not-allowed}
 .btn-ghost{background:#fff;color:#374151;border:1.5px solid #e5e7eb;border-radius:12px;padding:13px 18px;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;cursor:pointer;transition:all .2s;width:100%}
 .btn-ghost:hover{border-color:#16a34a;color:#16a34a}
-.btn-outline{background:transparent;color:#16a34a;border:1.5px solid #16a34a;border-radius:10px;padding:9px 16px;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:all .2s}
-.btn-outline:hover{background:#f0fdf4}
 .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .inp{background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;color:#111827;font-family:'Inter',sans-serif;font-size:16px;outline:none;width:100%;transition:border .2s}
 .inp:focus{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.08)}
 .si{width:62px;height:62px;background:#fff;border:2px solid #e5e7eb;border-radius:12px;color:#16a34a;font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;text-align:center;outline:none;transition:all .2s}
 .si:focus{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.08)}.si.f{border-color:#16a34a;background:#f0fdf4}
-.si.r{color:#16a34a}.si.r.f{border-color:#16a34a;background:#f0fdf4}.si.r:focus{border-color:#16a34a}.si:disabled{opacity:.35;cursor:not-allowed;background:#f9fafb}
-.tab{padding:7px 12px;border-radius:8px;font-family:'Inter',sans-serif;font-weight:600;font-size:12px;cursor:pointer;border:none;transition:all .2s}
-.tab.on{background:#16a34a;color:#fff}.tab.off{background:transparent;color:#6b7280}.tab.off:hover{color:#16a34a;background:#f0fdf4}
-.gtab{padding:7px 12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:12px;cursor:pointer;border:1.5px solid #e5e7eb;transition:all .2s;background:#fff}
-.gtab.on{background:#f0fdf4;color:#16a34a;border-color:#16a34a}.gtab.off{color:#6b7280}.gtab.off:hover{color:#16a34a;border-color:#16a34a}
-.ftab{padding:8px 14px;border-radius:20px;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;border:1.5px solid #e5e7eb;transition:all .2s;background:#fff}
-.ftab.on{background:#16a34a;color:#fff;border-color:#16a34a}.ftab.off{color:#6b7280}.ftab.off:hover{color:#16a34a;border-color:#16a34a}
-.stab{padding:8px 16px;border-radius:20px;font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;border:1.5px solid #e5e7eb;transition:all .2s;background:#fff}
-.stab.on{background:#16a34a;color:#fff;border-color:#16a34a}.stab.off{color:#6b7280}.stab.off:hover{color:#16a34a;border-color:#16a34a}
+.si.r{color:#16a34a}.si.r.f{border-color:#16a34a;background:#f0fdf4}.si:disabled{opacity:.35;cursor:not-allowed;background:#f9fafb}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace}
 .bg{background:#fef9c3;color:#854d0e;border:1px solid #fde68a}
 .bb{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
 .bgr{background:#dcfce7;color:#166534;border:1px solid #86efac}
 .br{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
 .bp{background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe}
-.bred{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
-.byellow{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
-.bgreen{background:#dcfce7;color:#166534;border:1px solid #86efac}
-select{background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;color:#111827;font-family:'Inter',sans-serif;font-size:16px;outline:none;width:100%;transition:border .2s}
-select:focus{border-color:#16a34a}select option{background:#fff;color:#111827}select:disabled{opacity:.4;cursor:not-allowed;background:#f9fafb}
-.nbtn{width:40px;height:40px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#374151;transition:all .2s}
-.nbtn:disabled{opacity:.3;cursor:not-allowed}.nbtn:not(:disabled):hover{border-color:#16a34a;color:#16a34a}
 .bottomnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;align-items:stretch;z-index:200;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -2px 12px rgba(0,0,0,.06)}
 .navbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 2px 8px;cursor:pointer;border:none;background:transparent;transition:color .15s;gap:3px;font-family:'Inter',sans-serif;min-height:58px}
 .navbtn .ni{font-size:22px;line-height:1}
 .navbtn .nl{font-size:10px;font-weight:600;color:#9ca3af}
 .navbtn.active .nl{color:#16a34a;font-weight:700}
 .navbtn.active .ni{filter:drop-shadow(0 0 4px rgba(22,163,74,.4))}
-.date-sep{font-size:15px;font-weight:700;color:#111827;padding:14px 0 8px;font-family:'Inter',sans-serif}
-.jogo-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.jogo-card-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f3f4f6;background:#fafafa}
-.jogo-card-body{padding:18px 16px}
-.jogo-card-footer{padding:10px 16px;border-top:1px solid #f3f4f6;background:#fafafa;display:flex;justify-content:space-between;align-items:center}
+.skeleton{background:#e5e7eb;border-radius:8px;animation:pulse 1.5s ease-in-out infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pull-refresh{position:relative;top:0;transition:top .3s ease}
 `;
 
 export default function App() {
@@ -103,9 +73,16 @@ export default function App() {
     const [usuarioAtual, setUsuarioAtual] = useState<string | null>(null);
     const [emailAtual, setEmailAtual] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
-    const [loginEmail, setLoginEmail] = useState(""); const [loginSenha, setLoginSenha] = useState(""); const [loginErro, setLoginErro] = useState("");
-    const [cadNome, setCadNome] = useState(""); const [cadEmail, setCadEmail] = useState(""); const [cadSenha, setCadSenha] = useState(""); const [cadSenha2, setCadSenha2] = useState(""); const [cadErro, setCadErro] = useState("");
-    const [esqueceuEmail, setEsqueceuEmail] = useState(""); const [esqueceuSent, setEsqueceuSent] = useState(false); const [telaEsqueceu, setTelaEsqueceu] = useState(false);
+    const [loginEmail, setLoginEmail] = useState(""); 
+    const [loginSenha, setLoginSenha] = useState(""); 
+    const [loginErro, setLoginErro] = useState("");
+    const [cadNome, setCadNome] = useState(""); 
+    const [cadEmail, setCadEmail] = useState(""); 
+    const [cadSenha, setCadSenha] = useState(""); 
+    const [cadSenha2, setCadSenha2] = useState(""); 
+    const [cadErro, setCadErro] = useState("");
+    const [esqueceuEmail, setEsqueceuEmail] = useState(""); 
+    const [esqueceuSent, setEsqueceuSent] = useState(false); 
     const [elim, setElim] = useState<any[]>(ELIM_TMPL);
     const [palpitesMap, setPalpitesMap] = useState<any>({});
     const [rascunho, setRascunho] = useState<any>({});
@@ -121,23 +98,47 @@ export default function App() {
     const [copChave, setCopChave] = useState(false);
     const [copCola, setCopCola] = useState(false);
     const [copRank, setCopRank] = useState(false);
-    const [detUser, setDetUser] = useState<string | null>(null);
-    const [resetNome, setResetNome] = useState<string | null>(null);
-    const [novaSenha, setNovaSenha] = useState("");
     const [rodada, setRodada] = useState(1);
     const [statusF, setStatusF] = useState<"proximos" | "aovivo" | "terminados">("proximos");
     const [jogoSel, setJogoSel] = useState<any | null>(null);
     const [countdown, setCountdown] = useState("");
     const [histRodada, setHistRodada] = useState<number | "todas">("todas");
-    const [mpLoading, setMpLoading] = useState(false);
     const [feed, setFeed] = useState<any[]>([]);
     const [, setTick] = useState(0);
     const [sessaoCarregando, setSessaoCarregando] = useState(true);
+    const [pullRefresh, setPullRefresh] = useState(0);
+    const [notif30min, setNotif30min] = useState(false);
+
     const irParaHome = () => {
         const modoSalvo = localStorage.getItem("modoAtual") || "home";
         setModo(modoSalvo);
     };
 
+    // Pull to refresh
+    useEffect(() => {
+        let startY = 0;
+        const handleTouchStart = (e: TouchEvent) => {
+            startY = e.touches[0].clientY;
+        };
+        const handleTouchMove = (e: TouchEvent) => {
+            if (window.scrollY === 0) {
+                const diff = e.touches[0].clientY - startY;
+                if (diff > 0) setPullRefresh(Math.min(diff, 100));
+            }
+        };
+        const handleTouchEnd = () => {
+            if (pullRefresh > 60) carregarTudo();
+            setPullRefresh(0);
+        };
+        document.addEventListener("touchstart", handleTouchStart);
+        document.addEventListener("touchmove", handleTouchMove);
+        document.addEventListener("touchend", handleTouchEnd);
+        return () => {
+            document.removeEventListener("touchstart", handleTouchStart);
+            document.removeEventListener("touchmove", handleTouchMove);
+            document.removeEventListener("touchend", handleTouchEnd);
+        };
+    }, [pullRefresh]);
 
     useEffect(() => { const t = setInterval(() => setTick(x => x + 1), 30000); return () => clearInterval(t); }, []);
 
@@ -149,14 +150,19 @@ export default function App() {
             setTela("recuperar");
             setSessaoCarregando(false);
         } else {
-            // Só faz getSession se NÃO for link de recuperação
             supabase.auth.getSession().then(({ data: { session } }) => {
                 if (session?.user) {
                     const email = session.user.email || "";
                     setEmailAtual(email);
                     setIsAdmin(email === ADMIN_EMAIL);
                     supabase.from("usuarios").select("*").eq("email", email).single().then(({ data }) => {
-                        if (data) { setUsuarioAtual(data.nome); setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "", email: data.email || "" } })); setTela("app"); const modoSalvo = localStorage.getItem("modoAtual") || "home"; setModo(modoSalvo); }
+                        if (data) { 
+                            setUsuarioAtual(data.nome); 
+                            setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "", email: data.email || "" } })); 
+                            setTela("app"); 
+                            const modoSalvo = localStorage.getItem("modoAtual") || "home"; 
+                            setModo(modoSalvo); 
+                        }
                         setSessaoCarregando(false);
                     });
                 } else { setSessaoCarregando(false); }
@@ -177,47 +183,38 @@ export default function App() {
         function atualizar() {
             const ps = palpitesMap[usuarioAtual || ""] || {};
             const todos = [...JOGOS_GRUPO, ...elim.filter((j: any) => j.time1)];
-            const sem = todos.filter((j: any) => { const p = ps[j.id]; return !lock(j.dt) && (!p || p.gols1 === "" || p.gols2 === ""); })
-                .sort((a: any, b: any) => new Date(a.dt).getTime() - new Date(b.dt).getTime());
+            const sem = todos.filter((j: any) => { 
+                const p = ps[j.id]; 
+                return !lock(j.dt) && (!p || p.gols1 === "" || p.gols2 === ""); 
+            }).sort((a: any, b: any) => new Date(a.dt).getTime() - new Date(b.dt).getTime());
+            
             if (!sem.length) { setCountdown(""); return; }
             const prox = sem[0], t = tr(prox.dt);
+            
+            // Notificação 30 minutos antes
+            const diffMs = new Date(prox.dt).getTime() - Date.now();
+            if (diffMs > 0 && diffMs <= 30 * 60 * 1000 && !notif30min) {
+                mostrarToast(`⏰ ${F[prox.time1] || ""}${prox.time1} × ${prox.time2}${F[prox.time2] || ""} começa em 30min!`, "ok");
+                setNotif30min(true);
+            }
+            
             if (!t) { setCountdown(""); return; }
             setCountdown(`${F[prox.time1] || ""}${prox.time1} × ${prox.time2}${F[prox.time2] || ""} — ${t}`);
         }
         atualizar();
         const t = setInterval(atualizar, 1000);
         return () => clearInterval(t);
-    }, [palpitesMap, elim, usuarioAtual]);
+    }, [palpitesMap, elim, usuarioAtual, notif30min]);
 
-    function mostrarToast(msg: string, tipo: "ok" | "err" = "ok") { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2500); }
+    function mostrarToast(msg: string, tipo: "ok" | "err" = "ok") { 
+        setToast({ msg, tipo }); 
+        setTimeout(() => setToast(null), 2500); 
+    }
+
     function dispararConfete() {
         const em = ["🎉", "⭐", "🏆", "✨", "🎊", "⚽", "🥇"];
         setConfetis(Array.from({ length: 10 }, (_, i) => ({ id: Date.now() + i, e: em[i % em.length], l: `${10 + Math.random() * 80}%`, d: `${Math.random() * 0.4}s` })));
         setTimeout(() => setConfetis([]), 1500);
-    }
-
-    function adicionarFeed(msg: string) {
-        setFeed(prev => [{ id: Date.now(), msg, ts: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) }, ...prev].slice(0, 20));
-    }
-
-    async function pagarMP() {
-        setMpLoading(true);
-        try {
-            const resp = await fetch("/api/create-payment", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nome: usuarioAtual })
-            });
-            const data = await resp.json();
-            if (data.url) {
-                window.open(data.url, "_blank");
-                mostrarToast("🔗 Abrindo checkout MP...");
-            } else {
-                console.error("MP error:", data);
-                mostrarToast(data.error || "Erro ao gerar link MP", "err");
-            }
-        } catch { mostrarToast("Erro ao conectar MP", "err"); }
-        setMpLoading(false);
     }
 
     const carregarTudo = useCallback(async () => {
@@ -229,14 +226,47 @@ export default function App() {
                 supabase.from("eliminatorias").select("*"),
                 supabase.from("config").select("*"),
             ]);
-            if (us) { const m: any = {}; us.forEach((u: any) => { m[u.nome] = { pago: u.pago, camp: u.campeao_palpite || "", email: u.email || "" }; }); setUsuarios(m); }
-            if (ps) { const m: any = {}; ps.forEach((p: any) => { if (!m[p.usuario_nome]) m[p.usuario_nome] = {}; m[p.usuario_nome][p.jogo_id] = { gols1: p.gols1?.toString() ?? "", gols2: p.gols2?.toString() ?? "" }; }); setPalpitesMap(m); setRascunho(m); }
-            if (rs) { const m: any = {}; rs.forEach((r: any) => { m[r.jogo_id] = { gols1: r.gols1?.toString() ?? "", gols2: r.gols2?.toString() ?? "", penalti: r.penalti }; }); setRes(m); }
-            if (es && es.length > 0) {
-                setElim(prev => prev.map((j: any) => { const e = es.find((el: any) => el.jogo_id === j.id); if (!e) return j; return { ...j, time1: e.time1 || "", time2: e.time2 || "", dt: e.data_hora || j.dt, est: e.estadio || j.est, cid: e.cidade || j.cid }; }));
-                const m: any = {}; es.forEach((e: any) => { if (e.gols1 !== null || e.gols2 !== null) m[e.jogo_id] = { gols1: e.gols1?.toString() ?? "", gols2: e.gols2?.toString() ?? "", penalti: e.penalti }; }); setResE(m);
+            if (us) { 
+                const m: any = {}; 
+                us.forEach((u: any) => { 
+                    m[u.nome] = { pago: u.pago, camp: u.campeao_palpite || "", email: u.email || "" }; 
+                }); 
+                setUsuarios(m); 
             }
-            if (cfg) { const c = cfg.find((x: any) => x.chave === "campeao_real"); if (c) setCampR(c.valor || ""); }
+            if (ps) { 
+                const m: any = {}; 
+                ps.forEach((p: any) => { 
+                    if (!m[p.usuario_nome]) m[p.usuario_nome] = {}; 
+                    m[p.usuario_nome][p.jogo_id] = { gols1: p.gols1?.toString() ?? "", gols2: p.gols2?.toString() ?? "" }; 
+                }); 
+                setPalpitesMap(m); 
+                setRascunho(m); 
+            }
+            if (rs) { 
+                const m: any = {}; 
+                rs.forEach((r: any) => { 
+                    m[r.jogo_id] = { gols1: r.gols1?.toString() ?? "", gols2: r.gols2?.toString() ?? "", penalti: r.penalti }; 
+                }); 
+                setRes(m); 
+            }
+            if (es && es.length > 0) {
+                setElim(prev => prev.map((j: any) => { 
+                    const e = es.find((el: any) => el.jogo_id === j.id); 
+                    if (!e) return j; 
+                    return { ...j, time1: e.time1 || "", time2: e.time2 || "", dt: e.data_hora || j.dt, est: e.estadio || j.est, cid: e.cidade || j.cid }; 
+                }));
+                const m: any = {}; 
+                es.forEach((e: any) => { 
+                    if (e.gols1 !== null || e.gols2 !== null) 
+                        m[e.jogo_id] = { gols1: e.gols1?.toString() ?? "", gols2: e.gols2?.toString() ?? "", penalti: e.penalti }; 
+                }); 
+                setResE(m);
+            }
+            if (cfg) { 
+                const c = cfg.find((x: any) => x.chave === "campeao_real"); 
+                if (c) setCampR(c.valor || ""); 
+            }
+            mostrarToast("✅ Dados atualizados!");
         } catch (e) { console.error(e); }
     }, []);
 
@@ -251,7 +281,18 @@ export default function App() {
         return () => { clearInterval(r); supabase.removeChannel(canal); };
     }, [carregarTudo]);
 
-    useEffect(() => { if (usuarioAtual) setRascunho((prev: any) => ({ ...prev, [usuarioAtual]: { ...(palpitesMap[usuarioAtual] || {}) } })); }, [usuarioAtual]);
+    useEffect(() => { 
+        if (usuarioAtual) 
+            setRascunho((prev: any) => ({ ...prev, [usuarioAtual]: { ...(palpitesMap[usuarioAtual] || {}) } })); 
+    }, [usuarioAtual]);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [modo]);
+
+    useEffect(() => {
+        localStorage.setItem("modoAtual", modo);
+    }, [modo]);
 
     const palS = palpitesMap[usuarioAtual || ""] || {};
     const palR = rascunho[usuarioAtual || ""] || {};
@@ -271,13 +312,6 @@ export default function App() {
         }, 5000);
         return () => clearInterval(poll);
     }, [pago, usuarioAtual]);
-
-    useEffect(() => {
-        window.scrollTo(0, 0);
-    }, [modo]);
-    useEffect(() => {
-        localStorage.setItem("modoAtual", modo);
-    }, [modo]);
 
     const campAtual = u.camp || "";
     const nPart = Object.keys(usuarios).length;
@@ -465,14 +499,17 @@ export default function App() {
         if (!email) { mostrarToast("Email não encontrado", "err"); return; }
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: typeof window !== "undefined" ? window.location.origin : "" });
         if (error) { mostrarToast("Erro ao enviar email", "err"); return; }
-        setResetNome(null); mostrarToast(`📧 Email de reset enviado para ${email}!`);
+        mostrarToast(`📧 Email de reset enviado para ${email}!`);
     }
 
     function exportarRanking() {
         const txt = `🏆 BOLÃO COPA 2026\n\n${ranking.map((p, i) => `${MEDAL[i] || `${i + 1}º`} ${p.nome} — ${p.pontos}pts`).join("\n")}\n\n💰 ${premios.dist.map(d => `${d.pos}º R$${d.valor}`).join(" | ")}`;
-        navigator.clipboard.writeText(txt); setCopRank(true); setTimeout(() => setCopRank(false), 2500);
+        navigator.clipboard.writeText(txt); 
+        setCopRank(true); 
+        setTimeout(() => setCopRank(false), 2500);
     }
 
+    // Componente do card de jogo para admin
     function JogoCardAdmin({ jogo, isElim = false }: any) {
         const r = isElim ? (resE[jogo.id] || {}) : (res[jogo.id] || {});
         const temRes = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
@@ -506,13 +543,12 @@ export default function App() {
             </div>
         );
     }
+
     return (
         <div style={{ minHeight: "100vh", background: "#f5f7fa", color: "#111827", fontFamily: "'Inter',sans-serif", userSelect: "none", WebkitUserSelect: "none", paddingBottom: tela === "app" ? "72px" : "0" }}>
             <style>{CSS}</style>
 
-            {/* ============================================ */}
-            {/* BANNER - FIXO NO TOPO */}
-            {/* ============================================ */}
+            {/* BANNER FIXO NO TOPO */}
             <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { if (tela === "admin") { setTela("app"); irParaHome(); } else irParaHome(); }}>
                     <div style={{ width: 36, height: 36, background: "#16a34a", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚽</div>
@@ -530,11 +566,7 @@ export default function App() {
                 )}
             </div>
 
-            {/* ============================================ */}
             {/* MODALS E OVERLAYS */}
-            {/* ============================================ */}
-
-            {/* Loading Screen */}
             {sessaoCarregando && (
                 <div style={{ position: "fixed", inset: 0, background: "#f5f7fa", zIndex: 99999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
                     <div style={{ width: 72, height: 72, background: "#16a34a", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40 }}>⚽</div>
@@ -544,10 +576,8 @@ export default function App() {
                 </div>
             )}
 
-            {/* Confetis */}
             {confetis.map(c => <div key={c.id} className="cf" style={{ left: c.l, animationDelay: c.d }}>{c.e}</div>)}
 
-            {/* Toast */}
             {toast && (
                 <div style={{
                     position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 9998,
@@ -560,7 +590,6 @@ export default function App() {
                 </div>
             )}
 
-            {/* Onboarding */}
             {onboarding && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 9997, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
                     <div className="card" style={{ maxWidth: 380, width: "100%", textAlign: "center", padding: "32px 24px" }}>
@@ -584,7 +613,6 @@ export default function App() {
                 </div>
             )}
 
-            {/* Modal Jogo Selecionado */}
             {jogoSel && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.9)", zIndex: 9996, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
                     <div style={{ background: "#fff", borderRadius: "24px 24px 0 0", width: "100%", maxWidth: 480, maxHeight: "95vh", overflow: "auto" }}>
@@ -648,12 +676,9 @@ export default function App() {
                 </div>
             )}
 
-            {/* ============================================ */}
             {/* CONTEÚDO PRINCIPAL */}
-            {/* ============================================ */}
-            <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 14px", position: "relative", zIndex: 1 }}>
+            <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 14px", position: "relative", zIndex: 1, transform: `translateY(${pullRefresh}px)`, transition: pullRefresh > 0 ? "none" : "transform .3s ease" }}>
 
-                {/* TELA LOGIN */}
                 {tela === "login" && (
                     <TelaLogin
                         onLogin={(nome, email, isAdmin, u) => {
@@ -668,12 +693,10 @@ export default function App() {
                     />
                 )}
 
-                {/* TELA RECUPERAR */}
                 {tela === "recuperar" && (
                     <TelaRecuperarSenha onSucesso={() => setTela("login")} />
                 )}
 
-                {/* TELA CADASTRO */}
                 {tela === "cadastro" && (
                     <TelaCadastro
                         onCadastro={(nome, email, isAdmin) => {
@@ -689,11 +712,9 @@ export default function App() {
                     />
                 )}
 
-                {/* TELAS DO APP */}
                 {tela === "app" && (
                     <div className="fade">
 
-                        {/* HOME */}
                         {modo === "home" && (
                             <TelaHome
                                 usuarioAtual={usuarioAtual}
@@ -716,7 +737,6 @@ export default function App() {
                             />
                         )}
 
-                        {/* JOGOS */}
                         {modo === "jogos" && (
                             <TelaJogos
                                 statusF={statusF}
@@ -733,7 +753,6 @@ export default function App() {
                             />
                         )}
 
-                        {/* PALPITES */}
                         {modo === "palpites" && (
                             <TelaPalpites
                                 pago={pago}
@@ -758,7 +777,6 @@ export default function App() {
                             />
                         )}
 
-                        {/* RANKING */}
                         {modo === "ranking" && (
                             <TelaRanking
                                 minhaPos={minhaPos}
@@ -777,7 +795,6 @@ export default function App() {
                             />
                         )}
 
-                        {/* HISTÓRICO */}
                         {modo === "historico" && (
                             <TelaHistorico
                                 palS={palS}
@@ -790,7 +807,6 @@ export default function App() {
                             />
                         )}
 
-                        {/* PIX */}
                         {modo === "pix" && (
                             <TelaPix
                                 pago={pago}
@@ -805,7 +821,6 @@ export default function App() {
                             />
                         )}
 
-                        {/* PERFIL */}
                         {modo === "perfil" && (
                             <TelaPerfil
                                 usuarioAtual={usuarioAtual}
@@ -821,7 +836,6 @@ export default function App() {
                             />
                         )}
 
-                        {/* CAMPEÃO */}
                         {modo === "campeao" && (
                             <TelaCampeao
                                 campAtual={campAtual}
@@ -832,17 +846,14 @@ export default function App() {
                             />
                         )}
 
-                        {/* REGRAS */}
                         {modo === "regras" && (
                             <TelaRegras premios={premios} />
                         )}
 
-                        {/* FEED */}
                         {modo === "feed" && (
                             <TelaFeed feed={feed} />
                         )}
 
-                        {/* MAIS OPÇÕES */}
                         {modo === "mais" && (
                             <TelaMais
                                 modo={modo}
@@ -857,7 +868,6 @@ export default function App() {
                     </div>
                 )}
 
-                {/* TELA ADMIN */}
                 {tela === "admin" && (
                     <TelaAdmin
                         adminModo={adminModo}
@@ -885,9 +895,6 @@ export default function App() {
 
             </div>
 
-            {/* ============================================ */}
-            {/* BOTTOM NAVIGATION */}
-            {/* ============================================ */}
             {tela === "app" && <NavBar modo={modo} isAdmin={isAdmin} setModo={setModo} />}
         </div>
     );
