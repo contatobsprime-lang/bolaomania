@@ -477,7 +477,7 @@ export default function App() {
         const r = isElim ? (resE[jogo.id] || {}) : (res[jogo.id] || {});
         const temRes = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
         return (
-            <div className="card" style={{ padding: "12px", border: `1.5px solid ${temRes ? "#86efac" : "#e5e7eb"}` }}>
+            <div style={{ padding: "12px", border: `1.5px solid ${temRes ? "#86efac" : "#e5e7eb"}` }} className="card">
                 <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 8, fontFamily: "'JetBrains Mono',monospace" }}>
                     📍 {jogo.est || jogo.estadio} · {fmtD(jogo.dt || jogo.dataHora)} {fmtH(jogo.dt || jogo.dataHora)}
                 </div>
@@ -506,11 +506,13 @@ export default function App() {
             </div>
         );
     }
-
     return (
         <div style={{ minHeight: "100vh", background: "#f5f7fa", color: "#111827", fontFamily: "'Inter',sans-serif", userSelect: "none", WebkitUserSelect: "none", paddingBottom: tela === "app" ? "72px" : "0" }}>
             <style>{CSS}</style>
-            {/* BANNER AQUI - NO TOPO */}
+
+            {/* ============================================ */}
+            {/* BANNER - FIXO NO TOPO */}
+            {/* ============================================ */}
             <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { if (tela === "admin") { setTela("app"); irParaHome(); } else irParaHome(); }}>
                     <div style={{ width: 36, height: 36, background: "#16a34a", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚽</div>
@@ -518,126 +520,6 @@ export default function App() {
                         <div style={{ fontWeight: 800, fontSize: 15, color: "#111827", letterSpacing: "-.3px" }}>Bolão Copa 2026</div>
                     </div>
                 </div>
-
-                {sessaoCarregando && (
-                    <div style={{ position: "fixed", inset: 0, background: "#f5f7fa", zIndex: 99999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
-                        <div style={{ width: 72, height: 72, background: "#16a34a", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40 }}>⚽</div>
-                        <div style={{ width: 40, height: 40, border: "3px solid #e5e7eb", borderTopColor: "#16a34a", borderRadius: "50%", animation: "spin .8s linear infinite" }} />
-                        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-                        <div style={{ fontSize: 14, color: "#9ca3af" }}>Carregando...</div>
-                    </div>
-                )}
-                {confetis.map(c => <div key={c.id} className="cf" style={{ left: c.l, animationDelay: c.d }}>{c.e}</div>)}
-
-                {toast && (
-                    <div style={{
-                        position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 9998,
-                        background: toast.tipo === "ok" ? "#166534" : "#b91c1c",
-                        color: "#fff",
-                        padding: "10px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace",
-                        whiteSpace: "nowrap", boxShadow: "0 4px 20px rgba(0,0,0,.4)"
-                    }}>
-                        {toast.msg}
-                    </div>
-                )}
-
-                {onboarding && (
-                    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 9997, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-                        <div className="card" style={{ maxWidth: 380, width: "100%", textAlign: "center", padding: "32px 24px" }}>
-                            <div style={{ width: 72, height: 72, background: "#16a34a", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 38, margin: "0 auto 16px" }}>⚽</div>
-                            <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, color: "#111827" }}>Bem-vindo ao <span style={{ color: "#16a34a" }}>Bolão 2026!</span></h2>
-                            <p style={{ fontSize: 13, color: "#9ca3af", marginBottom: 20, lineHeight: 1.7 }}>EUA · México · Canadá · 11 Jun – 19 Jul 2026</p>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, textAlign: "left" }}>
-                                {[["🎯", "Placar exato", `+5 pts (grupos)`], ["⚽", "Acertar vencedor", "+2 pts (grupos)"],
-                                ["🏆", "Campeão da Copa", `+${CONFIG.bonusCampeao} pts bônus`],
-                                ["🔒", "Palpites fecham", `${CONFIG.minutesBloqueio}min antes do jogo`],
-                                ["💳", "Cota de entrada", `R$ ${CONFIG.valorCota} via Mercado Pago`]
-                                ].map(([ic, txt, sub]) => (
-                                    <div key={txt} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#f9fafb", borderRadius: 12, border: "1px solid #e5e7eb" }}>
-                                        <span style={{ fontSize: 22 }}>{ic}</span>
-                                        <div><div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{txt}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{sub}</div></div>
-                                    </div>
-                                ))}
-                            </div>
-                            <button className="btn-primary" onClick={() => setOnboarding(false)}>Entendido, vamos lá! 🚀</button>
-                        </div>
-                    </div>
-                )}
-
-                {jogoSel && (
-                    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.9)", zIndex: 9996, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-                        <div style={{ background: "#fff", borderRadius: "24px 24px 0 0", width: "100%", maxWidth: 480, maxHeight: "95vh", overflow: "auto" }}>
-                            <div style={{ padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                <div>
-                                    <div style={{ fontSize: 12, color: "#16a34a", fontWeight: 700 }}>GRUPO {jogoSel.g} · {fmtD(jogoSel.dt)}</div>
-                                    <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>📍 {jogoSel.est}, {jogoSel.cid}</div>
-                                </div>
-                                <button onClick={() => setJogoSel(null)} style={{ background: "#f3f4f6", border: "none", color: "#374151", width: 34, height: 34, borderRadius: "50%", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-                            </div>
-                            <div style={{ padding: "20px" }}>
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-                                    <div style={{ textAlign: "center", flex: 1 }}>
-                                        <div style={{ fontSize: 40, marginBottom: 6 }}>{F[jogoSel.time1] || "🏳️"}</div>
-                                        <div style={{ fontWeight: 700, fontSize: 15 }}>{jogoSel.time1}</div>
-                                    </div>
-                                    <div style={{ textAlign: "center", padding: "0 16px" }}>
-                                        <div style={{ fontWeight: 800, fontSize: 18, color: "#d1d5db" }}>VS</div>
-                                        <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4, fontFamily: "'JetBrains Mono',monospace" }}>{fmtH(jogoSel.dt)}</div>
-                                    </div>
-                                    <div style={{ textAlign: "center", flex: 1 }}>
-                                        <div style={{ fontSize: 40, marginBottom: 6 }}>{F[jogoSel.time2] || "🏳️"}</div>
-                                        <div style={{ fontWeight: 700, fontSize: 15 }}>{jogoSel.time2}</div>
-                                    </div>
-                                </div>
-                                {lock(jogoSel.dt) ? (
-                                    <div style={{ textAlign: "center", padding: "24px", background: "#fef2f2", borderRadius: 16, border: "1px solid #fecaca" }}>
-                                        <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
-                                        <div style={{ fontWeight: 700, color: "#b91c1c", marginBottom: 4, fontSize: 16 }}>Palpite bloqueado</div>
-                                        <div style={{ fontSize: 13, color: "#6b7280" }}>O prazo encerrou</div>
-                                        {palS[jogoSel.id] && <div style={{ marginTop: 12, fontSize: 15, color: "#374151" }}>Seu palpite: <strong style={{ color: "#16a34a" }}>{palS[jogoSel.id].gols1} × {palS[jogoSel.id].gols2}</strong></div>}
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 20 }}>
-                                            <input type="number" min={0} max={30} className={`si${(palR[jogoSel.id]?.gols1 !== undefined && palR[jogoSel.id]?.gols1 !== "") ? " f" : ""}`} style={{ width: 72, height: 72, fontSize: 28 }}
-                                                value={palR[jogoSel.id]?.gols1 ?? ""} onChange={e => { setPalLocal(jogoSel.id, "gols1", e.target.value, jogoSel.dt); if (e.target.value !== "") { const nx = document.getElementById("gols2_modal"); if (nx) nx.focus(); } }} placeholder="0" />
-                                            <span style={{ fontSize: 24, color: "#d1d5db", fontWeight: 700 }}>×</span>
-                                            <input type="number" min={0} max={30} className={`si${(palR[jogoSel.id]?.gols2 !== undefined && palR[jogoSel.id]?.gols2 !== "") ? " f" : ""}`} style={{ width: 72, height: 72, fontSize: 28 }}
-                                                value={palR[jogoSel.id]?.gols2 ?? ""} id="gols2_modal" onChange={e => setPalLocal(jogoSel.id, "gols2", e.target.value, jogoSel.dt)} placeholder="0" />
-                                        </div>
-                                        <div className="card" style={{ marginBottom: 16 }}>
-                                            <div style={{ fontWeight: 700, fontSize: 11, color: "#16a34a", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Pontuação</div>
-                                            {[["🎯", "Placar exato", `+${pts(jogoSel.fase || "grupos").placar} pts`], ["⚽", "Vencedor/Empate", `+${pts(jogoSel.fase || "grupos").vencedor} pts`], ["❌", "Errar", "0 pts"]].map(([ic, txt, p]) => (
-                                                <div key={txt} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderBottom: "1px solid #f9fafb" }}>
-                                                    <span style={{ fontSize: 14 }}>{ic}</span><span style={{ flex: 1, fontSize: 12, color: "#374151" }}>{txt}</span><span className="badge bg">{p}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        {tr(jogoSel.dt) && <div style={{ textAlign: "center", marginBottom: 16 }}>
-                                            <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4 }}>Tempo restante</div>
-                                            <div style={{ fontWeight: 800, fontSize: 20, color: "#16a34a", fontFamily: "'JetBrains Mono',monospace" }}>{tr(jogoSel.dt)}</div>
-                                        </div>}
-                                        <button id="btn_confirmar" className="btn-primary" onClick={() => confirmarPalpite(jogoSel)} disabled={salvando} style={{ fontSize: 16, padding: "16px" }}>
-                                            {salvando ? "Salvando..." : "✅ Confirmar Palpite"}
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Tela Mais */}
-                {modo === "mais" && (
-                    <TelaMais
-                        modo={modo}
-                        isAdmin={isAdmin}
-                        setModo={setModo}
-                        setTela={setTela}
-                        handleLogout={handleLogout}
-                        mostrarToast={mostrarToast}
-                    />
-                )}
                 {tela === "app" && (
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {!pago && <span className="badge br" onClick={() => setModo("pix")} style={{ cursor: "pointer" }}>💳 Pagar</span>}
@@ -648,8 +530,130 @@ export default function App() {
                 )}
             </div>
 
+            {/* ============================================ */}
+            {/* MODALS E OVERLAYS */}
+            {/* ============================================ */}
+
+            {/* Loading Screen */}
+            {sessaoCarregando && (
+                <div style={{ position: "fixed", inset: 0, background: "#f5f7fa", zIndex: 99999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
+                    <div style={{ width: 72, height: 72, background: "#16a34a", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40 }}>⚽</div>
+                    <div style={{ width: 40, height: 40, border: "3px solid #e5e7eb", borderTopColor: "#16a34a", borderRadius: "50%", animation: "spin .8s linear infinite" }} />
+                    <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+                    <div style={{ fontSize: 14, color: "#9ca3af" }}>Carregando...</div>
+                </div>
+            )}
+
+            {/* Confetis */}
+            {confetis.map(c => <div key={c.id} className="cf" style={{ left: c.l, animationDelay: c.d }}>{c.e}</div>)}
+
+            {/* Toast */}
+            {toast && (
+                <div style={{
+                    position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 9998,
+                    background: toast.tipo === "ok" ? "#166534" : "#b91c1c",
+                    color: "#fff",
+                    padding: "10px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace",
+                    whiteSpace: "nowrap", boxShadow: "0 4px 20px rgba(0,0,0,.4)"
+                }}>
+                    {toast.msg}
+                </div>
+            )}
+
+            {/* Onboarding */}
+            {onboarding && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 9997, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+                    <div className="card" style={{ maxWidth: 380, width: "100%", textAlign: "center", padding: "32px 24px" }}>
+                        <div style={{ width: 72, height: 72, background: "#16a34a", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 38, margin: "0 auto 16px" }}>⚽</div>
+                        <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, color: "#111827" }}>Bem-vindo ao <span style={{ color: "#16a34a" }}>Bolão 2026!</span></h2>
+                        <p style={{ fontSize: 13, color: "#9ca3af", marginBottom: 20, lineHeight: 1.7 }}>EUA · México · Canadá · 11 Jun – 19 Jul 2026</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, textAlign: "left" }}>
+                            {[["🎯", "Placar exato", `+5 pts (grupos)`], ["⚽", "Acertar vencedor", "+2 pts (grupos)"],
+                            ["🏆", "Campeão da Copa", `+${CONFIG.bonusCampeao} pts bônus`],
+                            ["🔒", "Palpites fecham", `${CONFIG.minutesBloqueio}min antes do jogo`],
+                            ["💳", "Cota de entrada", `R$ ${CONFIG.valorCota} via Mercado Pago`]
+                            ].map(([ic, txt, sub]) => (
+                                <div key={txt} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#f9fafb", borderRadius: 12, border: "1px solid #e5e7eb" }}>
+                                    <span style={{ fontSize: 22 }}>{ic}</span>
+                                    <div><div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{txt}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{sub}</div></div>
+                                </div>
+                            ))}
+                        </div>
+                        <button className="btn-primary" onClick={() => setOnboarding(false)}>Entendido, vamos lá! 🚀</button>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Jogo Selecionado */}
+            {jogoSel && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.9)", zIndex: 9996, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+                    <div style={{ background: "#fff", borderRadius: "24px 24px 0 0", width: "100%", maxWidth: 480, maxHeight: "95vh", overflow: "auto" }}>
+                        <div style={{ padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <div>
+                                <div style={{ fontSize: 12, color: "#16a34a", fontWeight: 700 }}>GRUPO {jogoSel.g} · {fmtD(jogoSel.dt)}</div>
+                                <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>📍 {jogoSel.est}, {jogoSel.cid}</div>
+                            </div>
+                            <button onClick={() => setJogoSel(null)} style={{ background: "#f3f4f6", border: "none", color: "#374151", width: 34, height: 34, borderRadius: "50%", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                        </div>
+                        <div style={{ padding: "20px" }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+                                <div style={{ textAlign: "center", flex: 1 }}>
+                                    <div style={{ fontSize: 40, marginBottom: 6 }}>{F[jogoSel.time1] || "🏳️"}</div>
+                                    <div style={{ fontWeight: 700, fontSize: 15 }}>{jogoSel.time1}</div>
+                                </div>
+                                <div style={{ textAlign: "center", padding: "0 16px" }}>
+                                    <div style={{ fontWeight: 800, fontSize: 18, color: "#d1d5db" }}>VS</div>
+                                    <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4, fontFamily: "'JetBrains Mono',monospace" }}>{fmtH(jogoSel.dt)}</div>
+                                </div>
+                                <div style={{ textAlign: "center", flex: 1 }}>
+                                    <div style={{ fontSize: 40, marginBottom: 6 }}>{F[jogoSel.time2] || "🏳️"}</div>
+                                    <div style={{ fontWeight: 700, fontSize: 15 }}>{jogoSel.time2}</div>
+                                </div>
+                            </div>
+                            {lock(jogoSel.dt) ? (
+                                <div style={{ textAlign: "center", padding: "24px", background: "#fef2f2", borderRadius: 16, border: "1px solid #fecaca" }}>
+                                    <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
+                                    <div style={{ fontWeight: 700, color: "#b91c1c", marginBottom: 4, fontSize: 16 }}>Palpite bloqueado</div>
+                                    <div style={{ fontSize: 13, color: "#6b7280" }}>O prazo encerrou</div>
+                                    {palS[jogoSel.id] && <div style={{ marginTop: 12, fontSize: 15, color: "#374151" }}>Seu palpite: <strong style={{ color: "#16a34a" }}>{palS[jogoSel.id].gols1} × {palS[jogoSel.id].gols2}</strong></div>}
+                                </div>
+                            ) : (
+                                <>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 20 }}>
+                                        <input type="number" min={0} max={30} className={`si${(palR[jogoSel.id]?.gols1 !== undefined && palR[jogoSel.id]?.gols1 !== "") ? " f" : ""}`} style={{ width: 72, height: 72, fontSize: 28 }}
+                                            value={palR[jogoSel.id]?.gols1 ?? ""} onChange={e => { setPalLocal(jogoSel.id, "gols1", e.target.value, jogoSel.dt); if (e.target.value !== "") { const nx = document.getElementById("gols2_modal"); if (nx) nx.focus(); } }} placeholder="0" />
+                                        <span style={{ fontSize: 24, color: "#d1d5db", fontWeight: 700 }}>×</span>
+                                        <input type="number" min={0} max={30} className={`si${(palR[jogoSel.id]?.gols2 !== undefined && palR[jogoSel.id]?.gols2 !== "") ? " f" : ""}`} style={{ width: 72, height: 72, fontSize: 28 }}
+                                            value={palR[jogoSel.id]?.gols2 ?? ""} id="gols2_modal" onChange={e => setPalLocal(jogoSel.id, "gols2", e.target.value, jogoSel.dt)} placeholder="0" />
+                                    </div>
+                                    <div className="card" style={{ marginBottom: 16 }}>
+                                        <div style={{ fontWeight: 700, fontSize: 11, color: "#16a34a", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Pontuação</div>
+                                        {[["🎯", "Placar exato", `+${pts(jogoSel.fase || "grupos").placar} pts`], ["⚽", "Vencedor/Empate", `+${pts(jogoSel.fase || "grupos").vencedor} pts`], ["❌", "Errar", "0 pts"]].map(([ic, txt, p]) => (
+                                            <div key={txt} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderBottom: "1px solid #f9fafb" }}>
+                                                <span style={{ fontSize: 14 }}>{ic}</span><span style={{ flex: 1, fontSize: 12, color: "#374151" }}>{txt}</span><span className="badge bg">{p}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {tr(jogoSel.dt) && <div style={{ textAlign: "center", marginBottom: 16 }}>
+                                        <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4 }}>Tempo restante</div>
+                                        <div style={{ fontWeight: 800, fontSize: 20, color: "#16a34a", fontFamily: "'JetBrains Mono',monospace" }}>{tr(jogoSel.dt)}</div>
+                                    </div>}
+                                    <button id="btn_confirmar" className="btn-primary" onClick={() => confirmarPalpite(jogoSel)} disabled={salvando} style={{ fontSize: 16, padding: "16px" }}>
+                                        {salvando ? "Salvando..." : "✅ Confirmar Palpite"}
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ============================================ */}
+            {/* CONTEÚDO PRINCIPAL */}
+            {/* ============================================ */}
             <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 14px", position: "relative", zIndex: 1 }}>
 
+                {/* TELA LOGIN */}
                 {tela === "login" && (
                     <TelaLogin
                         onLogin={(nome, email, isAdmin, u) => {
@@ -663,10 +667,13 @@ export default function App() {
                         onCadastro={() => setTela("cadastro")}
                     />
                 )}
+
+                {/* TELA RECUPERAR */}
                 {tela === "recuperar" && (
                     <TelaRecuperarSenha onSucesso={() => setTela("login")} />
                 )}
 
+                {/* TELA CADASTRO */}
                 {tela === "cadastro" && (
                     <TelaCadastro
                         onCadastro={(nome, email, isAdmin) => {
@@ -682,8 +689,7 @@ export default function App() {
                     />
                 )}
 
-
-
+                {/* TELAS DO APP */}
                 {tela === "app" && (
                     <div className="fade">
 
@@ -752,6 +758,7 @@ export default function App() {
                             />
                         )}
 
+                        {/* RANKING */}
                         {modo === "ranking" && (
                             <TelaRanking
                                 minhaPos={minhaPos}
@@ -769,6 +776,7 @@ export default function App() {
                                 copRank={copRank}
                             />
                         )}
+
                         {/* HISTÓRICO */}
                         {modo === "historico" && (
                             <TelaHistorico
@@ -834,10 +842,22 @@ export default function App() {
                             <TelaFeed feed={feed} />
                         )}
 
+                        {/* MAIS OPÇÕES */}
+                        {modo === "mais" && (
+                            <TelaMais
+                                modo={modo}
+                                isAdmin={isAdmin}
+                                setModo={setModo}
+                                setTela={setTela}
+                                handleLogout={handleLogout}
+                                mostrarToast={mostrarToast}
+                            />
+                        )}
+
                     </div>
                 )}
 
-                {/* ADMIN */}
+                {/* TELA ADMIN */}
                 {tela === "admin" && (
                     <TelaAdmin
                         adminModo={adminModo}
@@ -865,7 +885,9 @@ export default function App() {
 
             </div>
 
-            {/* Bottom Navigation — estilo Mercado Pago */}
+            {/* ============================================ */}
+            {/* BOTTOM NAVIGATION */}
+            {/* ============================================ */}
             {tela === "app" && <NavBar modo={modo} isAdmin={isAdmin} setModo={setModo} />}
         </div>
     );
