@@ -27,6 +27,7 @@ import TelaHome from "@/components/TelaHome";
 import TelaMais from "@/components/TelaMais";
 import NavBar from "@/components/NavBar";
 
+
 export default function App() {
     const [tela, setTela] = useState<Tela>("login");
     const [onboarding, setOnboarding] = useState(false);
