@@ -39,16 +39,16 @@ export default function App() {
     const [usuarioAtual, setUsuarioAtual] = useState<string | null>(null);
     const [emailAtual, setEmailAtual] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
-    const [loginEmail, setLoginEmail] = useState(""); 
-    const [loginSenha, setLoginSenha] = useState(""); 
+    const [loginEmail, setLoginEmail] = useState("");
+    const [loginSenha, setLoginSenha] = useState("");
     const [loginErro, setLoginErro] = useState("");
-    const [cadNome, setCadNome] = useState(""); 
-    const [cadEmail, setCadEmail] = useState(""); 
-    const [cadSenha, setCadSenha] = useState(""); 
-    const [cadSenha2, setCadSenha2] = useState(""); 
+    const [cadNome, setCadNome] = useState("");
+    const [cadEmail, setCadEmail] = useState("");
+    const [cadSenha, setCadSenha] = useState("");
+    const [cadSenha2, setCadSenha2] = useState("");
     const [cadErro, setCadErro] = useState("");
-    const [esqueceuEmail, setEsqueceuEmail] = useState(""); 
-    const [esqueceuSent, setEsqueceuSent] = useState(false); 
+    const [esqueceuEmail, setEsqueceuEmail] = useState("");
+    const [esqueceuSent, setEsqueceuSent] = useState(false);
     const [elim, setElim] = useState<any[]>(ELIM_TMPL);
     const [palpitesMap, setPalpitesMap] = useState<any>({});
     const [rascunho, setRascunho] = useState<any>({});
@@ -122,12 +122,12 @@ export default function App() {
                     setEmailAtual(email);
                     setIsAdmin(email === ADMIN_EMAIL);
                     supabase.from("usuarios").select("*").eq("email", email).single().then(({ data }) => {
-                        if (data) { 
-                            setUsuarioAtual(data.nome); 
-                            setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "", email: data.email || "" } })); 
-                            setTela("app"); 
-                            const modoSalvo = localStorage.getItem("modoAtual") || "home"; 
-                            setModo(modoSalvo); 
+                        if (data) {
+                            setUsuarioAtual(data.nome);
+                            setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "", email: data.email || "" } }));
+                            setTela("app");
+                            const modoSalvo = localStorage.getItem("modoAtual") || "home";
+                            setModo(modoSalvo);
                         }
                         setSessaoCarregando(false);
                     });
@@ -149,21 +149,21 @@ export default function App() {
         function atualizar() {
             const ps = palpitesMap[usuarioAtual || ""] || {};
             const todos = [...JOGOS_GRUPO, ...elim.filter((j: any) => j.time1)];
-            const sem = todos.filter((j: any) => { 
-                const p = ps[j.id]; 
-                return !lock(j.dt) && (!p || p.gols1 === "" || p.gols2 === ""); 
+            const sem = todos.filter((j: any) => {
+                const p = ps[j.id];
+                return !lock(j.dt) && (!p || p.gols1 === "" || p.gols2 === "");
             }).sort((a: any, b: any) => new Date(a.dt).getTime() - new Date(b.dt).getTime());
-            
+
             if (!sem.length) { setCountdown(""); return; }
             const prox = sem[0], t = tr(prox.dt);
-            
+
             // Notificação 30 minutos antes
             const diffMs = new Date(prox.dt).getTime() - Date.now();
             if (diffMs > 0 && diffMs <= 30 * 60 * 1000 && !notif30min) {
                 mostrarToast(`⏰ ${F[prox.time1] || ""}${prox.time1} × ${prox.time2}${F[prox.time2] || ""} começa em 30min!`, "ok");
                 setNotif30min(true);
             }
-            
+
             if (!t) { setCountdown(""); return; }
             setCountdown(`${F[prox.time1] || ""}${prox.time1} × ${prox.time2}${F[prox.time2] || ""} — ${t}`);
         }
@@ -172,9 +172,9 @@ export default function App() {
         return () => clearInterval(t);
     }, [palpitesMap, elim, usuarioAtual, notif30min]);
 
-    function mostrarToast(msg: string, tipo: "ok" | "err" = "ok") { 
-        setToast({ msg, tipo }); 
-        setTimeout(() => setToast(null), 2500); 
+    function mostrarToast(msg: string, tipo: "ok" | "err" = "ok") {
+        setToast({ msg, tipo });
+        setTimeout(() => setToast(null), 2500);
     }
 
     function dispararConfete() {
@@ -192,45 +192,45 @@ export default function App() {
                 supabase.from("eliminatorias").select("*"),
                 supabase.from("config").select("*"),
             ]);
-            if (us) { 
-                const m: any = {}; 
-                us.forEach((u: any) => { 
-                    m[u.nome] = { pago: u.pago, camp: u.campeao_palpite || "", email: u.email || "" }; 
-                }); 
-                setUsuarios(m); 
+            if (us) {
+                const m: any = {};
+                us.forEach((u: any) => {
+                    m[u.nome] = { pago: u.pago, camp: u.campeao_palpite || "", email: u.email || "" };
+                });
+                setUsuarios(m);
             }
-            if (ps) { 
-                const m: any = {}; 
-                ps.forEach((p: any) => { 
-                    if (!m[p.usuario_nome]) m[p.usuario_nome] = {}; 
-                    m[p.usuario_nome][p.jogo_id] = { gols1: p.gols1?.toString() ?? "", gols2: p.gols2?.toString() ?? "" }; 
-                }); 
-                setPalpitesMap(m); 
-                setRascunho(m); 
+            if (ps) {
+                const m: any = {};
+                ps.forEach((p: any) => {
+                    if (!m[p.usuario_nome]) m[p.usuario_nome] = {};
+                    m[p.usuario_nome][p.jogo_id] = { gols1: p.gols1?.toString() ?? "", gols2: p.gols2?.toString() ?? "" };
+                });
+                setPalpitesMap(m);
+                setRascunho(m);
             }
-            if (rs) { 
-                const m: any = {}; 
-                rs.forEach((r: any) => { 
-                    m[r.jogo_id] = { gols1: r.gols1?.toString() ?? "", gols2: r.gols2?.toString() ?? "", penalti: r.penalti }; 
-                }); 
-                setRes(m); 
+            if (rs) {
+                const m: any = {};
+                rs.forEach((r: any) => {
+                    m[r.jogo_id] = { gols1: r.gols1?.toString() ?? "", gols2: r.gols2?.toString() ?? "", penalti: r.penalti };
+                });
+                setRes(m);
             }
             if (es && es.length > 0) {
-                setElim(prev => prev.map((j: any) => { 
-                    const e = es.find((el: any) => el.jogo_id === j.id); 
-                    if (!e) return j; 
-                    return { ...j, time1: e.time1 || "", time2: e.time2 || "", dt: e.data_hora || j.dt, est: e.estadio || j.est, cid: e.cidade || j.cid }; 
+                setElim(prev => prev.map((j: any) => {
+                    const e = es.find((el: any) => el.jogo_id === j.id);
+                    if (!e) return j;
+                    return { ...j, time1: e.time1 || "", time2: e.time2 || "", dt: e.data_hora || j.dt, est: e.estadio || j.est, cid: e.cidade || j.cid };
                 }));
-                const m: any = {}; 
-                es.forEach((e: any) => { 
-                    if (e.gols1 !== null || e.gols2 !== null) 
-                        m[e.jogo_id] = { gols1: e.gols1?.toString() ?? "", gols2: e.gols2?.toString() ?? "", penalti: e.penalti }; 
-                }); 
+                const m: any = {};
+                es.forEach((e: any) => {
+                    if (e.gols1 !== null || e.gols2 !== null)
+                        m[e.jogo_id] = { gols1: e.gols1?.toString() ?? "", gols2: e.gols2?.toString() ?? "", penalti: e.penalti };
+                });
                 setResE(m);
             }
-            if (cfg) { 
-                const c = cfg.find((x: any) => x.chave === "campeao_real"); 
-                if (c) setCampR(c.valor || ""); 
+            if (cfg) {
+                const c = cfg.find((x: any) => x.chave === "campeao_real");
+                if (c) setCampR(c.valor || "");
             }
             mostrarToast("✅ Dados atualizados!");
         } catch (e) { console.error(e); }
@@ -247,9 +247,9 @@ export default function App() {
         return () => { clearInterval(r); supabase.removeChannel(canal); };
     }, [carregarTudo]);
 
-    useEffect(() => { 
-        if (usuarioAtual) 
-            setRascunho((prev: any) => ({ ...prev, [usuarioAtual]: { ...(palpitesMap[usuarioAtual] || {}) } })); 
+    useEffect(() => {
+        if (usuarioAtual)
+            setRascunho((prev: any) => ({ ...prev, [usuarioAtual]: { ...(palpitesMap[usuarioAtual] || {}) } }));
     }, [usuarioAtual]);
 
     useEffect(() => {
@@ -267,17 +267,43 @@ export default function App() {
 
     useEffect(() => {
         if (pago || !usuarioAtual) return;
-        const poll = setInterval(async () => {
-            const { data } = await supabase.from("usuarios").select("pago").eq("nome", usuarioAtual).single();
-            if (data?.pago) {
-                setUsuarios((prev: any) => ({ ...prev, [usuarioAtual]: { ...prev[usuarioAtual], pago: true } }));
-                dispararConfete();
-                mostrarToast("🎉 Pagamento confirmado! Bem-vindo ao bolão!");
-                clearInterval(poll);
-            }
-        }, 5000);
-        return () => clearInterval(poll);
-    }, [pago, usuarioAtual]);
+
+        const subscription = supabase
+            .channel(`user:${usuarioAtual}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "usuarios",
+                    filter: `nome=eq.${usuarioAtual}`,
+                },
+                (payload) => {
+                    if (payload.new.pago === true && !pago) {
+                        setUsuarios((prev: any) => ({
+                            ...prev,
+                            [usuarioAtual]: { ...prev[usuarioAtual], pago: true },
+                        }));
+                        dispararConfete();
+                        mostrarToast("🎉 Pagamento confirmado! Bem-vindo ao bolão!");
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(subscription);
+        };
+    }, [usuarioAtual, pago]);
+    // Detectar botão voltar do dispositivo
+    useEffect(() => {
+        const handlePopState = () => {
+            irParaHome();
+        };
+
+        window.addEventListener("popstate", handlePopState);
+        return () => window.removeEventListener("popstate", handlePopState);
+    }, []);
 
     const campAtual = u.camp || "";
     const nPart = Object.keys(usuarios).length;
@@ -461,8 +487,8 @@ export default function App() {
 
     function exportarRanking() {
         const txt = `🏆 BOLÃO COPA 2026\n\n${ranking.map((p, i) => `${MEDAL[i] || `${i + 1}º`} ${p.nome} — ${p.pontos}pts`).join("\n")}\n\n💰 ${premios.dist.map(d => `${d.pos}º R$${d.valor}`).join(" | ")}`;
-        navigator.clipboard.writeText(txt); 
-        setCopRank(true); 
+        navigator.clipboard.writeText(txt);
+        setCopRank(true);
         setTimeout(() => setCopRank(false), 2500);
     }
 
