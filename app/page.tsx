@@ -294,15 +294,6 @@ export default function App() {
         };
     }, [usuarioAtual, pago]);
 
-    // ✅ Interceptar botão voltar do dispositivo
-    useEffect(() => {
-        const handlePopState = () => {
-            irParaHome(); // Volta para HOME em vez de sair do app
-        };
-
-        window.addEventListener("popstate", handlePopState);
-        return () => window.removeEventListener("popstate", handlePopState);
-    }, []);
 
     const campAtual = u.camp || "";
     const nPart = Object.keys(usuarios).length;
@@ -769,19 +760,9 @@ export default function App() {
                                 resE={resE}
                                 MEDAL={MEDAL}
                                 F={F}
-                                exportarRanking={exportarRanking}
-                                copRank={copRank}
-                            />
-                        )}
-
-                        {/* ✅ BOTÕES DE SHARE RANKING */}
-                        {modo === "ranking" && (
-                            <BotoesShareRanking
-                                ranking={ranking}
-                                premios={premios}
-                                usuarioAtual={usuarioAtual}
-                                MEDAL={MEDAL}
                                 mostrarToast={mostrarToast}
+                                isLoading={false}     
+                                error={null}           
                             />
                         )}
 

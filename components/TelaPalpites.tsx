@@ -135,7 +135,7 @@ export default function TelaPalpites({
       {faseAtiva !== "grupos" && (
         <div>
           {elim.filter(j => j.fase === faseAtiva && j.time1).length === 0 && (
-            <div className="card" style={{ textAlign: "center", color: "#d1d5db", padding: "28px" }}>Fase ainda não definida pelo admin</div>
+            <div className="card" style={{ textAlign: "center", color: "#d1d5db", padding: "28px" }}>Fase ainda não definida</div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
             {elim.filter(j => j.fase === faseAtiva && j.time1).map(j => {
