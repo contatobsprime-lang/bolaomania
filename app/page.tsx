@@ -26,6 +26,7 @@ import TelaFeed from "@/components/TelaFeed";
 import TelaHome from "@/components/TelaHome";
 import TelaMais from "@/components/TelaMais";
 import NavBar from "@/components/NavBar";
+import BotoesShareRanking from "@/components/BotoesShareRanking";
 
 
 export default function App() {
@@ -772,6 +773,17 @@ export default function App() {
                                 F={F}
                                 exportarRanking={exportarRanking}
                                 copRank={copRank}
+                            />
+                        )}
+
+                        {/* ADICIONA AQUI - os botões de share */}
+                        {modo === "ranking" && (
+                            <BotoesShareRanking
+                                ranking={ranking}
+                                premios={premios}
+                                usuarioAtual={usuarioAtual}
+                                MEDAL={MEDAL}
+                                mostrarToast={mostrarToast}
                             />
                         )}
 
