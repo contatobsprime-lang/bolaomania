@@ -76,9 +76,6 @@ export default function App() {
     const [pullRefresh, setPullRefresh] = useState(0);
     const [notif30min, setNotif30min] = useState(false);
 
-    const irParaHome = () => {
-        setModo("home");
-    };
 
     // Pull to refresh
     useEffect(() => {
