@@ -77,8 +77,7 @@ export default function App() {
     const [notif30min, setNotif30min] = useState(false);
 
     const irParaHome = () => {
-        const modoSalvo = localStorage.getItem("modoAtual") || "home";
-        setModo(modoSalvo);
+        setModo("home");
     };
 
     // Pull to refresh
@@ -127,8 +126,7 @@ export default function App() {
                             setUsuarioAtual(data.nome);
                             setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "", email: data.email || "" } }));
                             setTela("app");
-                            const modoSalvo = localStorage.getItem("modoAtual") || "home";
-                            setModo(modoSalvo);
+                            setModo("home"); // ✅ SEMPRE vai para HOME ao entrar
                         }
                         setSessaoCarregando(false);
                     });
@@ -233,7 +231,6 @@ export default function App() {
                 const c = cfg.find((x: any) => x.chave === "campeao_real");
                 if (c) setCampR(c.valor || "");
             }
-            mostrarToast("✅ Dados atualizados!");
         } catch (e) { console.error(e); }
     }, []);
 
@@ -296,10 +293,11 @@ export default function App() {
             supabase.removeChannel(subscription);
         };
     }, [usuarioAtual, pago]);
-    // Detectar botão voltar do dispositivo
+
+    // ✅ Interceptar botão voltar do dispositivo
     useEffect(() => {
         const handlePopState = () => {
-            irParaHome();
+            irParaHome(); // Volta para HOME em vez de sair do app
         };
 
         window.addEventListener("popstate", handlePopState);
@@ -776,7 +774,7 @@ export default function App() {
                             />
                         )}
 
-                        {/* ADICIONA AQUI - os botões de share */}
+                        {/* ✅ BOTÕES DE SHARE RANKING */}
                         {modo === "ranking" && (
                             <BotoesShareRanking
                                 ranking={ranking}
