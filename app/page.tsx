@@ -76,6 +76,9 @@ export default function App() {
     const [pullRefresh, setPullRefresh] = useState(0);
     const [notif30min, setNotif30min] = useState(false);
 
+    const irParaHome = () => {
+        setModo("home");
+    };
 
     // Pull to refresh
     useEffect(() => {
@@ -123,7 +126,6 @@ export default function App() {
                             setUsuarioAtual(data.nome);
                             setUsuarios((prev: any) => ({ ...prev, [data.nome]: { pago: data.pago, camp: data.campeao_palpite || "", email: data.email || "" } }));
                             setTela("app");
-                            setModo("home"); // ✅ SEMPRE vai para HOME ao entrar
                         }
                         setSessaoCarregando(false);
                     });
