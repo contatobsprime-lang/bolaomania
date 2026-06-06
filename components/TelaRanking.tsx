@@ -22,18 +22,18 @@ interface Props {
   error?: string | null;
 }
 
-export default function TelaRanking({ 
-  minhaPos, 
-  meusDados, 
-  usuarioAtual, 
-  ranking, 
-  premios, 
-  palpitesMap, 
-  elim, 
-  res, 
-  resE, 
-  MEDAL, 
-  F, 
+export default function TelaRanking({
+  minhaPos,
+  meusDados,
+  usuarioAtual,
+  ranking,
+  premios,
+  palpitesMap,
+  elim,
+  res,
+  resE,
+  MEDAL,
+  F,
   mostrarToast,
   isLoading = false,
   error = null
@@ -57,8 +57,8 @@ export default function TelaRanking({
   // ✅ EMPTY STATE
   if (ranking.length === 0 && !isLoading) {
     return (
-      <div style={{ 
-        textAlign: "center", 
+      <div style={{
+        textAlign: "center",
         padding: "60px 20px",
         animation: "fadeIn 0.6s ease"
       }}>
@@ -76,8 +76,8 @@ export default function TelaRanking({
   // ❌ ERROR STATE
   if (error) {
     return (
-      <div style={{ 
-        textAlign: "center", 
+      <div style={{
+        textAlign: "center",
         padding: "60px 20px",
         background: "#fef2f2",
         borderRadius: 16,
@@ -91,7 +91,7 @@ export default function TelaRanking({
         <div style={{ fontSize: 14, color: "#9ca3af", marginBottom: 16 }}>
           {error}
         </div>
-        <button 
+        <button
           onClick={() => window.location.reload()}
           style={{
             padding: "10px 20px",
@@ -121,11 +121,11 @@ export default function TelaRanking({
           <div style={{ height: 16, background: "#e5e7eb", borderRadius: 8, width: "60%", animation: "pulse 2s infinite 0.1s" }} />
         </div>
         {[1, 2, 3, 4, 5].map((i) => (
-          <div 
+          <div
             key={i}
             className="card"
-            style={{ 
-              marginBottom: 8, 
+            style={{
+              marginBottom: 8,
               padding: "14px 16px",
               animation: "fadeIn 0.6s ease"
             }}
@@ -188,39 +188,67 @@ export default function TelaRanking({
         }
       `}</style>
 
-      {/* ✅ HEADER STICKY COM BOTÕES */}
-      <div className="header-sticky">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <div>
-            <div style={{ fontSize: 10, color: "#9ca3af", fontFamily: "'JetBrains Mono',monospace", marginBottom: 2 }}>AO VIVO</div>
-            <div style={{ fontWeight: 800, fontSize: 18 }}>Classificação Geral</div>
-          </div>
-          {/* ✅ BOTÕES NO HEADER */}
-          <div style={{ animation: "slideUp 0.6s ease", flexShrink: 0 }}>
-            <BotoesShareRanking
-              ranking={ranking}
-              premios={premios}
-              usuarioAtual={usuarioAtual}
-              MEDAL={MEDAL}
-              mostrarToast={mostrarToast}
-            />
-          </div>
+      {/* NO HEADER */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 12,
+        flexWrap: "wrap"  // Quebra em 2 linhas se precisar
+      }}>
+        <div>
+          <div style={{ fontSize: 10, color: "#9ca3af", fontFamily: "'JetBrains Mono',monospace", marginBottom: 2 }}>AO VIVO</div>
+          <div style={{ fontWeight: 800, fontSize: 18 }}>Classificação</div>
+        </div>
+
+        {/* BOTÕES - RESPONSIVO */}
+        <div style={{
+          display: "flex",
+          gap: 8,
+          flexShrink: 0
+        }}>
+          <button style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            border: "1.5px solid #e5e7eb",
+            background: "#fff",
+            cursor: "pointer",
+            fontSize: 18,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}>📋</button>
+
+          <button style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            border: "1.5px solid #e5e7eb",
+            background: "#16a34a",
+            color: "#fff",
+            cursor: "pointer",
+            fontSize: 18,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}>💬</button>
         </div>
       </div>
 
       {/* ✅ MEU CARD COM ANIMAÇÃO */}
       {minhaPos > 0 && (
-        <div 
-          style={{ 
-            background: "linear-gradient(135deg,#16a34a,#15803d)", 
-            borderRadius: 16, 
-            padding: "16px", 
-            marginBottom: 14, 
-            color: "#fff", 
-            display: "flex", 
-            alignItems: "center", 
+        <div
+          style={{
+            background: "linear-gradient(135deg,#16a34a,#15803d)",
+            borderRadius: 16,
+            padding: "16px",
+            marginBottom: 14,
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
             gap: 14,
-            animation: animatingUser === usuarioAtual 
+            animation: animatingUser === usuarioAtual
               ? "moveUp 0.6s ease, scaleCard 0.4s ease"
               : "slideUp 0.6s ease"
           }}
@@ -234,11 +262,11 @@ export default function TelaRanking({
       )}
 
       {/* ✅ PREMIAÇÃO COM ANIMAÇÃO */}
-      <div 
-        className="card" 
-        style={{ 
-          marginBottom: 14, 
-          border: "1.5px solid #fde68a", 
+      <div
+        className="card"
+        style={{
+          marginBottom: 14,
+          border: "1.5px solid #fde68a",
           background: "#fefce8",
           animation: "slideUp 0.6s ease 0.1s both"
         }}
@@ -246,14 +274,14 @@ export default function TelaRanking({
         <div style={{ fontWeight: 700, fontSize: 13, color: "#854d0e", marginBottom: 10 }}>💰 Premiação</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {premios.dist.map((d: any, idx: number) => (
-            <div 
-              key={d.pos} 
-              style={{ 
-                flex: "1 1 60px", 
-                textAlign: "center", 
-                padding: "10px 8px", 
-                background: "#fff", 
-                borderRadius: 10, 
+            <div
+              key={d.pos}
+              style={{
+                flex: "1 1 60px",
+                textAlign: "center",
+                padding: "10px 8px",
+                background: "#fff",
+                borderRadius: 10,
                 border: "1px solid #fde68a",
                 transition: "all 0.3s",
                 animation: `slideUp 0.6s ease ${0.15 + idx * 0.05}s both`,
@@ -284,18 +312,18 @@ export default function TelaRanking({
           const isAnimating = animatingUser === p.nome;
 
           return (
-            <div 
-              key={p.nome} 
+            <div
+              key={p.nome}
               className="ranking-card"
-              style={{ 
-                border: `1.5px solid ${isMe ? "#86efac" : "#e5e7eb"}`, 
-                background: isMe ? "#f0fdf4" : "#fff", 
-                cursor: "pointer", 
-                position: "relative", 
-                overflow: "hidden", 
+              style={{
+                border: `1.5px solid ${isMe ? "#86efac" : "#e5e7eb"}`,
+                background: isMe ? "#f0fdf4" : "#fff",
+                cursor: "pointer",
+                position: "relative",
+                overflow: "hidden",
                 padding: "14px 16px",
                 borderRadius: 12,
-                animation: isAnimating 
+                animation: isAnimating
                   ? "moveUp 0.6s ease, scaleCard 0.4s ease"
                   : `slideUp 0.6s ease ${0.2 + i * 0.05}s both`,
                 backgroundColor: isAnimating ? "#fef08a" : (isMe ? "#f0fdf4" : "#fff")
@@ -315,13 +343,13 @@ export default function TelaRanking({
                     {badges.map(b => <span key={b} className="badge bgr">{b}</span>)}
                   </div>
                   {detUser === p.nome && (
-                    <div 
-                      style={{ 
-                        marginTop: 10, 
-                        fontSize: 13, 
-                        lineHeight: 1.6, 
-                        background: "#f9fafb", 
-                        borderRadius: 8, 
+                    <div
+                      style={{
+                        marginTop: 10,
+                        fontSize: 13,
+                        lineHeight: 1.6,
+                        background: "#f9fafb",
+                        borderRadius: 8,
                         padding: "10px 12px",
                         animation: "slideUp 0.3s ease",
                         borderLeft: "3px solid #16a34a"
