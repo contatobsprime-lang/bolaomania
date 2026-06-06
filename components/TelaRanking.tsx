@@ -188,12 +188,22 @@ export default function TelaRanking({
         }
       `}</style>
 
-      {/* ✅ HEADER STICKY */}
+      {/* ✅ HEADER STICKY COM BOTÕES */}
       <div className="header-sticky">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <div>
             <div style={{ fontSize: 10, color: "#9ca3af", fontFamily: "'JetBrains Mono',monospace", marginBottom: 2 }}>AO VIVO</div>
             <div style={{ fontWeight: 800, fontSize: 18 }}>Classificação Geral</div>
+          </div>
+          {/* ✅ BOTÕES NO HEADER */}
+          <div style={{ animation: "slideUp 0.6s ease", flexShrink: 0 }}>
+            <BotoesShareRanking
+              ranking={ranking}
+              premios={premios}
+              usuarioAtual={usuarioAtual}
+              MEDAL={MEDAL}
+              mostrarToast={mostrarToast}
+            />
           </div>
         </div>
       </div>
@@ -337,17 +347,6 @@ export default function TelaRanking({
             </div>
           );
         })}
-      </div>
-
-      {/* ✅ BOTÕES DE SHARE NO FINAL COM ANIMAÇÃO */}
-      <div style={{ animation: "slideUp 0.6s ease 0.3s both" }}>
-        <BotoesShareRanking
-          ranking={ranking}
-          premios={premios}
-          usuarioAtual={usuarioAtual}
-          MEDAL={MEDAL}
-          mostrarToast={mostrarToast}
-        />
       </div>
     </div>
   );
