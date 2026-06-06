@@ -24,7 +24,8 @@ ${ranking
 💰 *PRÊMIOS:*
 ${premios.dist.map((d: any) => `${d.pos}º lugar: R$ ${d.valor}`).join("\n")}
 
-🎮 Participa também! ⚽`;
+🎮 Participa também! ⚽
+🔗 https://bolaomania.vercel.app/`;
     };
 
     const handleCopiar = () => {
