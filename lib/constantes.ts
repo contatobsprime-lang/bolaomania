@@ -5,11 +5,11 @@ export const CONFIG = {
   bloqueioCompetidor: "2026-07-04T18:00:00",
   premios: { 1: 0.40, 2: 0.25, 3: 0.15, 4: 0.12, 5: 0.08 } as Record<number, number>,
   pontos: {
-    grupos:  { vencedor: 2,  placar: 5  },
-    oitavas: { vencedor: 3,  placar: 8  },
-    quartas: { vencedor: 5,  placar: 12 },
-    semi:    { vencedor: 7,  placar: 15 },
-    final:   { vencedor: 10, placar: 20 },
+    grupos: { vencedor: 2, placar: 5 },
+    oitavas: { vencedor: 3, placar: 8 },
+    quartas: { vencedor: 5, placar: 12 },
+    semi: { vencedor: 7, placar: 15 },
+    final: { vencedor: 10, placar: 20 },
   } as Record<string, { vencedor: number; placar: number }>,
 };
 
@@ -50,17 +50,18 @@ export const F: Record<string, string> = {
 export const MEDAL = ["🥇", "🥈", "🥉", "4º", "5º"];
 
 export const FASE_L: Record<string, string> = {
-  grupos:  "Grupos",
+  grupos: "Grupos",
+  "16avos": "16avos",
   oitavas: "Oitavas",
   quartas: "Quartas",
-  semi:    "Semifinal",
-  final:   "Final",
+  semi: "Semifinal",
+  final: "Final",
 };
 
 export const ELIM_TMPL = [
-  ...Array.from({ length: 16 }, (_, i) => ({ id: 100 + i, fase: "oitavas", label: `Oitavas ${i + 1}`,   time1: "", time2: "", dt: "2026-07-04T18:00:00", est: "A definir",          cid: "A definir" })),
-  ...Array.from({ length: 8  }, (_, i) => ({ id: 200 + i, fase: "quartas", label: `Quartas ${i + 1}`,   time1: "", time2: "", dt: "2026-07-10T18:00:00", est: "A definir",          cid: "A definir" })),
-  ...Array.from({ length: 4  }, (_, i) => ({ id: 300 + i, fase: "semi",    label: `Semifinal ${i + 1}`, time1: "", time2: "", dt: "2026-07-14T16:00:00", est: "A definir",          cid: "A definir" })),
-  { id: 400, fase: "final", label: "Final",    time1: "", time2: "", dt: "2026-07-19T16:00:00", est: "MetLife Stadium",   cid: "Nova York/NJ" },
-  { id: 401, fase: "final", label: "3º Lugar", time1: "", time2: "", dt: "2026-07-18T17:00:00", est: "Hard Rock Stadium", cid: "Miami"        },
+  ...Array.from({ length: 16 }, (_, i) => ({ id: 100 + i, fase: "oitavas", label: `Oitavas ${i + 1}`, time1: "", time2: "", dt: "2026-07-04T18:00:00", est: "A definir", cid: "A definir" })),
+  ...Array.from({ length: 8 }, (_, i) => ({ id: 200 + i, fase: "quartas", label: `Quartas ${i + 1}`, time1: "", time2: "", dt: "2026-07-10T18:00:00", est: "A definir", cid: "A definir" })),
+  ...Array.from({ length: 4 }, (_, i) => ({ id: 300 + i, fase: "semi", label: `Semifinal ${i + 1}`, time1: "", time2: "", dt: "2026-07-14T16:00:00", est: "A definir", cid: "A definir" })),
+  { id: 400, fase: "final", label: "Final", time1: "", time2: "", dt: "2026-07-19T16:00:00", est: "MetLife Stadium", cid: "Nova York/NJ" },
+  { id: 401, fase: "final", label: "3º Lugar", time1: "", time2: "", dt: "2026-07-18T17:00:00", est: "Hard Rock Stadium", cid: "Miami" },
 ];
