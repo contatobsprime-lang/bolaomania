@@ -712,9 +712,13 @@ export default function App() {
                                 setStatusF={setStatusF}
                                 rodada={rodada}
                                 setRodada={setRodada}
+                                faseAtiva={faseAtiva}
+                                setFaseAtiva={setFaseAtiva}
                                 jogosFiltrados={jogosFiltrados}
                                 jogosRodada={jogosRodada}
+                                elim={elim}
                                 res={res}
+                                resE={resE}
                                 palS={palS}
                                 palpitesMap={palpitesMap}
                                 F={F}
@@ -760,8 +764,8 @@ export default function App() {
                                 MEDAL={MEDAL}
                                 F={F}
                                 mostrarToast={mostrarToast}
-                                isLoading={false}     
-                                error={null}           
+                                isLoading={false}
+                                error={null}
                             />
                         )}
 
