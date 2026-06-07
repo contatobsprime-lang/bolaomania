@@ -57,8 +57,9 @@ export default function TelaPalpites({
         {campAtual && <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280" }}>Seu palpite: <strong style={{ color: "#16a34a" }}>{F[campAtual]} {campAtual}</strong></div>}
       </div>
 
+      // ✅ DEPOIS (com 16avos):
       <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
-        {["grupos", "oitavas", "quartas", "semi", "final"].map(f => (
+        {["grupos", "16avos", "oitavas", "quartas", "semi", "final"].map(f => (
           <button key={f} className={`ftab ${faseAtiva === f ? "on" : "off"}`} onClick={() => setFaseAtiva(f)}>{FASE_L[f]}</button>
         ))}
       </div>
