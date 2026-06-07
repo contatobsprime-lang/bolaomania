@@ -57,9 +57,32 @@ export default function TelaPalpites({
         {campAtual && <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280" }}>Seu palpite: <strong style={{ color: "#16a34a" }}>{F[campAtual]} {campAtual}</strong></div>}
       </div>
 
-      <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
-        {["grupos", "16avos", "oitavas", "quartas", "semi", "final"].map(f => (
-          <button key={f} className={`ftab ${faseAtiva === f ? "on" : "off"}`} onClick={() => setFaseAtiva(f)}>{FASE_L[f]}</button>
+      <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap", overflowX: "auto" }}>
+        {["grupos", "16avos", "oitavas", "quartas", "semi", "final"].map((f) => (
+          <button
+            key={f}
+            onClick={() => setFaseAtiva(f)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: 8,
+              border: "1px solid #e5e7eb",
+              background: faseAtiva === f ? "#16a34a" : "#f9fafb",
+              color: faseAtiva === f ? "#fff" : "#6b7280",
+              fontWeight: 600,
+              fontSize: 12,
+              cursor: "pointer",
+              transition: "all .2s",
+              whiteSpace: "nowrap",
+            }}
+            onMouseOver={(e) => {
+              if (faseAtiva !== f) e.currentTarget.style.background = "#f3f4f6";
+            }}
+            onMouseOut={(e) => {
+              if (faseAtiva !== f) e.currentTarget.style.background = "#f9fafb";
+            }}
+          >
+            {FASE_L[f] || f}
+          </button>
         ))}
       </div>
 

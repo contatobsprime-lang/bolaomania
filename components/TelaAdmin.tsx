@@ -74,9 +74,9 @@ export default function TelaAdmin({
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "0 8px", flexShrink: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <input type="number" min={0} max={30} className={`si r${temRes ? " f" : ""}`} value={r.gols1 ?? ""} onChange={e => {/* setResAdmin */}} placeholder="—" />
+                        <input type="number" min={0} max={30} className={`si r${temRes ? " f" : ""}`} value={r.gols1 ?? ""} onChange={e => {/* setResAdmin */ }} placeholder="—" />
                         <span style={{ color: "#d1d5db", fontSize: 14 }}>×</span>
-                        <input type="number" min={0} max={30} className={`si r${temRes ? " f" : ""}`} value={r.gols2 ?? ""} onChange={e => {/* setResAdmin */}} placeholder="—" />
+                        <input type="number" min={0} max={30} className={`si r${temRes ? " f" : ""}`} value={r.gols2 ?? ""} onChange={e => {/* setResAdmin */ }} placeholder="—" />
                       </div>
                     </div>
                     <div style={{ textAlign: "center", flex: 1 }}>
@@ -89,7 +89,7 @@ export default function TelaAdmin({
             })}
           </div>
           <div style={{ marginTop: 10, padding: "9px 13px", background: "rgba(74,222,128,.04)", border: "1px solid rgba(74,222,128,.12)", borderRadius: 9, display: "flex", justifyContent: "space-between" }}>
-<span style={{ fontSize: 11, color: "#6b7280" }}>{Object.entries(res).filter(([, r]) => r.gols1 !== "" && r.gols1 !== undefined).length}/{JOGOS_GRUPO.length} resultados</span>            <span className="badge bgr">☁ Supabase</span>
+            <span style={{ fontSize: 11, color: "#6b7280" }}>{Object.entries(res).filter(([, r]) => r.gols1 !== "" && r.gols1 !== undefined).length}/{JOGOS_GRUPO.length} resultados</span>            <span className="badge bgr">☁ Supabase</span>
           </div>
         </div>
       )}
@@ -97,8 +97,7 @@ export default function TelaAdmin({
       {adminModo === "elim" && (
         <div>
           <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap" }}>
-            {["oitavas", "quartas", "semi", "final"].map(f => <button key={f} className={`ftab ${faseAtiva === f ? "on" : "off"}`} onClick={() => setFaseAtiva(f)}>{FASE_L[f]}</button>)}
-          </div>
+            {["16avos", "oitavas", "quartas", "semi", "final"].map(f => <button key={f} className={`ftab ${faseAtiva === f ? "on" : "off"}`} onClick={() => setFaseAtiva(f)}>{FASE_L[f]}</button>)}          </div>
           {faseAtiva === "final" && (
             <div className="card" style={{ marginBottom: 10, border: "1px solid rgba(247,201,72,.2)" }}>
               <div style={{ fontWeight: 700, fontSize: 10, color: "#16a34a", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>🏆 Campeão Real da Copa</div>
@@ -134,13 +133,13 @@ export default function TelaAdmin({
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "0 8px", flexShrink: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <input type="number" min={0} max={30} className="si r" value={resE[j.id]?.gols1 ?? ""} onChange={e => {/* setResEAdmin */}} placeholder="—" />
+                          <input type="number" min={0} max={30} className="si r" value={resE[j.id]?.gols1 ?? ""} onChange={e => {/* setResEAdmin */ }} placeholder="—" />
                           <span style={{ color: "#d1d5db", fontSize: 14 }}>×</span>
-                          <input type="number" min={0} max={30} className="si r" value={resE[j.id]?.gols2 ?? ""} onChange={e => {/* setResEAdmin */}} placeholder="—" />
+                          <input type="number" min={0} max={30} className="si r" value={resE[j.id]?.gols2 ?? ""} onChange={e => {/* setResEAdmin */ }} placeholder="—" />
                         </div>
                         {j.fase !== "grupos" && (
                           <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6b7280", cursor: "pointer" }}>
-                            <input type="checkbox" checked={resE[j.id]?.penalti || false} onChange={e => {/* setResEAdmin */}} style={{ width: 14, height: 14 }} /> Pênalti
+                            <input type="checkbox" checked={resE[j.id]?.penalti || false} onChange={e => {/* setResEAdmin */ }} style={{ width: 14, height: 14 }} /> Pênalti
                           </label>
                         )}
                       </div>
