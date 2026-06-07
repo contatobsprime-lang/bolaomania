@@ -50,7 +50,7 @@ export default function App() {
     const [cadErro, setCadErro] = useState("");
     const [esqueceuEmail, setEsqueceuEmail] = useState("");
     const [esqueceuSent, setEsqueceuSent] = useState(false);
-    const [elim, setElim] = useState<any[]>(ELIM_TMPL);
+    const [elim, setElim] = useState<any[]>([]);
     const [palpitesMap, setPalpitesMap] = useState<any>({});
     const [rascunho, setRascunho] = useState<any>({});
     const [res, setRes] = useState<any>({});

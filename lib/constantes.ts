@@ -58,10 +58,4 @@ export const FASE_L: Record<string, string> = {
   final: "Final",
 };
 
-export const ELIM_TMPL = [
-  ...Array.from({ length: 16 }, (_, i) => ({ id: 100 + i, fase: "oitavas", label: `Oitavas ${i + 1}`, time1: "", time2: "", dt: "2026-07-04T18:00:00", est: "A definir", cid: "A definir" })),
-  ...Array.from({ length: 8 }, (_, i) => ({ id: 200 + i, fase: "quartas", label: `Quartas ${i + 1}`, time1: "", time2: "", dt: "2026-07-10T18:00:00", est: "A definir", cid: "A definir" })),
-  ...Array.from({ length: 4 }, (_, i) => ({ id: 300 + i, fase: "semi", label: `Semifinal ${i + 1}`, time1: "", time2: "", dt: "2026-07-14T16:00:00", est: "A definir", cid: "A definir" })),
-  { id: 400, fase: "final", label: "Final", time1: "", time2: "", dt: "2026-07-19T16:00:00", est: "MetLife Stadium", cid: "Nova York/NJ" },
-  { id: 401, fase: "final", label: "3º Lugar", time1: "", time2: "", dt: "2026-07-18T17:00:00", est: "Hard Rock Stadium", cid: "Miami" },
-];
+export const ELIM_TMPL = [...];
