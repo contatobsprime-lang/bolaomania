@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import type { RankingEntry, Jogo } from "@/lib/types";
 import { calcBadges } from "@/lib/calculos";
-import BotoesShareRanking from "@/components/BotoesShareRanking";
 
 interface Props {
   minhaPos: number;
@@ -42,7 +41,6 @@ export default function TelaRanking({
   const [prevRanking, setPrevRanking] = useState<any[]>(ranking);
   const [animatingUser, setAnimatingUser] = useState<string | null>(null);
 
-  // Detectar mudanças de posição
   useEffect(() => {
     ranking.forEach((user, newIdx) => {
       const oldIdx = prevRanking.findIndex(u => u.nome === user.nome);
@@ -54,65 +52,43 @@ export default function TelaRanking({
     setPrevRanking(ranking);
   }, [ranking, prevRanking]);
 
-  // ✅ EMPTY STATE
+  const gerarTexto = () => {
+    const meusPts = ranking.find((r: any) => r.nome === usuarioAtual)?.pontos || 0;
+    return `🏆 *BOLÃO COPA 2026* 🏆\n\n${usuarioAtual ? `Estou em *${minhaPos}º lugar* com *${meusPts} pontos*! 🎯\n\n` : ""}📊 *TOP 5:*\n${ranking.slice(0, 5).map((p: any, i: number) => `${MEDAL[i] || `${i + 1}º`} *${p.nome}* — ${p.pontos}pts`).join("\n")}\n\n💰 *PRÊMIOS:*\n${premios.dist.map((d: any) => `${d.pos}º lugar: R$ ${d.valor}`).join("\n")}\n\n🎮 Participa também! ⚽\n🔗 https://bolaomania.vercel.app/`;
+  };
+
+  const handleCopiar = () => {
+    navigator.clipboard.writeText(gerarTexto());
+    mostrarToast("✅ Copiado! Cole no WhatsApp", "ok");
+  };
+
+  const handleWhatsApp = () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(gerarTexto())}`, "_blank");
+  };
+
   if (ranking.length === 0 && !isLoading) {
     return (
-      <div style={{
-        textAlign: "center",
-        padding: "60px 20px",
-        animation: "fadeIn 0.6s ease"
-      }}>
+      <div style={{ textAlign: "center", padding: "60px 20px", animation: "fadeIn 0.6s ease" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
-        <div style={{ fontSize: 18, fontWeight: 700, color: "#111827", marginBottom: 8 }}>
-          Ranking vazio
-        </div>
-        <div style={{ fontSize: 14, color: "#9ca3af" }}>
-          Ninguém começou a jogar ainda. Faça seu palpite para aparecer aqui!
-        </div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: "#111827", marginBottom: 8 }}>Ranking vazio</div>
+        <div style={{ fontSize: 14, color: "#9ca3af" }}>Ninguém começou a jogar ainda. Faça seu palpite para aparecer aqui!</div>
       </div>
     );
   }
 
-  // ❌ ERROR STATE
   if (error) {
     return (
-      <div style={{
-        textAlign: "center",
-        padding: "60px 20px",
-        background: "#fef2f2",
-        borderRadius: 16,
-        border: "1.5px solid #fecaca",
-        animation: "fadeIn 0.6s ease"
-      }}>
+      <div style={{ textAlign: "center", padding: "60px 20px", background: "#fef2f2", borderRadius: 16, border: "1.5px solid #fecaca", animation: "fadeIn 0.6s ease" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>❌</div>
-        <div style={{ fontSize: 18, fontWeight: 700, color: "#b91c1c", marginBottom: 8 }}>
-          Erro ao carregar ranking
-        </div>
-        <div style={{ fontSize: 14, color: "#9ca3af", marginBottom: 16 }}>
-          {error}
-        </div>
-        <button
-          onClick={() => window.location.reload()}
-          style={{
-            padding: "10px 20px",
-            background: "#b91c1c",
-            color: "#fff",
-            border: "none",
-            borderRadius: 8,
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "all 0.2s"
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.background = "#991b1b")}
-          onMouseOut={(e) => (e.currentTarget.style.background = "#b91c1c")}
-        >
+        <div style={{ fontSize: 18, fontWeight: 700, color: "#b91c1c", marginBottom: 8 }}>Erro ao carregar ranking</div>
+        <div style={{ fontSize: 14, color: "#9ca3af", marginBottom: 16 }}>{error}</div>
+        <button onClick={() => window.location.reload()} style={{ padding: "10px 20px", background: "#b91c1c", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}>
           Tentar novamente
         </button>
       </div>
     );
   }
 
-  // ⏳ LOADING STATE
   if (isLoading) {
     return (
       <div>
@@ -121,15 +97,7 @@ export default function TelaRanking({
           <div style={{ height: 16, background: "#e5e7eb", borderRadius: 8, width: "60%", animation: "pulse 2s infinite 0.1s" }} />
         </div>
         {[1, 2, 3, 4, 5].map((i) => (
-          <div
-            key={i}
-            className="card"
-            style={{
-              marginBottom: 8,
-              padding: "14px 16px",
-              animation: "fadeIn 0.6s ease"
-            }}
-          >
+          <div key={i} className="card" style={{ marginBottom: 8, padding: "14px 16px" }}>
             <div style={{ display: "flex", gap: 12 }}>
               <div style={{ width: 28, height: 24, background: "#e5e7eb", borderRadius: 6, animation: "pulse 2s infinite" }} />
               <div style={{ flex: 1 }}>
@@ -147,112 +115,49 @@ export default function TelaRanking({
   return (
     <div>
       <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideUp {
-          from { transform: translateY(20px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-        @keyframes moveUp {
-          0% { transform: translateY(10px); background: #fef08a; }
-          100% { transform: translateY(0); background: transparent; }
-        }
-        @keyframes scaleCard {
-          from { transform: scale(0.98); }
-          to { transform: scale(1); }
-        }
-        .ranking-card {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .ranking-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-        }
-        .ranking-card:active {
-          transform: translateY(0);
-        }
-        .header-sticky {
-          position: sticky;
-          top: -16px;
-          background: #f5f7fa;
-          padding: 16px 0;
-          margin-bottom: 14px;
-          z-index: 10;
-          animation: slideUp 0.6s ease;
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes moveUp { 0% { transform: translateY(10px); background: #fef08a; } 100% { transform: translateY(0); background: transparent; } }
+        @keyframes scaleCard { from { transform: scale(0.98); } to { transform: scale(1); } }
+        .ranking-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .ranking-card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        .ranking-card:active { transform: translateY(0); }
       `}</style>
 
-      {/* NO HEADER */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 12,
-        flexWrap: "wrap"  // Quebra em 2 linhas se precisar
-      }}>
+      {/* HEADER */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
         <div>
           <div style={{ fontSize: 10, color: "#9ca3af", fontFamily: "'JetBrains Mono',monospace", marginBottom: 2 }}>AO VIVO</div>
           <div style={{ fontWeight: 800, fontSize: 18 }}>Classificação</div>
         </div>
-
-        {/* BOTÕES - RESPONSIVO */}
-        <div style={{
-          display: "flex",
-          gap: 8,
-          flexShrink: 0
-        }}>
-          <button style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            border: "1.5px solid #e5e7eb",
-            background: "#fff",
-            cursor: "pointer",
-            fontSize: 18,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}>📋</button>
-
-          <button style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            border: "1.5px solid #e5e7eb",
-            background: "#16a34a",
-            color: "#fff",
-            cursor: "pointer",
-            fontSize: 18,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}>💬</button>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <button
+            onClick={handleCopiar}
+            style={{ width: 40, height: 40, borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}
+            title="Copiar ranking"
+          >📋</button>
+          <button
+            onClick={handleWhatsApp}
+            style={{ width: 40, height: 40, borderRadius: 10, border: "none", background: "#25d366", color: "#fff", cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}
+            title="Compartilhar no WhatsApp"
+          >💬</button>
         </div>
       </div>
 
-      {/* ✅ MEU CARD COM ANIMAÇÃO */}
+      {/* MEU CARD */}
       {minhaPos > 0 && (
-        <div
-          style={{
-            background: "linear-gradient(135deg,#16a34a,#15803d)",
-            borderRadius: 16,
-            padding: "16px",
-            marginBottom: 14,
-            color: "#fff",
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            animation: animatingUser === usuarioAtual
-              ? "moveUp 0.6s ease, scaleCard 0.4s ease"
-              : "slideUp 0.6s ease"
-          }}
-        >
+        <div style={{
+          background: "linear-gradient(135deg,#16a34a,#15803d)",
+          borderRadius: 16,
+          padding: "16px",
+          marginBottom: 14,
+          color: "#fff",
+          display: "flex",
+          alignItems: "center",
+          gap: 14,
+          animation: animatingUser === usuarioAtual ? "moveUp 0.6s ease, scaleCard 0.4s ease" : "slideUp 0.6s ease"
+        }}>
           <div style={{ fontSize: 28 }}>{MEDAL[minhaPos - 1] || `${minhaPos}º`}</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: 16 }}>{usuarioAtual} <span style={{ fontSize: 12, opacity: .8 }}>(você)</span></div>
@@ -261,40 +166,16 @@ export default function TelaRanking({
         </div>
       )}
 
-      {/* ✅ PREMIAÇÃO COM ANIMAÇÃO */}
-      <div
-        className="card"
-        style={{
-          marginBottom: 14,
-          border: "1.5px solid #fde68a",
-          background: "#fefce8",
-          animation: "slideUp 0.6s ease 0.1s both"
-        }}
-      >
+      {/* PREMIAÇÃO */}
+      <div className="card" style={{ marginBottom: 14, border: "1.5px solid #fde68a", background: "#fefce8", animation: "slideUp 0.6s ease 0.1s both" }}>
         <div style={{ fontWeight: 700, fontSize: 13, color: "#854d0e", marginBottom: 10 }}>💰 Premiação</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {premios.dist.map((d: any, idx: number) => (
             <div
               key={d.pos}
-              style={{
-                flex: "1 1 60px",
-                textAlign: "center",
-                padding: "10px 8px",
-                background: "#fff",
-                borderRadius: 10,
-                border: "1px solid #fde68a",
-                transition: "all 0.3s",
-                animation: `slideUp 0.6s ease ${0.15 + idx * 0.05}s both`,
-                cursor: "pointer"
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.1)";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
+              style={{ flex: "1 1 60px", textAlign: "center", padding: "10px 8px", background: "#fff", borderRadius: 10, border: "1px solid #fde68a", animation: `slideUp 0.6s ease ${0.15 + idx * 0.05}s both`, cursor: "pointer", transition: "all 0.3s" }}
+              onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.1)"; }}
+              onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
             >
               <div style={{ fontSize: 18 }}>{MEDAL[d.pos - 1]}</div>
               <div style={{ fontWeight: 800, fontSize: 15, color: "#16a34a" }}>R$ {d.valor}</div>
@@ -303,7 +184,7 @@ export default function TelaRanking({
         </div>
       </div>
 
-      {/* ✅ RANKING COM ANIMAÇÕES */}
+      {/* RANKING */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
         {ranking.map((p, i) => {
           const isMe = p.nome === usuarioAtual;
@@ -317,16 +198,13 @@ export default function TelaRanking({
               className="ranking-card"
               style={{
                 border: `1.5px solid ${isMe ? "#86efac" : "#e5e7eb"}`,
-                background: isMe ? "#f0fdf4" : "#fff",
+                background: isAnimating ? "#fef08a" : (isMe ? "#f0fdf4" : "#fff"),
                 cursor: "pointer",
                 position: "relative",
                 overflow: "hidden",
                 padding: "14px 16px",
                 borderRadius: 12,
-                animation: isAnimating
-                  ? "moveUp 0.6s ease, scaleCard 0.4s ease"
-                  : `slideUp 0.6s ease ${0.2 + i * 0.05}s both`,
-                backgroundColor: isAnimating ? "#fef08a" : (isMe ? "#f0fdf4" : "#fff")
+                animation: isAnimating ? "moveUp 0.6s ease, scaleCard 0.4s ease" : `slideUp 0.6s ease ${0.2 + i * 0.05}s both`,
               }}
               onClick={() => setDetUser(detUser === p.nome ? null : p.nome)}
             >
@@ -334,7 +212,9 @@ export default function TelaRanking({
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ fontSize: 20, width: 28, textAlign: "center", flexShrink: 0, fontWeight: 700 }}>{MEDAL[i] || `${i + 1}º`}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: "#111827", marginBottom: 4 }}>{p.nome} {isMe && <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>(você)</span>}</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: "#111827", marginBottom: 4 }}>
+                    {p.nome} {isMe && <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>(você)</span>}
+                  </div>
                   <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
                     <span className="badge bb">✅ {p.acertos}</span>
                     <span className="badge bp">🎯 {p.placares}</span>
@@ -343,27 +223,10 @@ export default function TelaRanking({
                     {badges.map(b => <span key={b} className="badge bgr">{b}</span>)}
                   </div>
                   {detUser === p.nome && (
-                    <div
-                      style={{
-                        marginTop: 10,
-                        fontSize: 13,
-                        lineHeight: 1.6,
-                        background: "#f9fafb",
-                        borderRadius: 8,
-                        padding: "10px 12px",
-                        animation: "slideUp 0.3s ease",
-                        borderLeft: "3px solid #16a34a"
-                      }}
-                    >
-                      <div style={{ color: "#6b7280", marginBottom: 6 }}>
-                        {p.acertos} acertos · {p.placares} exatos
-                      </div>
-                      {p.bonusCampeao > 0 && (
-                        <div style={{ color: "#854d0e", marginBottom: 6 }}>🏆 +{p.bonusCampeao}pts bônus</div>
-                      )}
-                      {premio && (
-                        <div style={{ color: "#16a34a", fontWeight: 700 }}>💰 R$ {premio.valor}</div>
-                      )}
+                    <div style={{ marginTop: 10, fontSize: 13, lineHeight: 1.6, background: "#f9fafb", borderRadius: 8, padding: "10px 12px", animation: "slideUp 0.3s ease", borderLeft: "3px solid #16a34a" }}>
+                      <div style={{ color: "#6b7280", marginBottom: 6 }}>{p.acertos} acertos · {p.placares} exatos</div>
+                      {p.bonusCampeao > 0 && <div style={{ color: "#854d0e", marginBottom: 6 }}>🏆 +{p.bonusCampeao}pts bônus</div>}
+                      {premio && <div style={{ color: "#16a34a", fontWeight: 700 }}>💰 R$ {premio.valor}</div>}
                     </div>
                   )}
                 </div>
