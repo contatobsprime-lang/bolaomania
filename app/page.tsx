@@ -27,6 +27,8 @@ import TelaHome from "@/components/TelaHome";
 import TelaMais from "@/components/TelaMais";
 import NavBar from "@/components/NavBar";
 import BotoesShareRanking from "@/components/BotoesShareRanking";
+import PopupNotificacao from "@/components/PopupNotificacao";
+import { useNotificacao30min } from "@/lib/hooks/useNotificacao30min";
 
 
 export default function App() {
@@ -68,13 +70,17 @@ export default function App() {
     const [rodada, setRodada] = useState(1);
     const [statusF, setStatusF] = useState<"proximos" | "aovivo" | "terminados">("proximos");
     const [jogoSel, setJogoSel] = useState<any | null>(null);
-    const [countdown, setCountdown] = useState("");
     const [histRodada, setHistRodada] = useState<number | "todas">("todas");
     const [feed, setFeed] = useState<any[]>([]);
     const [, setTick] = useState(0);
     const [sessaoCarregando, setSessaoCarregando] = useState(true);
     const [pullRefresh, setPullRefresh] = useState(0);
-    const [notif30min, setNotif30min] = useState(false);
+
+    const { popupJogo, setPopupJogo, countdown } = useNotificacao30min(
+        palpitesMap,
+        elim,
+        usuarioAtual
+    );
 
     const irParaHome = () => {
         setModo("home");
@@ -143,32 +149,6 @@ export default function App() {
         return () => subscription.unsubscribe();
     }, []);
 
-    useEffect(() => {
-        function atualizar() {
-            const ps = palpitesMap[usuarioAtual || ""] || {};
-            const todos = [...JOGOS_GRUPO, ...elim.filter((j: any) => j.time1)];
-            const sem = todos.filter((j: any) => {
-                const p = ps[j.id];
-                return !lock(j.dt) && (!p || p.gols1 === "" || p.gols2 === "");
-            }).sort((a: any, b: any) => new Date(a.dt).getTime() - new Date(b.dt).getTime());
-
-            if (!sem.length) { setCountdown(""); return; }
-            const prox = sem[0], t = tr(prox.dt);
-
-            // Notificação 30 minutos antes
-            const diffMs = new Date(prox.dt).getTime() - Date.now();
-            if (diffMs > 0 && diffMs <= 30 * 60 * 1000 && !notif30min) {
-                mostrarToast(`⏰ ${F[prox.time1] || ""}${prox.time1} × ${prox.time2}${F[prox.time2] || ""} começa em 30min!`, "ok");
-                setNotif30min(true);
-            }
-
-            if (!t) { setCountdown(""); return; }
-            setCountdown(`${F[prox.time1] || ""}${prox.time1} × ${prox.time2}${F[prox.time2] || ""} — ${t}`);
-        }
-        atualizar();
-        const t = setInterval(atualizar, 1000);
-        return () => clearInterval(t);
-    }, [palpitesMap, elim, usuarioAtual, notif30min]);
 
     function mostrarToast(msg: string, tipo: "ok" | "err" = "ok") {
         setToast({ msg, tipo });
@@ -868,6 +848,8 @@ export default function App() {
                 )}
 
             </div>
+
+            <PopupNotificacao popupJogo={popupJogo} setPopupJogo={setPopupJogo} setJogoSel={setJogoSel} F={F} />
 
             {tela === "app" && <NavBar modo={modo} isAdmin={isAdmin} setModo={setModo} />}
         </div>
