@@ -26,7 +26,6 @@ import TelaFeed from "@/components/TelaFeed";
 import TelaHome from "@/components/TelaHome";
 import TelaMais from "@/components/TelaMais";
 import NavBar from "@/components/NavBar";
-import BotoesShareRanking from "@/components/BotoesShareRanking";
 import PopupNotificacao from "@/components/PopupNotificacao";
 import { useNotificacao30min } from "@/lib/hooks/useNotificacao30min";
 
