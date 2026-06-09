@@ -43,9 +43,17 @@ export function useNotificacao30min(
       }
 
       if (diffMs > 0) {
-        const mins = Math.floor(diffMs / 60000);
+        const horas = Math.floor(diffMs / 3600000);
+        const mins = Math.floor((diffMs % 3600000) / 60000);
         const secs = Math.floor((diffMs % 60000) / 1000);
-        setCountdown(`${mins}:${secs.toString().padStart(2, "0")}`);
+
+        if (horas > 0) {
+          setCountdown(`${horas}h ${mins.toString().padStart(2, "0")}min`);
+        } else if (mins > 0) {
+          setCountdown(`${mins}min ${secs.toString().padStart(2, "0")}s`);
+        } else {
+          setCountdown(`${secs}s`);
+        }
       } else {
         setCountdown("");
       }
