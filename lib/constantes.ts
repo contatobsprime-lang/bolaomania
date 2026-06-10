@@ -3,13 +3,15 @@ export const CONFIG = {
   bonusCampeao: 20,
   minutesBloqueio: 30,
   bloqueioCompetidor: "2026-07-04T18:00:00",
-  premios: { 1: 0.40, 2: 0.25, 3: 0.15, 4: 0.12, 5: 0.08 } as Record<number, number>,
+  comissao: 0.10,
+  premios: { 1: 0.36, 2: 0.22, 3: 0.14, 4: 0.10, 5: 0.08 } as Record<number, number>,
   pontos: {
-    grupos: { vencedor: 2, placar: 5 },
-    oitavas: { vencedor: 3, placar: 8 },
-    quartas: { vencedor: 5, placar: 12 },
-    semi: { vencedor: 7, placar: 15 },
-    final: { vencedor: 10, placar: 20 },
+    grupos:   { vencedor: 2, placar: 5 },
+    "16avos": { vencedor: 3, placar: 6 },
+    oitavas:  { vencedor: 3, placar: 8 },
+    quartas:  { vencedor: 5, placar: 12 },
+    semi:     { vencedor: 7, placar: 15 },
+    final:    { vencedor: 10, placar: 20 },
   } as Record<string, { vencedor: number; placar: number }>,
 };
 
@@ -58,4 +60,4 @@ export const FASE_L: Record<string, string> = {
   final: "Final",
 };
 
-export const ELIM_TMPL = [];
+export const ELIM_TMPL: any[] = [];

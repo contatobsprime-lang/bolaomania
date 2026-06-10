@@ -80,8 +80,12 @@ export function calcTudo(
 
 export function calcPremios(n: number) {
   const total = n * CONFIG.valorCota;
+  const comissao = Math.floor(total * (CONFIG.comissao ?? 0));
+  const totalPremios = total - comissao;
   return {
     total,
+    comissao,
+    totalPremios,
     dist: Object.entries(CONFIG.premios).map(([pos, pct]) => ({
       pos: parseInt(pos),
       pct,
@@ -115,14 +119,14 @@ export function calcBadges(
   const pals = palpitesMap[nome] ?? {};
 
   const fases: { label: string; jogos: Jogo[]; isElim: boolean }[] = [
-    { label: "R1",      jogos: JOGOS_GRUPO.filter(j => j.r === 1),          isElim: false },
-    { label: "R2",      jogos: JOGOS_GRUPO.filter(j => j.r === 2),          isElim: false },
-    { label: "R3",      jogos: JOGOS_GRUPO.filter(j => j.r === 3),          isElim: false },
-    { label: "16avos",  jogos: elim.filter(j => j.fase === "16avos"),        isElim: true  },
-    { label: "Oitavas", jogos: elim.filter(j => j.fase === "oitavas"),       isElim: true  },
-    { label: "Quartas", jogos: elim.filter(j => j.fase === "quartas"),       isElim: true  },
-    { label: "Semi",    jogos: elim.filter(j => j.fase === "semi"),          isElim: true  },
-    { label: "Final",   jogos: elim.filter(j => j.fase === "final"),         isElim: true  },
+    { label: "R1",      jogos: JOGOS_GRUPO.filter(j => j.r === 1),    isElim: false },
+    { label: "R2",      jogos: JOGOS_GRUPO.filter(j => j.r === 2),    isElim: false },
+    { label: "R3",      jogos: JOGOS_GRUPO.filter(j => j.r === 3),    isElim: false },
+    { label: "16avos",  jogos: elim.filter(j => j.fase === "16avos"), isElim: true  },
+    { label: "Oitavas", jogos: elim.filter(j => j.fase === "oitavas"),isElim: true  },
+    { label: "Quartas", jogos: elim.filter(j => j.fase === "quartas"),isElim: true  },
+    { label: "Semi",    jogos: elim.filter(j => j.fase === "semi"),   isElim: true  },
+    { label: "Final",   jogos: elim.filter(j => j.fase === "final"),  isElim: true  },
   ];
 
   fases.forEach(({ label, jogos, isElim }) => {
