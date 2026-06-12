@@ -29,12 +29,10 @@ export function usePushNotification(usuarioAtual: string | null) {
       applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
     });
 
-    const resultado = await supabase.from("push_subscriptions").upsert({
+    await supabase.from("push_subscriptions").upsert({
       usuario_nome: usuarioAtual,
       subscription: sub.toJSON(),
     }, { onConflict: "usuario_nome" });
-
-    console.log("SUPABASE RESULTADO:", resultado);
   }
 
   return { permissao, ativarNotificacoes };
