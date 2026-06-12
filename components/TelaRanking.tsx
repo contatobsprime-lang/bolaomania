@@ -95,7 +95,7 @@ export default function TelaRanking({
   if (error) {
     return (
       <div style={{ textAlign: "center", padding: "60px 20px", background: "#fef2f2", borderRadius: 16, border: "1.5px solid #fecaca" }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>❌</div>
+        <i className="ti ti-alert-circle" aria-hidden="true" style={{ fontSize: 48, marginBottom: 16, display: "block", color: "#b91c1c" }} />
         <div style={{ fontSize: 18, fontWeight: 700, color: "#b91c1c", marginBottom: 8 }}>Erro ao carregar ranking</div>
         <div style={{ fontSize: 14, color: "#9ca3af", marginBottom: 16 }}>{error}</div>
         <button onClick={() => window.location.reload()} style={{ padding: "10px 20px", background: "#b91c1c", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}>
@@ -108,7 +108,7 @@ export default function TelaRanking({
   if (ranking.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "60px 20px" }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+        <i className="ti ti-chart-bar" aria-hidden="true" style={{ fontSize: 48, marginBottom: 16, display: "block", color: "#9ca3af" }} />
         <div style={{ fontSize: 18, fontWeight: 700, color: "#111827", marginBottom: 8 }}>Ranking vazio</div>
         <div style={{ fontSize: 14, color: "#9ca3af" }}>Ninguém começou a jogar ainda.</div>
       </div>
@@ -187,8 +187,8 @@ export default function TelaRanking({
 
             {/* Badges de desempenho */}
             <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
-              <span className="badge bb">✅ {p.acertos}</span>
-              <span className="badge bp">🎯 {p.placares}</span>
+              <span className="badge bb"><i className="ti ti-check" aria-hidden="true" /> {p.acertos}</span>
+              <span className="badge bp"><i className="ti ti-target" aria-hidden="true" /> {p.placares}</span>
               {p.campeao && <span className="badge bg">{F[p.campeao]}</span>}
               {badges.map((b: string) => <span key={b} className="badge bgr">{b}</span>)}
             </div>
@@ -204,21 +204,25 @@ export default function TelaRanking({
                   {p.acertos} acertos · {p.placares} exatos
                 </div>
                 {p.bonusCampeao > 0 && (
-                  <div style={{ color: "#854d0e", marginBottom: 6 }}>🏆 +{p.bonusCampeao}pts bônus campeão</div>
+                  <div style={{ color: "#854d0e", marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
+                    <i className="ti ti-trophy" aria-hidden="true" /> +{p.bonusCampeao}pts bônus campeão
+                  </div>
                 )}
                 {premio && (
-                  <div style={{ color: "#16a34a", fontWeight: 700, marginBottom: 6 }}>💰 R$ {premio.valor}</div>
+                  <div style={{ color: "#16a34a", fontWeight: 700, marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
+                    <i className="ti ti-coin" aria-hidden="true" /> R$ {premio.valor}
+                  </div>
                 )}
                 {!isPagante && isMe && (
                   <div style={{ marginTop: 4 }}>
                     {prazoEncerrado ? (
-                      <div style={{ fontSize: 11, color: "#9ca3af" }}>
-                        ⏰ Prazo encerrado em 28/06 — não é mais possível concorrer ao prêmio.
+                      <div style={{ fontSize: 11, color: "#9ca3af", display: "flex", alignItems: "center", gap: 4 }}>
+                        <i className="ti ti-lock" aria-hidden="true" /> Prazo encerrado em 28/06 — não é mais possível concorrer ao prêmio.
                       </div>
                     ) : (
                       <>
-                        <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6 }}>
-                          ⚠️ Seus pontos não contam para o prêmio
+                        <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
+                          <i className="ti ti-alert-triangle" aria-hidden="true" /> Seus pontos não contam para o prêmio
                         </div>
                         <button
                           onClick={(e) => { e.stopPropagation(); setModo("pix"); }}
@@ -226,17 +230,18 @@ export default function TelaRanking({
                             width: "100%", padding: "8px", borderRadius: 8,
                             border: "none", background: "#16a34a", color: "#fff",
                             fontWeight: 700, fontSize: 12, cursor: "pointer",
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                           }}
                         >
-                          💳 Pagar e concorrer →
+                          <i className="ti ti-credit-card" aria-hidden="true" /> Pagar e concorrer →
                         </button>
                       </>
                     )}
                   </div>
                 )}
                 {!isPagante && !isMe && !prazoEncerrado && (
-                  <div style={{ fontSize: 11, color: "#9ca3af" }}>
-                    ⚠️ Não concorre ao prêmio
+                  <div style={{ fontSize: 11, color: "#9ca3af", display: "flex", alignItems: "center", gap: 4 }}>
+                    <i className="ti ti-alert-triangle" aria-hidden="true" /> Não concorre ao prêmio
                   </div>
                 )}
               </div>
@@ -274,12 +279,12 @@ export default function TelaRanking({
             onClick={handleCopiar}
             style={{ width: 40, height: 40, borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}
             title="Copiar ranking"
-          >📋</button>
+          ><i className="ti ti-clipboard" aria-hidden="true" /></button>
           <button
             onClick={handleWhatsApp}
             style={{ width: 40, height: 40, borderRadius: 10, border: "none", background: "#25d366", color: "#fff", cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}
             title="Compartilhar no WhatsApp"
-          >💬</button>
+          ><i className="ti ti-brand-whatsapp" aria-hidden="true" /></button>
         </div>
       </div>
 
@@ -290,7 +295,7 @@ export default function TelaRanking({
           background: "#fffbeb", border: "1.5px solid #fde68a",
           display: "flex", alignItems: "center", gap: 10,
         }}>
-          <span style={{ fontSize: 18 }}>⏳</span>
+          <i className="ti ti-hourglass" aria-hidden="true" style={{ fontSize: 18, color: "#92400e" }} />
           <div style={{ fontSize: 12, color: "#92400e" }}>
             <strong>Prazo para entrar no prêmio:</strong> até 28/06 às 15h (horário de Brasília), antes do início das oitavas.
           </div>
@@ -319,10 +324,10 @@ export default function TelaRanking({
               {meusDados?.pontos || 0} pts · {meusDados?.acertos || 0} acertos · {meusDados?.placares || 0} exatos
             </div>
             {!meusDados.pago && (
-              <div style={{ fontSize: 12, marginTop: 4, opacity: 0.9 }}>
+              <div style={{ fontSize: 12, marginTop: 4, opacity: 0.9, display: "flex", alignItems: "center", gap: 4 }}>
                 {prazoEncerrado
-                  ? "⏰ Prazo encerrado — não concorre ao prêmio"
-                  : <><span>⚠️ Fora do prêmio — </span><span style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => setModo("pix")}>pagar agora</span></>
+                  ? (<><i className="ti ti-lock" aria-hidden="true" /> Prazo encerrado — não concorre ao prêmio</>)
+                  : (<><i className="ti ti-alert-triangle" aria-hidden="true" /><span>Fora do prêmio — </span><span style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => setModo("pix")}>pagar agora</span></>)
                 }
               </div>
             )}
@@ -332,7 +337,9 @@ export default function TelaRanking({
 
       {/* PREMIAÇÃO */}
       <div className="card" style={{ marginBottom: 14, border: "1.5px solid #fde68a", background: "#fefce8" }}>
-        <div style={{ fontWeight: 700, fontSize: 13, color: "#854d0e", marginBottom: 10 }}>💰 Premiação</div>
+        <div style={{ fontWeight: 700, fontSize: 13, color: "#854d0e", marginBottom: 10, display: "flex", alignItems: "center", gap: 4 }}>
+          <i className="ti ti-coin" aria-hidden="true" /> Premiação
+        </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {premios.dist.map((d: any) => (
             <div key={d.pos} style={{ flex: "1 1 60px", textAlign: "center", padding: "10px 8px", background: "#fff", borderRadius: 10, border: "1px solid #fde68a" }}>
