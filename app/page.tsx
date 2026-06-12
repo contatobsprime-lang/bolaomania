@@ -261,7 +261,9 @@ export default function App() {
     const minhaPos = ranking.findIndex(r => r.nome === usuarioAtual) + 1;
     const meusDados = ranking.find(r => r.nome === usuarioAtual);
 
-    const jogosRodada = JOGOS_GRUPO.filter(j => j.r === rodada);
+    const jogosRodada = JOGOS_GRUPO
+        .filter(j => j.r === rodada)
+        .sort((a, b) => new Date(a.dt).getTime() - new Date(b.dt).getTime());
     const jogosFiltrados = jogosRodada.filter(j => {
         const r = res[j.id] || {};
         const temRes = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
@@ -269,7 +271,7 @@ export default function App() {
         if (statusF === "proximos") return s === "prox";
         if (statusF === "aovivo") return s === "live" || s === "wait";
         return s === "enc";
-    });
+    }).sort((a, b) => new Date(a.dt).getTime() - new Date(b.dt).getTime());
 
     async function handleLogin() {
         setCarregando(true); setLoginErro("");
