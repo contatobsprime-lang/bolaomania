@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
 
-/* Reset */
+/* =========================
+   RESET
+========================= */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -9,7 +11,20 @@
     -webkit-user-select: none;
 }
 
-/* Scrollbar */
+/* =========================
+   BODY
+========================= */
+body {
+    background: #f5f7fa;
+    color: #111827;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
 ::-webkit-scrollbar {
     width: 4px;
 }
@@ -23,7 +38,9 @@
     border-radius: 2px;
 }
 
-/* Input Number */
+/* =========================
+   INPUT NUMBER FIX
+========================= */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -34,14 +51,9 @@ input[type=number] {
     appearance: textfield;
 }
 
-/* Body */
-body {
-    background: #f5f7fa;
-    color: #111827;
-    font-family: 'Inter', sans-serif;
-}
-
-/* Animations */
+/* =========================
+   ANIMAÇÕES
+========================= */
 .fade {
     animation: fadeIn 0.25s ease;
 }
@@ -51,7 +63,6 @@ body {
         opacity: 0;
         transform: translateY(6px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -63,32 +74,27 @@ body {
         transform: translateY(0) rotate(0);
         opacity: 1;
     }
-
     100% {
         transform: translateY(-100px) rotate(720deg);
         opacity: 0;
     }
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 @keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
-/* Confetti */
+/* leve feedback de clique global */
+@keyframes tap {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.97); }
+    100% { transform: scale(1); }
+}
+
+/* =========================
+   CONFETTI
+========================= */
 .cf {
     position: fixed;
     bottom: 80px;
@@ -98,23 +104,29 @@ body {
     z-index: 9999;
 }
 
-/* Buttons */
+/* =========================
+   BUTTONS
+========================= */
 .btn-primary {
     background: #16a34a;
     color: #fff;
     border: none;
     border-radius: 12px;
     padding: 15px 24px;
-    font-family: 'Inter', sans-serif;
     font-weight: 700;
     font-size: 16px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     width: 100%;
 }
 
 .btn-primary:hover {
     background: #15803d;
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
 }
 
 .btn-primary:disabled {
@@ -122,35 +134,48 @@ body {
     cursor: not-allowed;
 }
 
+/* =========================
+   GHOST BUTTON
+========================= */
 .btn-ghost {
     background: #fff;
     color: #374151;
     border: 1.5px solid #e5e7eb;
     border-radius: 12px;
     padding: 13px 18px;
-    font-family: 'Inter', sans-serif;
     font-weight: 600;
     font-size: 15px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     width: 100%;
 }
 
 .btn-ghost:hover {
     border-color: #16a34a;
     color: #16a34a;
+    transform: translateY(-1px);
 }
 
-/* Card */
+/* =========================
+   CARDS
+========================= */
 .card {
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 16px;
     padding: 18px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Inputs */
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================
+   INPUTS
+========================= */
 .inp {
     background: #fff;
     border: 1.5px solid #e5e7eb;
@@ -161,15 +186,18 @@ body {
     font-size: 16px;
     outline: none;
     width: 100%;
-    transition: border 0.2s;
+    transition: all 0.2s ease;
 }
 
 .inp:focus {
     border-color: #16a34a;
     box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.08);
+    transform: translateY(-1px);
 }
 
-/* Score Input */
+/* =========================
+   SCORE INPUT
+========================= */
 .si {
     width: 62px;
     height: 62px;
@@ -182,30 +210,18 @@ body {
     font-weight: 700;
     text-align: center;
     outline: none;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
 .si:focus {
     border-color: #16a34a;
     box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.08);
+    transform: scale(1.03);
 }
 
 .si.f {
     border-color: #16a34a;
     background: #f0fdf4;
-}
-
-.si.r {
-    color: #16a34a;
-}
-
-.si.r.f {
-    border-color: #16a34a;
-    background: #f0fdf4;
-}
-
-.si.r:focus {
-    border-color: #16a34a;
 }
 
 .si:disabled {
@@ -214,78 +230,9 @@ body {
     background: #f9fafb;
 }
 
-/* Badges */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 3px 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-}
-
-.bg {
-    background: #fef9c3;
-    color: #854d0e;
-    border: 1px solid #fde68a;
-}
-
-.bb {
-    background: #dbeafe;
-    color: #1e40af;
-    border: 1px solid #bfdbfe;
-}
-
-.bgr {
-    background: #dcfce7;
-    color: #166534;
-    border: 1px solid #86efac;
-}
-
-.br {
-    background: #fee2e2;
-    color: #b91c1c;
-    border: 1px solid #fecaca;
-}
-
-.bp {
-    background: #f3e8ff;
-    color: #6b21a8;
-    border: 1px solid #d8b4fe;
-}
-
-/* Select */
-select {
-    background: #fff;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 14px 16px;
-    color: #111827;
-    font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    outline: none;
-    width: 100%;
-    transition: border 0.2s;
-}
-
-select:focus {
-    border-color: #16a34a;
-}
-
-select option {
-    background: #fff;
-    color: #111827;
-}
-
-select:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    background: #f9fafb;
-}
-
-/* Bottom Navigation */
+/* =========================
+   NAVBAR (MELHORADO)
+========================= */
 .bottomnav {
     position: fixed;
     bottom: 0;
@@ -294,10 +241,9 @@ select:disabled {
     background: #fff;
     border-top: 1px solid #e5e7eb;
     display: flex;
-    align-items: stretch;
     z-index: 200;
+    box-shadow: 0 -2px 14px rgba(0, 0, 0, 0.08);
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .navbtn {
@@ -310,21 +256,21 @@ select:disabled {
     cursor: pointer;
     border: none;
     background: transparent;
-    transition: color 0.15s;
+    transition: all 0.2s ease;
     gap: 3px;
-    font-family: 'Inter', sans-serif;
     min-height: 58px;
 }
 
 .navbtn .ni {
     font-size: 22px;
-    line-height: 1;
+    transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .navbtn .nl {
     font-size: 10px;
     font-weight: 600;
     color: #9ca3af;
+    transition: color 0.2s ease;
 }
 
 .navbtn.active .nl {
@@ -333,33 +279,35 @@ select:disabled {
 }
 
 .navbtn.active .ni {
-    filter: drop-shadow(0 0 4px rgba(22, 163, 74, 0.4));
+    color: #16a34a;
+    transform: translateY(-2px) scale(1.08);
 }
 
-/* Skeleton */
+/* clique mobile */
+.navbtn:active {
+    animation: tap 0.2s ease;
+}
+
+/* =========================
+   SKELETON
+========================= */
 .skeleton {
     background: #e5e7eb;
     border-radius: 8px;
     animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* Pull Refresh */
-.pull-refresh {
-    position: relative;
-    top: 0;
-    transition: top 0.3s ease;
-}
-
-/* Tabs */
+/* =========================
+   TABS
+========================= */
 .tab {
     padding: 7px 12px;
     border-radius: 8px;
-    font-family: 'Inter', sans-serif;
     font-weight: 600;
     font-size: 12px;
     cursor: pointer;
     border: none;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
 .tab.on {
@@ -368,7 +316,6 @@ select:disabled {
 }
 
 .tab.off {
-    background: transparent;
     color: #6b7280;
 }
 
@@ -377,124 +324,123 @@ select:disabled {
     background: #f0fdf4;
 }
 
-.gtab {
-    padding: 7px 12px;
-    border-radius: 8px;
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 600;
-    font-size: 12px;
-    cursor: pointer;
-    border: 1.5px solid #e5e7eb;
-    transition: all 0.2s;
-    background: #fff;
-}
-
-.gtab.on {
-    background: #f0fdf4;
-    color: #16a34a;
-    border-color: #16a34a;
-}
-
-.gtab.off {
-    color: #6b7280;
-}
-
-.gtab.off:hover {
-    color: #16a34a;
-    border-color: #16a34a;
-}
-
-.ftab {
-    padding: 8px 14px;
-    border-radius: 20px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    border: 1.5px solid #e5e7eb;
-    transition: all 0.2s;
-    background: #fff;
-}
-
-.ftab.on {
-    background: #16a34a;
-    color: #fff;
-    border-color: #16a34a;
-}
-
-.ftab.off {
-    color: #6b7280;
-}
-
-.ftab.off:hover {
-    color: #16a34a;
-    border-color: #16a34a;
-}
-
-.stab {
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    border: 1.5px solid #e5e7eb;
-    transition: all 0.2s;
-    background: #fff;
-}
-
-.stab.on {
-    background: #16a34a;
-    color: #fff;
-    border-color: #16a34a;
-}
-
-.stab.off {
-    color: #6b7280;
-}
-
-.stab.off:hover {
-    color: #16a34a;
-    border-color: #16a34a;
-}
-
-/* Date Separator */
-.date-sep {
-    font-size: 15px;
-    font-weight: 700;
-    color: #111827;
-    padding: 14px 0 8px;
-    font-family: 'Inter', sans-serif;
-}
-
-/* Jogo Card */
+/* =========================
+   JOGO CARD
+========================= */
 .jogo-card {
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 16px;
     overflow: hidden;
     margin-bottom: 10px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease;
 }
 
-.jogo-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 16px;
-    border-bottom: 1px solid #f3f4f6;
-    background: #fafafa;
+.jogo-card:hover {
+    transform: translateY(-2px);
+}
+/* =========================
+   PREMIUM MOTIONS SYSTEM
+========================= */
+
+.page-enter {
+    animation: pageIn 0.25s ease-out;
 }
 
-.jogo-card-body {
-    padding: 18px 16px;
+@keyframes pageIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.jogo-card-footer {
-    padding: 10px 16px;
-    border-top: 1px solid #f3f4f6;
-    background: #fafafa;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Smooth section transitions */
+.section {
+    animation: fadeIn 0.25s ease;
+}
+
+/* =========================
+   PREMIUM CARD FEEL
+========================= */
+.card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    will-change: transform;
+}
+
+.card:active {
+    transform: scale(0.98);
+}
+
+/* =========================
+   PREMIUM BUTTON FEEDBACK
+========================= */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.2);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.btn-primary:active::after {
+    opacity: 1;
+}
+
+/* =========================
+   PREMIUM INPUT FOCUS
+========================= */
+.inp:focus,
+.si:focus {
+    transition: all 0.2s ease;
+}
+
+/* =========================
+   PREMIUM BOTTOM NAV INDICATOR
+========================= */
+.bottomnav {
+    position: fixed;
+    overflow: hidden;
+}
+
+/* barra ativa animada */
+.nav-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 25%;
+    background: linear-gradient(90deg, #16a34a, #4ade80);
+    transition: transform 0.25s ease;
+    border-radius: 999px;
+}
+
+/* efeito de glow no ativo */
+.navbtn.active .ni {
+    filter: drop-shadow(0 0 6px rgba(22, 163, 74, 0.45));
+}
+
+/* =========================
+   LOADING PREMIUM
+========================= */
+.loading-dot {
+    width: 6px;
+    height: 6px;
+    background: #16a34a;
+    border-radius: 50%;
+    animation: blink 1s infinite ease-in-out;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
 }

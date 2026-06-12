@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Jogo, HistRodada, DetJogo } from "@/lib/types";
 import { calcTudo } from "@/lib/calculos";
+import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
 
 interface Props {
   palS: Record<number, { gols1: string; gols2: string }>;

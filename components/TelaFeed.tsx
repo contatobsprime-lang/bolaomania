@@ -1,4 +1,5 @@
 "use client";
+import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
 
 interface Feed {
   id: string;

@@ -2,6 +2,8 @@
 
 import { CONFIG } from "@/lib/constantes";
 import { campLock, tr } from "@/lib/utils";
+import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
+
 
 interface Props {
   campAtual: string;
