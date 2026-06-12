@@ -70,7 +70,7 @@ export function ShopeeAffiliateBanner({ tela }: ShopeeAffiliateBannerProps) {
     if (!produto) return;
     try {
       await fetch(`${N8N_CLICK_URL}?id=${produto.id}&tela=${tela}`);
-    } catch {}
+    } catch { }
     window.open(produto.link, "_blank");
   };
 
@@ -79,43 +79,43 @@ export function ShopeeAffiliateBanner({ tela }: ShopeeAffiliateBannerProps) {
 
   return (
     <div style={{ margin: "12px 0" }}>
-      
-        href={produto.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ display: "block", textDecoration: "none" }}
-        aria-label={`Ver oferta: ${produto.titulo} na Shopee`}
-        onClick={handleClick}
+      <a
+      href={produto.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ display: "block", textDecoration: "none" }}
+      aria-label={`Ver oferta: ${produto.titulo} na Shopee`}
+      onClick={handleClick}
       >
-        <div
-          style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: "#fff", border: "1px solid #fde2d8", borderRadius: 12, cursor: "pointer", transition: "border-color 0.15s, background 0.15s" }}
-          onMouseOver={e => (e.currentTarget.style.background = "#fff8f6")}
-          onMouseOut={e => (e.currentTarget.style.background = "#fff")}
-        >
-          <div style={{ width: 52, height: 52, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #f0f0f0" }}>
-            {produto.imagem
-              ? <img src={produto.imagem} alt={produto.titulo} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              : <ShopeeIcon />}
-          </div>
-          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontSize: 10, color: "#bbb", lineHeight: 1.3 }}>Patrocinado · Shopee</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: 1.4 }}>
-              {produto.titulo}
-            </span>
-            {produto.preco && (
-              <span style={{ fontSize: 13, color: "#EE4D2D", fontWeight: 700, lineHeight: 1.3 }}>
-                {produto.preco}
-              </span>
-            )}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 12, color: "#EE4D2D", fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap", background: "#fff1ee", padding: "5px 10px", borderRadius: 8, border: "1px solid #fde2d8" }}>
-            Ver oferta
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <path d="M2 6h8M7 3l3 3-3 3" stroke="#EE4D2D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
+      <div
+        style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: "#fff", border: "1px solid #fde2d8", borderRadius: 12, cursor: "pointer", transition: "border-color 0.15s, background 0.15s" }}
+        onMouseOver={e => (e.currentTarget.style.background = "#fff8f6")}
+        onMouseOut={e => (e.currentTarget.style.background = "#fff")}
+      >
+        <div style={{ width: 52, height: 52, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #f0f0f0" }}>
+          {produto.imagem
+            ? <img src={produto.imagem} alt={produto.titulo} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : <ShopeeIcon />}
         </div>
-      </a>
-    </div>
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+          <span style={{ fontSize: 10, color: "#bbb", lineHeight: 1.3 }}>Patrocinado · Shopee</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: 1.4 }}>
+            {produto.titulo}
+          </span>
+          {produto.preco && (
+            <span style={{ fontSize: 13, color: "#EE4D2D", fontWeight: 700, lineHeight: 1.3 }}>
+              {produto.preco}
+            </span>
+          )}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 12, color: "#EE4D2D", fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap", background: "#fff1ee", padding: "5px 10px", borderRadius: 8, border: "1px solid #fde2d8" }}>
+          Ver oferta
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+            <path d="M2 6h8M7 3l3 3-3 3" stroke="#EE4D2D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      </div>
+    </a>
+    </div >
   );
 }
