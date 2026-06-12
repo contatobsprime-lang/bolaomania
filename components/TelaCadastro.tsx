@@ -43,22 +43,25 @@ export default function TelaCadastro({ onCadastro, onVoltar }: Props) {
           <i className="ti ti-user-plus" style={{ fontSize: 34, color: "#fff" }} aria-hidden="true" />
         </div>
         <h2 style={{ fontSize: 24, fontWeight: 800, color: "#111827", letterSpacing: "-0.5px" }}>Criar conta</h2>
+        <p style={{ color: "#6b7280", fontSize: 14, marginTop: 6 }}>
+          Entre e comece seus palpites
+        </p>
       </div>
       <div className="card" style={{ marginBottom: 12, padding: "24px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <input className="inp" placeholder="Seu nome completo" value={cadNome} onChange={e => setCadNome(e.target.value)} />
+          <input className="inp" placeholder="Digite seu nome" value={cadNome} onChange={e => setCadNome(e.target.value)} />
           <input className="inp" type="email" placeholder="Seu email" value={cadEmail} onChange={e => setCadEmail(e.target.value)} />
           <input className="inp" type="password" placeholder="Crie uma senha (mín. 6 caracteres)" value={cadSenha} onChange={e => setCadSenha(e.target.value)} />
-          <input className="inp" type="password" placeholder="Confirmar senha" value={cadSenha2} onChange={e => setCadSenha2(e.target.value)} onKeyDown={e => e.key === "Enter" && handleCadastro()} />
+          <input className="inp" type="password" placeholder="Confirme sua senha" value={cadSenha2} onChange={e => setCadSenha2(e.target.value)} onKeyDown={e => e.key === "Enter" && handleCadastro()} />
           {cadErro && <div style={{ color: "#b91c1c", fontSize: 13, background: "#fef2f2", padding: "8px 12px", borderRadius: 8 }}>{cadErro}</div>}
-          <button className="btn-primary" onClick={handleCadastro} disabled={carregando}>{carregando ? "Criando..." : "Criar conta e entrar"}</button>
+          <button className="btn-primary" onClick={handleCadastro} disabled={carregando}>{carregando ? "Criando..." : "Começar agora"}</button>
           <p style={{ fontSize: 11, color: "#9ca3af", textAlign: "center", lineHeight: 1.6 }}>
             Ao criar sua conta você concorda com nossa{" "}
             <a href="/privacidade" target="_blank" style={{ color: "#16a34a", textDecoration: "underline" }}>Política de Privacidade</a>
           </p>
         </div>
       </div>
-      <button className="btn-ghost" onClick={() => { setCadErro(""); onVoltar(); }}>← Voltar para login</button>
+      <button className="btn-ghost" onClick={() => { setCadErro(""); onVoltar(); }}>Entrar com minha conta</button>
     </div>
   );
 }
