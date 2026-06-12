@@ -13,6 +13,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+export async function GET() {
+  return NextResponse.json({ ok: true, msg: "Push API ativa" });
+}
 export async function POST(request: NextRequest) {
   try {
     const { title, body, tag } = await request.json();
