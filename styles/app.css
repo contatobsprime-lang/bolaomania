@@ -1,446 +1,182 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
 
-/* =========================
-   RESET
-========================= */
+/* RESET */
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    user-select: none;
-    -webkit-user-select: none;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-/* =========================
-   BODY
-========================= */
 body {
-    background: #f5f7fa;
-    color: #111827;
-    font-family: 'Inter', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+  background: #f4f6f9;
+  color: #111827;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* =========================
-   SCROLLBAR
-========================= */
-::-webkit-scrollbar {
-    width: 4px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f0f2f5;
-}
-
+/* SCROLL */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #f0f2f5; }
 ::-webkit-scrollbar-thumb {
-    background: #16a34a;
-    border-radius: 2px;
+  background: #16a34a;
+  border-radius: 4px;
 }
 
-/* =========================
-   INPUT NUMBER FIX
-========================= */
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-}
-
-input[type=number] {
-    -moz-appearance: textfield;
-    appearance: textfield;
-}
-
-/* =========================
-   ANIMAÇÕES
-========================= */
+/* ANIMATIONS */
 .fade {
-    animation: fadeIn 0.25s ease;
+  animation: fadeIn .25s ease;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(6px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes confetti {
-    0% {
-        transform: translateY(0) rotate(0);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(-100px) rotate(720deg);
-        opacity: 0;
-    }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+  0%,100% { opacity: 1; }
+  50% { opacity: .5; }
 }
 
-/* leve feedback de clique global */
-@keyframes tap {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.97); }
-    100% { transform: scale(1); }
-}
-
-/* =========================
-   CONFETTI
-========================= */
-.cf {
-    position: fixed;
-    bottom: 80px;
-    animation: confetti 1.2s ease forwards;
-    pointer-events: none;
-    font-size: 22px;
-    z-index: 9999;
-}
-
-/* =========================
-   BUTTONS
-========================= */
-.btn-primary {
-    background: #16a34a;
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 15px 24px;
-    font-weight: 700;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 100%;
-}
-
-.btn-primary:hover {
-    background: #15803d;
-    transform: translateY(-1px);
-}
-
-.btn-primary:active {
-    transform: scale(0.98);
-}
-
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* =========================
-   GHOST BUTTON
-========================= */
-.btn-ghost {
-    background: #fff;
-    color: #374151;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 13px 18px;
-    font-weight: 600;
-    font-size: 15px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 100%;
-}
-
-.btn-ghost:hover {
-    border-color: #16a34a;
-    color: #16a34a;
-    transform: translateY(-1px);
-}
-
-/* =========================
-   CARDS
-========================= */
+/* CARDS PREMIUM */
 .card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 18px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.05);
+  transition: transform .15s ease, box-shadow .15s ease;
 }
 
 .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
 }
 
-/* =========================
-   INPUTS
-========================= */
+/* BUTTONS */
+.btn-primary {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .2s;
+  width: 100%;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+.btn-ghost {
+  background: #fff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.btn-ghost:hover {
+  border-color: #16a34a;
+  color: #16a34a;
+}
+
+/* INPUTS */
 .inp {
-    background: #fff;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 14px 16px;
-    color: #111827;
-    font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    outline: none;
-    width: 100%;
-    transition: all 0.2s ease;
+  width: 100%;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+  outline: none;
+  transition: .2s;
 }
 
 .inp:focus {
-    border-color: #16a34a;
-    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.08);
-    transform: translateY(-1px);
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22,163,74,.1);
 }
 
-/* =========================
-   SCORE INPUT
-========================= */
+/* SCORE INPUT */
 .si {
-    width: 62px;
-    height: 62px;
-    background: #fff;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    color: #16a34a;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 24px;
-    font-weight: 700;
-    text-align: center;
-    outline: none;
-    transition: all 0.2s ease;
+  width: 62px;
+  height: 62px;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+  font-family: 'JetBrains Mono';
+  transition: .2s;
 }
 
 .si:focus {
-    border-color: #16a34a;
-    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.08);
-    transform: scale(1.03);
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22,163,74,.12);
 }
 
 .si.f {
-    border-color: #16a34a;
-    background: #f0fdf4;
+  background: #f0fdf4;
+  border-color: #16a34a;
 }
 
-.si:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-    background: #f9fafb;
-}
-
-/* =========================
-   NAVBAR (MELHORADO)
-========================= */
+/* BOTTOM NAV PREMIUM */
 .bottomnav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #fff;
-    border-top: 1px solid #e5e7eb;
-    display: flex;
-    z-index: 200;
-    box-shadow: 0 -2px 14px rgba(0, 0, 0, 0.08);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: rgba(255,255,255,.9);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  z-index: 999;
 }
 
 .navbtn {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 2px 8px;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    transition: all 0.2s ease;
-    gap: 3px;
-    min-height: 58px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: .2s;
 }
 
 .navbtn .ni {
-    font-size: 22px;
-    transition: transform 0.2s ease, color 0.2s ease;
+  font-size: 22px;
+  transition: .2s;
 }
 
 .navbtn .nl {
-    font-size: 10px;
-    font-weight: 600;
-    color: #9ca3af;
-    transition: color 0.2s ease;
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.navbtn.active .ni {
+  color: #16a34a;
+  transform: translateY(-1px) scale(1.05);
+  filter: drop-shadow(0 2px 6px rgba(22,163,74,.25));
 }
 
 .navbtn.active .nl {
-    color: #16a34a;
-    font-weight: 700;
+  color: #16a34a;
+  font-weight: 700;
 }
 
-.navbtn.active .ni {
-    color: #16a34a;
-    transform: translateY(-2px) scale(1.08);
-}
-
-/* clique mobile */
-.navbtn:active {
-    animation: tap 0.2s ease;
-}
-
-/* =========================
-   SKELETON
-========================= */
+/* PROGRESS */
 .skeleton {
-    background: #e5e7eb;
-    border-radius: 8px;
-    animation: pulse 1.5s ease-in-out infinite;
-}
-
-/* =========================
-   TABS
-========================= */
-.tab {
-    padding: 7px 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 12px;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s ease;
-}
-
-.tab.on {
-    background: #16a34a;
-    color: #fff;
-}
-
-.tab.off {
-    color: #6b7280;
-}
-
-.tab.off:hover {
-    color: #16a34a;
-    background: #f0fdf4;
-}
-
-/* =========================
-   JOGO CARD
-========================= */
-.jogo-card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 10px;
-    transition: transform 0.2s ease;
-}
-
-.jogo-card:hover {
-    transform: translateY(-2px);
-}
-/* =========================
-   PREMIUM MOTIONS SYSTEM
-========================= */
-
-.page-enter {
-    animation: pageIn 0.25s ease-out;
-}
-
-@keyframes pageIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Smooth section transitions */
-.section {
-    animation: fadeIn 0.25s ease;
-}
-
-/* =========================
-   PREMIUM CARD FEEL
-========================= */
-.card {
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-    will-change: transform;
-}
-
-.card:active {
-    transform: scale(0.98);
-}
-
-/* =========================
-   PREMIUM BUTTON FEEDBACK
-========================= */
-.btn-primary {
-    position: relative;
-    overflow: hidden;
-}
-
-.btn-primary::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: rgba(255,255,255,0.2);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.btn-primary:active::after {
-    opacity: 1;
-}
-
-/* =========================
-   PREMIUM INPUT FOCUS
-========================= */
-.inp:focus,
-.si:focus {
-    transition: all 0.2s ease;
-}
-
-/* =========================
-   PREMIUM BOTTOM NAV INDICATOR
-========================= */
-.bottomnav {
-    position: fixed;
-    overflow: hidden;
-}
-
-/* barra ativa animada */
-.nav-indicator {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 3px;
-    width: 25%;
-    background: linear-gradient(90deg, #16a34a, #4ade80);
-    transition: transform 0.25s ease;
-    border-radius: 999px;
-}
-
-/* efeito de glow no ativo */
-.navbtn.active .ni {
-    filter: drop-shadow(0 0 6px rgba(22, 163, 74, 0.45));
-}
-
-/* =========================
-   LOADING PREMIUM
-========================= */
-.loading-dot {
-    width: 6px;
-    height: 6px;
-    background: #16a34a;
-    border-radius: 50%;
-    animation: blink 1s infinite ease-in-out;
-}
-
-@keyframes blink {
-    0%, 100% { opacity: 0.3; transform: scale(0.8); }
-    50% { opacity: 1; transform: scale(1.2); }
+  background: #e5e7eb;
+  border-radius: 10px;
+  animation: pulse 1.5s infinite;
 }
