@@ -28,6 +28,7 @@ import TelaMais from "@/components/TelaMais";
 import NavBar from "@/components/NavBar";
 import PopupNotificacao from "@/components/PopupNotificacao";
 import { useNotificacao30min } from "@/lib/hooks/useNotificacao30min";
+import { usePushNotification } from "@/lib/hooks/usePushNotification";
 
 
 export default function App() {
@@ -80,6 +81,8 @@ export default function App() {
         elim,
         usuarioAtual
     );
+
+    const { permissao, ativarNotificacoes } = usePushNotification(usuarioAtual);
 
     const irParaHome = () => setModo("home");
 
@@ -224,7 +227,6 @@ export default function App() {
     const u = usuarios[usuarioAtual || ""] || {};
     const pago = u.pago || false;
 
-    // Realtime: detecta pagamento confirmado
     useEffect(() => {
         if (pago || !usuarioAtual) return;
         const subscription = supabase
@@ -308,8 +310,6 @@ export default function App() {
         if (lock(dt) || !usuarioAtual) return;
         setRascunho((prev: any) => ({ ...prev, [usuarioAtual]: { ...(prev[usuarioAtual] || {}), [jogoId]: { ...(prev[usuarioAtual]?.[jogoId] || {}), [campo]: valor } } }));
     }
-
-    // ── Palpites: abertos para todos, pagantes concorrem ao prêmio ──────────
 
     async function confirmarPalpite(jogo: any) {
         if (!usuarioAtual || salvando) return;
@@ -474,6 +474,21 @@ export default function App() {
                     <div style={{ width: 36, height: 36, background: "#16a34a", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚽</div>
                     <div style={{ fontWeight: 800, fontSize: 15, color: "#111827", letterSpacing: "-.3px" }}>Bolão Copa 2026</div>
                 </div>
+                {tela === "app" && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        {permissao !== "granted" && (
+                            <button
+                                onClick={ativarNotificacoes}
+                                style={{ padding: "6px 12px", borderRadius: 8, border: "1.5px solid #86efac", background: "#dcfce7", color: "#166534", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
+                            >
+                                🔔 Ativar
+                            </button>
+                        )}
+                        {!pago && (
+                            <span className="badge br" onClick={() => setModo("pix")} style={{ cursor: "pointer" }}>💳 Pagar</span>
+                        )}
+                    </div>
+                )}
                 {tela === "admin" && (
                     <button style={{ padding: "7px 14px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#374151" }} onClick={() => { setTela("app"); irParaHome(); }}>← Voltar</button>
                 )}
@@ -616,7 +631,6 @@ export default function App() {
 
                 {tela === "app" && (
                     <div className="fade">
-
                         {modo === "home" && (
                             <TelaHome
                                 usuarioAtual={usuarioAtual}
@@ -643,7 +657,6 @@ export default function App() {
                                 confirmarPalpite={confirmarPalpite}
                             />
                         )}
-
                         {modo === "jogos" && (
                             <TelaJogos
                                 statusF={statusF} setStatusF={setStatusF}
@@ -655,7 +668,6 @@ export default function App() {
                                 F={F} setJogoSel={setJogoSel}
                             />
                         )}
-
                         {modo === "palpites" && (
                             <TelaPalpites
                                 pago={pago} campAtual={campAtual}
@@ -669,7 +681,6 @@ export default function App() {
                                 salvarGrupo={salvarGrupo} salvarElim={salvarElim}
                             />
                         )}
-
                         {modo === "ranking" && (
                             <TelaRanking
                                 minhaPos={minhaPos} meusDados={meusDados}
@@ -682,14 +693,12 @@ export default function App() {
                                 isLoading={false} error={null}
                             />
                         )}
-
                         {modo === "historico" && (
                             <TelaHistorico
                                 palS={palS} elim={elim} res={res} resE={resE}
                                 campAtual={campAtual} campR={campR} F={F}
                             />
                         )}
-
                         {modo === "pix" && (
                             <TelaPix
                                 pago={pago} usuarioAtual={usuarioAtual} emailAtual={emailAtual}
@@ -701,7 +710,6 @@ export default function App() {
                                 }}
                             />
                         )}
-
                         {modo === "perfil" && (
                             <TelaPerfil
                                 usuarioAtual={usuarioAtual} emailAtual={emailAtual}
@@ -710,14 +718,12 @@ export default function App() {
                                 elim={elim} res={res} resE={resE}
                             />
                         )}
-
                         {modo === "campeao" && (
                             <TelaCampeao
                                 campAtual={campAtual} setCamp={setCamp}
                                 usuarios={usuarios} TODOS_TIMES={TODOS_TIMES} F={F}
                             />
                         )}
-
                         {modo === "regras" && <TelaRegras premios={premios} />}
                         {modo === "feed" && <TelaFeed feed={feed} />}
                         {modo === "mais" && (
@@ -727,7 +733,6 @@ export default function App() {
                                 handleLogout={handleLogout} mostrarToast={mostrarToast}
                             />
                         )}
-
                     </div>
                 )}
 
