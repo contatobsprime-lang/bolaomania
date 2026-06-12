@@ -87,7 +87,7 @@ export default function TelaLogin({ onLogin, onCadastro }: Props) {
           <input className="inp" type="email" placeholder="Seu email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} />
           <input className="inp" type="password" placeholder="Senha" value={loginSenha} onChange={e => setLoginSenha(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} />
           {loginErro && <div style={{ color: "#b91c1c", fontSize: 13, background: "#fef2f2", padding: "8px 12px", borderRadius: 8 }}>{loginErro}</div>}
-          <button className="btn-primary" onClick={handleLogin} disabled={carregando}>{carregando ? "Entrando..." : "Entrar"}</button>
+          <button className="btn-primary" onClick={handleLogin} disabled={carregando}>{carregando ? "Entrando..." : "Acesse sua conta"}</button>
           <button onClick={() => { setTelaEsqueceu(true); setEsqueceuEmail(loginEmail); }} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 13, cursor: "pointer", textAlign: "center" }}>Esqueci minha senha</button>
         </div>
       </div>
