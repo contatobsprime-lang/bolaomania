@@ -35,13 +35,23 @@ export default function TelaPalpites({
 }: Props) {
   return (
     <div>
+      {/* CTA para não pagantes — não bloqueia mais, só convida */}
       {!pago && (
-        <div className="card" style={{ marginBottom: 14, background: "rgba(248,113,113,.06)", border: "1px solid rgba(248,113,113,.2)" }}>
-          <div style={{ fontWeight: 700, color: "#b91c1c", marginBottom: 6 }}>🔒 Pagamento pendente</div>
-          <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 10 }}>Faça o Pix para participar do bolão.</div>
-          <button className="btn-primary" onClick={() => setModo("pix")}>Ver dados do Pix →</button>
+        <div className="card" style={{ marginBottom: 14, background: "linear-gradient(135deg, rgba(22,163,74,.08), rgba(22,163,74,.03))", border: "1.5px solid rgba(22,163,74,.25)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <div style={{ fontSize: 28 }}>🏆</div>
+            <div>
+              <div style={{ fontWeight: 700, color: "#15803d", fontSize: 14 }}>Concorra aos prêmios!</div>
+              <div style={{ fontSize: 12, color: "#6b7280" }}>Seus palpites são salvos, mas só concorre quem pagar.</div>
+            </div>
+          </div>
+          <button className="btn-primary" onClick={() => setModo("pix")} style={{ width: "100%", fontSize: 13 }}>
+            💳 Pagar R${CONFIG.valorCota} e entrar no ranking →
+          </button>
         </div>
       )}
+
+      {/* Campeão */}
       <div className="card" style={{ marginBottom: 14, border: "1px solid rgba(247,201,72,.2)", background: "rgba(247,201,72,.03)" }}>
         <div style={{ fontWeight: 700, fontSize: 11, color: "#16a34a", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>🏆 Campeão da Copa</div>
         <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
@@ -57,28 +67,18 @@ export default function TelaPalpites({
         {campAtual && <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280" }}>Seu palpite: <strong style={{ color: "#16a34a" }}>{F[campAtual]} {campAtual}</strong></div>}
       </div>
 
+      {/* Abas de fase */}
       <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap", overflowX: "auto" }}>
         {["grupos", "16avos", "oitavas", "quartas", "semi", "final"].map((f) => (
           <button
             key={f}
             onClick={() => setFaseAtiva(f)}
             style={{
-              padding: "6px 14px",
-              borderRadius: 8,
-              border: "1px solid #e5e7eb",
+              padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb",
               background: faseAtiva === f ? "#16a34a" : "#f9fafb",
               color: faseAtiva === f ? "#fff" : "#6b7280",
-              fontWeight: 600,
-              fontSize: 12,
-              cursor: "pointer",
-              transition: "all .2s",
-              whiteSpace: "nowrap",
-            }}
-            onMouseOver={(e) => {
-              if (faseAtiva !== f) e.currentTarget.style.background = "#f3f4f6";
-            }}
-            onMouseOut={(e) => {
-              if (faseAtiva !== f) e.currentTarget.style.background = "#f9fafb";
+              fontWeight: 600, fontSize: 12, cursor: "pointer",
+              transition: "all .2s", whiteSpace: "nowrap",
             }}
           >
             {FASE_L[f] || f}

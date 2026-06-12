@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { JOGOS_GRUPO } from "@/data/jogos-grupo";
 import { lock } from "@/lib/utils";
 
@@ -8,8 +8,9 @@ export function useNotificacao30min(
   usuarioAtual: string | null
 ) {
   const [popupJogo, setPopupJogo] = useState<any | null>(null);
-  const [notif30min, setNotif30min] = useState(false);
   const [countdown, setCountdown] = useState("");
+  // Guarda ids já notificados para não repetir na mesma sessão
+  const notificados = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     function atualizar() {
@@ -36,12 +37,19 @@ export function useNotificacao30min(
       const prox = sem[0];
       const diffMs = new Date(prox.dt).getTime() - Date.now();
 
-      if (diffMs > 0 && diffMs <= 30 * 60 * 1000 && !notif30min) {
+      // Notifica se estiver dentro de 30min e ainda não notificou esse jogo
+      if (diffMs > 0 && diffMs <= 30 * 60 * 1000 && !notificados.current.has(prox.id)) {
+        notificados.current.add(prox.id);
         setPopupJogo(prox);
-        setNotif30min(true);
         setTimeout(() => setPopupJogo(null), 15000);
       }
 
+      // Reseta notificação se o jogo já passou (permite renotificar se reabrir app)
+      if (diffMs <= 0) {
+        notificados.current.delete(prox.id);
+      }
+
+      // Countdown
       if (diffMs > 0) {
         const horas = Math.floor(diffMs / 3600000);
         const mins = Math.floor((diffMs % 3600000) / 60000);
@@ -62,7 +70,7 @@ export function useNotificacao30min(
     atualizar();
     const interval = setInterval(atualizar, 1000);
     return () => clearInterval(interval);
-  }, [palpitesMap, elim, usuarioAtual, notif30min]);
+  }, [palpitesMap, elim, usuarioAtual]);
 
   return { popupJogo, setPopupJogo, countdown };
 }

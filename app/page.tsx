@@ -81,16 +81,12 @@ export default function App() {
         usuarioAtual
     );
 
-    const irParaHome = () => {
-        setModo("home");
-    };
+    const irParaHome = () => setModo("home");
 
     // Pull to refresh
     useEffect(() => {
         let startY = 0;
-        const handleTouchStart = (e: TouchEvent) => {
-            startY = e.touches[0].clientY;
-        };
+        const handleTouchStart = (e: TouchEvent) => { startY = e.touches[0].clientY; };
         const handleTouchMove = (e: TouchEvent) => {
             if (window.scrollY === 0) {
                 const diff = e.touches[0].clientY - startY;
@@ -139,15 +135,11 @@ export default function App() {
         }
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            if (_event === "PASSWORD_RECOVERY") {
-                setTela("recuperar");
-                return;
-            }
+            if (_event === "PASSWORD_RECOVERY") { setTela("recuperar"); return; }
             if (!session) { setUsuarioAtual(null); setEmailAtual(null); setIsAdmin(false); setTela("login"); }
         });
         return () => subscription.unsubscribe();
     }, []);
-
 
     function mostrarToast(msg: string, tipo: "ok" | "err" = "ok") {
         setToast({ msg, tipo });
@@ -171,9 +163,7 @@ export default function App() {
             ]);
             if (us) {
                 const m: any = {};
-                us.forEach((u: any) => {
-                    m[u.nome] = { pago: u.pago, camp: u.campeao_palpite || "", email: u.email || "" };
-                });
+                us.forEach((u: any) => { m[u.nome] = { pago: u.pago, camp: u.campeao_palpite || "", email: u.email || "" }; });
                 setUsuarios(m);
             }
             if (ps) {
@@ -187,9 +177,7 @@ export default function App() {
             }
             if (rs) {
                 const m: any = {};
-                rs.forEach((r: any) => {
-                    m[r.jogo_id] = { gols1: r.gols1?.toString() ?? "", gols2: r.gols2?.toString() ?? "", penalti: r.penalti };
-                });
+                rs.forEach((r: any) => { m[r.jogo_id] = { gols1: r.gols1?.toString() ?? "", gols2: r.gols2?.toString() ?? "", penalti: r.penalti }; });
                 setRes(m);
             }
             if (es && es.length > 0) {
@@ -228,50 +216,30 @@ export default function App() {
             setRascunho((prev: any) => ({ ...prev, [usuarioAtual]: { ...(palpitesMap[usuarioAtual] || {}) } }));
     }, [usuarioAtual]);
 
-    useEffect(() => {
-        window.scrollTo(0, 0);
-    }, [modo]);
-
-    useEffect(() => {
-        localStorage.setItem("modoAtual", modo);
-    }, [modo]);
+    useEffect(() => { window.scrollTo(0, 0); }, [modo]);
+    useEffect(() => { localStorage.setItem("modoAtual", modo); }, [modo]);
 
     const palS = palpitesMap[usuarioAtual || ""] || {};
     const palR = rascunho[usuarioAtual || ""] || {};
     const u = usuarios[usuarioAtual || ""] || {};
     const pago = u.pago || false;
 
+    // Realtime: detecta pagamento confirmado
     useEffect(() => {
         if (pago || !usuarioAtual) return;
-
         const subscription = supabase
             .channel(`user:${usuarioAtual}`)
-            .on(
-                "postgres_changes",
-                {
-                    event: "UPDATE",
-                    schema: "public",
-                    table: "usuarios",
-                    filter: `nome=eq.${usuarioAtual}`,
-                },
+            .on("postgres_changes", { event: "UPDATE", schema: "public", table: "usuarios", filter: `nome=eq.${usuarioAtual}` },
                 (payload) => {
                     if (payload.new.pago === true && !pago) {
-                        setUsuarios((prev: any) => ({
-                            ...prev,
-                            [usuarioAtual]: { ...prev[usuarioAtual], pago: true },
-                        }));
+                        setUsuarios((prev: any) => ({ ...prev, [usuarioAtual]: { ...prev[usuarioAtual], pago: true } }));
                         dispararConfete();
                         mostrarToast("🎉 Pagamento confirmado! Bem-vindo ao bolão!");
                     }
                 }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(subscription);
-        };
+            ).subscribe();
+        return () => { supabase.removeChannel(subscription); };
     }, [usuarioAtual, pago]);
-
 
     const campAtual = u.camp || "";
     const nPart = Object.keys(usuarios).length;
@@ -341,9 +309,10 @@ export default function App() {
         setRascunho((prev: any) => ({ ...prev, [usuarioAtual]: { ...(prev[usuarioAtual] || {}), [jogoId]: { ...(prev[usuarioAtual]?.[jogoId] || {}), [campo]: valor } } }));
     }
 
+    // ── Palpites: abertos para todos, pagantes concorrem ao prêmio ──────────
+
     async function confirmarPalpite(jogo: any) {
         if (!usuarioAtual || salvando) return;
-        if (!pago) { mostrarToast("Faça o pagamento primeiro!", "err"); return; }
         const p = palR[jogo.id] || {};
         const g1 = parseInt(p.gols1), g2 = parseInt(p.gols2);
         if (isNaN(g1) || isNaN(g2) || p.gols1 === "" || p.gols2 === "") { mostrarToast("Preencha os dois placares", "err"); return; }
@@ -352,12 +321,12 @@ export default function App() {
         setSalvando(false);
         if (error) { mostrarToast("Erro ao salvar", "err"); return; }
         setPalpitesMap((prev: any) => ({ ...prev, [usuarioAtual]: { ...(prev[usuarioAtual] || {}), [jogo.id]: { gols1: g1.toString(), gols2: g2.toString() } } }));
-        mostrarToast("✅ Palpite confirmado!"); setJogoSel(null);
+        mostrarToast("✅ Palpite confirmado!");
+        setJogoSel(null);
     }
 
     async function salvarGrupo() {
         if (!usuarioAtual || salvando) return;
-        if (!pago) { mostrarToast("Faça o pagamento primeiro!", "err"); return; }
         setSalvando(true);
         const ups: any[] = [];
         JOGOS_GRUPO.filter(j => j.g === grupoAtivo).forEach(j => {
@@ -366,15 +335,16 @@ export default function App() {
         });
         if (ups.length > 0) {
             const { error } = await supabase.from("palpites").upsert(ups, { onConflict: "usuario_nome,jogo_id" });
-            if (!error) { setPalpitesMap((prev: any) => ({ ...prev, [usuarioAtual]: { ...(prev[usuarioAtual] || {}), ...Object.fromEntries(ups.map(u => ([u.jogo_id, { gols1: u.gols1.toString(), gols2: u.gols2.toString() }]))) } })); mostrarToast(`✅ ${ups.length} palpites salvos!`); }
-            else mostrarToast("Erro ao salvar", "err");
+            if (!error) {
+                setPalpitesMap((prev: any) => ({ ...prev, [usuarioAtual]: { ...(prev[usuarioAtual] || {}), ...Object.fromEntries(ups.map(u => ([u.jogo_id, { gols1: u.gols1.toString(), gols2: u.gols2.toString() }]))) } }));
+                mostrarToast(`✅ ${ups.length} palpites salvos!`);
+            } else mostrarToast("Erro ao salvar", "err");
         } else mostrarToast("Nenhum palpite completo", "err");
         setSalvando(false);
     }
 
     async function salvarElim() {
         if (!usuarioAtual || salvando) return;
-        if (!pago) { mostrarToast("Faça o pagamento primeiro!", "err"); return; }
         setSalvando(true);
         const ups: any[] = [];
         elim.filter(j => j.fase === faseAtiva && j.time1 && j.time2).forEach(j => {
@@ -383,15 +353,16 @@ export default function App() {
         });
         if (ups.length > 0) {
             const { error } = await supabase.from("palpites").upsert(ups, { onConflict: "usuario_nome,jogo_id" });
-            if (!error) { setPalpitesMap((prev: any) => ({ ...prev, [usuarioAtual]: { ...(prev[usuarioAtual] || {}), ...Object.fromEntries(ups.map(u => ([u.jogo_id, { gols1: u.gols1.toString(), gols2: u.gols2.toString() }]))) } })); mostrarToast(`✅ ${ups.length} palpites salvos!`); }
-            else mostrarToast("Erro ao salvar", "err");
+            if (!error) {
+                setPalpitesMap((prev: any) => ({ ...prev, [usuarioAtual]: { ...(prev[usuarioAtual] || {}), ...Object.fromEntries(ups.map(u => ([u.jogo_id, { gols1: u.gols1.toString(), gols2: u.gols2.toString() }]))) } }));
+                mostrarToast(`✅ ${ups.length} palpites salvos!`);
+            } else mostrarToast("Erro ao salvar", "err");
         } else mostrarToast("Nenhum palpite completo", "err");
         setSalvando(false);
     }
 
     async function setCamp(time: string) {
         if (!usuarioAtual || campLock()) return;
-        if (!pago) { mostrarToast("Faça o pagamento primeiro!", "err"); return; }
         setUsuarios((prev: any) => ({ ...prev, [usuarioAtual]: { ...prev[usuarioAtual], camp: time } }));
         await supabase.from("usuarios").update({ campeao_palpite: time }).eq("nome", usuarioAtual);
         mostrarToast("🏆 Campeão salvo!");
@@ -460,7 +431,6 @@ export default function App() {
         setTimeout(() => setCopRank(false), 2500);
     }
 
-    // Componente do card de jogo para admin
     function JogoCardAdmin({ jogo, isElim = false }: any) {
         const r = isElim ? (resE[jogo.id] || {}) : (res[jogo.id] || {});
         const temRes = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
@@ -497,25 +467,19 @@ export default function App() {
 
     return (
         <div style={{ minHeight: "100vh", background: "#f5f7fa", color: "#111827", fontFamily: "'Inter',sans-serif", userSelect: "none", WebkitUserSelect: "none", paddingBottom: tela === "app" ? "72px" : "0" }}>
-            {/* BANNER FIXO NO TOPO */}
+
+            {/* HEADER */}
             <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { if (tela === "admin") { setTela("app"); irParaHome(); } else irParaHome(); }}>
                     <div style={{ width: 36, height: 36, background: "#16a34a", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚽</div>
-                    <div>
-                        <div style={{ fontWeight: 800, fontSize: 15, color: "#111827", letterSpacing: "-.3px" }}>Bolão Copa 2026</div>
-                    </div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: "#111827", letterSpacing: "-.3px" }}>Bolão Copa 2026</div>
                 </div>
-                {tela === "app" && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        {!pago && <span className="badge br" onClick={() => setModo("pix")} style={{ cursor: "pointer" }}>💳 Pagar</span>}
-                    </div>
-                )}
                 {tela === "admin" && (
                     <button style={{ padding: "7px 14px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#374151" }} onClick={() => { setTela("app"); irParaHome(); }}>← Voltar</button>
                 )}
             </div>
 
-            {/* MODALS E OVERLAYS */}
+            {/* LOADING */}
             {sessaoCarregando && (
                 <div style={{ position: "fixed", inset: 0, background: "#f5f7fa", zIndex: 99999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
                     <div style={{ width: 72, height: 72, background: "#16a34a", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40 }}>⚽</div>
@@ -527,13 +491,7 @@ export default function App() {
             {confetis.map(c => <div key={c.id} className="cf" style={{ left: c.l, animationDelay: c.d }}>{c.e}</div>)}
 
             {toast && (
-                <div style={{
-                    position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 9998,
-                    background: toast.tipo === "ok" ? "#166534" : "#b91c1c",
-                    color: "#fff",
-                    padding: "10px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace",
-                    whiteSpace: "nowrap", boxShadow: "0 4px 20px rgba(0,0,0,.4)"
-                }}>
+                <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 9998, background: toast.tipo === "ok" ? "#166534" : "#b91c1c", color: "#fff", padding: "10px 20px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", whiteSpace: "nowrap", boxShadow: "0 4px 20px rgba(0,0,0,.4)" }}>
                     {toast.msg}
                 </div>
             )}
@@ -545,14 +503,19 @@ export default function App() {
                         <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, color: "#111827" }}>Bem-vindo ao <span style={{ color: "#16a34a" }}>Bolão 2026!</span></h2>
                         <p style={{ fontSize: 13, color: "#9ca3af", marginBottom: 20, lineHeight: 1.7 }}>EUA · México · Canadá · 11 Jun – 19 Jul 2026</p>
                         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, textAlign: "left" }}>
-                            {[["🎯", "Placar exato", `+5 pts (grupos)`], ["⚽", "Acertar vencedor", "+2 pts (grupos)"],
-                            ["🏆", "Campeão da Copa", `+${CONFIG.bonusCampeao} pts bônus`],
-                            ["🔒", "Palpites fecham", `${CONFIG.minutesBloqueio}min antes do jogo`],
-                            ["💳", "Cota de entrada", `R$ ${CONFIG.valorCota} via Mercado Pago`]
+                            {[
+                                ["🎯", "Placar exato", `+5 pts (grupos)`],
+                                ["⚽", "Acertar vencedor", "+2 pts (grupos)"],
+                                ["🏆", "Campeão da Copa", `+${CONFIG.bonusCampeao} pts bônus`],
+                                ["🔒", "Palpites fecham", `${CONFIG.minutesBloqueio}min antes do jogo`],
+                                ["💳", "Cota de entrada", `R$ ${CONFIG.valorCota} via Mercado Pago`],
                             ].map(([ic, txt, sub]) => (
                                 <div key={txt} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#f9fafb", borderRadius: 12, border: "1px solid #e5e7eb" }}>
                                     <span style={{ fontSize: 22 }}>{ic}</span>
-                                    <div><div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{txt}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{sub}</div></div>
+                                    <div>
+                                        <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{txt}</div>
+                                        <div style={{ fontSize: 12, color: "#6b7280" }}>{sub}</div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -630,31 +593,22 @@ export default function App() {
                 {tela === "login" && (
                     <TelaLogin
                         onLogin={(nome, email, isAdmin, u) => {
-                            setUsuarioAtual(nome);
-                            setEmailAtual(email);
-                            setIsAdmin(isAdmin);
+                            setUsuarioAtual(nome); setEmailAtual(email); setIsAdmin(isAdmin);
                             setUsuarios((prev: Record<string, { pago: boolean; camp: string }>) => ({ ...prev, [nome]: { pago: u.pago, camp: u.campeao_palpite || "" } }));
-                            setTela("app");
-                            irParaHome();
+                            setTela("app"); irParaHome();
                         }}
                         onCadastro={() => setTela("cadastro")}
                     />
                 )}
 
-                {tela === "recuperar" && (
-                    <TelaRecuperarSenha onSucesso={() => setTela("login")} />
-                )}
+                {tela === "recuperar" && <TelaRecuperarSenha onSucesso={() => setTela("login")} />}
 
                 {tela === "cadastro" && (
                     <TelaCadastro
                         onCadastro={(nome, email, isAdmin) => {
-                            setUsuarioAtual(nome);
-                            setEmailAtual(email);
-                            setIsAdmin(isAdmin);
+                            setUsuarioAtual(nome); setEmailAtual(email); setIsAdmin(isAdmin);
                             setUsuarios((prev: Record<string, { pago: boolean; camp: string }>) => ({ ...prev, [nome]: { pago: false, camp: "" } }));
-                            setOnboarding(true);
-                            setTela("app");
-                            irParaHome();
+                            setOnboarding(true); setTela("app"); irParaHome();
                         }}
                         onVoltar={() => setTela("login")}
                     />
@@ -670,11 +624,15 @@ export default function App() {
                                 meusDados={meusDados}
                                 minhaPos={minhaPos}
                                 nPart={nPart}
+                                nPagos={nPagos}
+                                premios={premios}
                                 totSalvos={totSalvos}
                                 totJogos={totJogos}
                                 pctPal={pctPal}
                                 countdown={countdown}
+                                elim={elim}
                                 res={res}
+                                resE={resE}
                                 palS={palS}
                                 palR={palR}
                                 F={F}
@@ -687,84 +645,53 @@ export default function App() {
 
                         {modo === "jogos" && (
                             <TelaJogos
-                                statusF={statusF}
-                                setStatusF={setStatusF}
-                                rodada={rodada}
-                                setRodada={setRodada}
-                                faseAtiva={faseAtiva}
-                                setFaseAtiva={setFaseAtiva}
-                                jogosFiltrados={jogosFiltrados}
-                                jogosRodada={jogosRodada}
-                                elim={elim}
-                                res={res}
-                                resE={resE}
-                                palS={palS}
-                                palpitesMap={palpitesMap}
-                                F={F}
-                                setJogoSel={setJogoSel}
+                                statusF={statusF} setStatusF={setStatusF}
+                                rodada={rodada} setRodada={setRodada}
+                                faseAtiva={faseAtiva} setFaseAtiva={setFaseAtiva}
+                                jogosFiltrados={jogosFiltrados} jogosRodada={jogosRodada}
+                                elim={elim} res={res} resE={resE}
+                                palS={palS} palpitesMap={palpitesMap}
+                                F={F} setJogoSel={setJogoSel}
                             />
                         )}
 
                         {modo === "palpites" && (
                             <TelaPalpites
-                                pago={pago}
-                                campAtual={campAtual}
-                                faseAtiva={faseAtiva}
-                                grupoAtivo={grupoAtivo}
-                                elim={elim}
-                                palR={palR}
-                                palS={palS}
-                                res={res}
-                                resE={resE}
-                                salvando={salvando}
-                                temRasc={temRasc}
-                                setModo={setModo}
-                                setFaseAtiva={setFaseAtiva}
-                                setGrupoAtivo={setGrupoAtivo}
-                                setJogoSel={setJogoSel}
-                                setCamp={setCamp}
-                                setPalLocal={setPalLocal}
-                                salvarGrupo={salvarGrupo}
-                                salvarElim={salvarElim}
+                                pago={pago} campAtual={campAtual}
+                                faseAtiva={faseAtiva} grupoAtivo={grupoAtivo}
+                                elim={elim} palR={palR} palS={palS}
+                                res={res} resE={resE}
+                                salvando={salvando} temRasc={temRasc}
+                                setModo={setModo} setFaseAtiva={setFaseAtiva}
+                                setGrupoAtivo={setGrupoAtivo} setJogoSel={setJogoSel}
+                                setCamp={setCamp} setPalLocal={setPalLocal}
+                                salvarGrupo={salvarGrupo} salvarElim={salvarElim}
                             />
                         )}
 
                         {modo === "ranking" && (
                             <TelaRanking
-                                minhaPos={minhaPos}
-                                meusDados={meusDados}
-                                usuarioAtual={usuarioAtual}
-                                ranking={ranking}
-                                premios={premios}
-                                palpitesMap={palpitesMap}
-                                elim={elim}
-                                res={res}
-                                resE={resE}
-                                MEDAL={MEDAL}
-                                F={F}
+                                minhaPos={minhaPos} meusDados={meusDados}
+                                usuarioAtual={usuarioAtual} ranking={ranking}
+                                premios={premios} palpitesMap={palpitesMap}
+                                elim={elim} res={res} resE={resE}
+                                MEDAL={MEDAL} F={F}
                                 mostrarToast={mostrarToast}
-                                isLoading={false}
-                                error={null}
+                                setModo={setModo}
+                                isLoading={false} error={null}
                             />
                         )}
 
                         {modo === "historico" && (
                             <TelaHistorico
-                                palS={palS}
-                                elim={elim}
-                                res={res}
-                                resE={resE}
-                                campAtual={campAtual}
-                                campR={campR}
-                                F={F}
+                                palS={palS} elim={elim} res={res} resE={resE}
+                                campAtual={campAtual} campR={campR} F={F}
                             />
                         )}
 
                         {modo === "pix" && (
                             <TelaPix
-                                pago={pago}
-                                usuarioAtual={usuarioAtual}
-                                emailAtual={emailAtual}
+                                pago={pago} usuarioAtual={usuarioAtual} emailAtual={emailAtual}
                                 onPago={() => {
                                     setUsuarios((prev: Record<string, { pago: boolean; camp: string }>) => ({ ...prev, [usuarioAtual || ""]: { ...prev[usuarioAtual || ""], pago: true } }));
                                     dispararConfete();
@@ -776,45 +703,27 @@ export default function App() {
 
                         {modo === "perfil" && (
                             <TelaPerfil
-                                usuarioAtual={usuarioAtual}
-                                emailAtual={emailAtual}
-                                pago={pago}
-                                meusDados={meusDados}
-                                minhaPos={minhaPos}
-                                ranking={ranking}
-                                palpitesMap={palpitesMap}
-                                elim={elim}
-                                res={res}
-                                resE={resE}
+                                usuarioAtual={usuarioAtual} emailAtual={emailAtual}
+                                pago={pago} meusDados={meusDados} minhaPos={minhaPos}
+                                ranking={ranking} palpitesMap={palpitesMap}
+                                elim={elim} res={res} resE={resE}
                             />
                         )}
 
                         {modo === "campeao" && (
                             <TelaCampeao
-                                campAtual={campAtual}
-                                setCamp={setCamp}
-                                usuarios={usuarios}
-                                TODOS_TIMES={TODOS_TIMES}
-                                F={F}
+                                campAtual={campAtual} setCamp={setCamp}
+                                usuarios={usuarios} TODOS_TIMES={TODOS_TIMES} F={F}
                             />
                         )}
 
-                        {modo === "regras" && (
-                            <TelaRegras premios={premios} />
-                        )}
-
-                        {modo === "feed" && (
-                            <TelaFeed feed={feed} />
-                        )}
-
+                        {modo === "regras" && <TelaRegras premios={premios} />}
+                        {modo === "feed" && <TelaFeed feed={feed} />}
                         {modo === "mais" && (
                             <TelaMais
-                                modo={modo}
-                                isAdmin={isAdmin}
-                                setModo={setModo}
-                                setTela={setTela}
-                                handleLogout={handleLogout}
-                                mostrarToast={mostrarToast}
+                                modo={modo} isAdmin={isAdmin}
+                                setModo={setModo} setTela={setTela}
+                                handleLogout={handleLogout} mostrarToast={mostrarToast}
                             />
                         )}
 
@@ -823,33 +732,21 @@ export default function App() {
 
                 {tela === "admin" && (
                     <TelaAdmin
-                        adminModo={adminModo}
-                        setAdminModo={setAdminModo}
-                        grupoAtivo={grupoAtivo}
-                        setGrupoAtivo={setGrupoAtivo}
-                        faseAtiva={faseAtiva}
-                        setFaseAtiva={setFaseAtiva}
-                        res={res}
-                        resE={resE}
-                        elim={elim}
-                        updateElimT={updateElimT}
-                        campR={campR}
-                        atualizarCampR={atualizarCampR}
-                        usuarios={usuarios}
-                        ranking={ranking}
-                        nPart={nPart}
-                        nPagos={nPagos}
-                        togglePago={togglePago}
-                        resetarSenha={resetarSenha}
-                        mostrarToast={mostrarToast}
-                        F={F}
+                        adminModo={adminModo} setAdminModo={setAdminModo}
+                        grupoAtivo={grupoAtivo} setGrupoAtivo={setGrupoAtivo}
+                        faseAtiva={faseAtiva} setFaseAtiva={setFaseAtiva}
+                        res={res} resE={resE} elim={elim}
+                        updateElimT={updateElimT} campR={campR}
+                        atualizarCampR={atualizarCampR} usuarios={usuarios}
+                        ranking={ranking} nPart={nPart} nPagos={nPagos}
+                        togglePago={togglePago} resetarSenha={resetarSenha}
+                        mostrarToast={mostrarToast} F={F}
                     />
                 )}
 
             </div>
 
             <PopupNotificacao popupJogo={popupJogo} setPopupJogo={setPopupJogo} setJogoSel={setJogoSel} F={F} />
-
             {tela === "app" && <NavBar modo={modo} isAdmin={isAdmin} setModo={setModo} />}
         </div>
     );
