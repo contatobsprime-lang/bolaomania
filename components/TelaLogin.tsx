@@ -46,7 +46,7 @@ export default function TelaLogin({ onLogin, onCadastro }: Props) {
 
   if (telaEsqueceu) return (
     <div className="fade" style={{ maxWidth: 360, margin: "0 auto", paddingTop: 24 }}>
-      <div style={{ textAlign: "center", marginBottom: 32 }}>
+      <div style={{ textAlign: "center", marginBottom: 16 }}>
         <div style={{ width: 80, height: 80, background: "linear-gradient(135deg,#16a34a,#15803d)", borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", boxShadow: "0 12px 28px rgba(22,163,74,.18)" }}>
           <i className="ti ti-lock-question" style={{ fontSize: 38, color: "#fff" }} aria-hidden="true" />
         </div>
@@ -76,13 +76,15 @@ export default function TelaLogin({ onLogin, onCadastro }: Props) {
 
   return (
     <div className="fade" style={{ maxWidth: 360, margin: "0 auto", paddingTop: 24 }}>
-      <div style={{ textAlign: "center", marginBottom: 32 }}>
-        <div style={{ width: 80, height: 80, background: "linear-gradient(135deg,#16a34a,#15803d)", borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 42, margin: "0 auto 16px" }}>⚽</div>
+      <div style={{ textAlign: "center", marginBottom: 16 }}>
+        <div style={{ margin: "0 auto 16px", width: 96, height: 96 }}>
+          <img src="/icone-bolao.png" alt="Bolão Copa 2026" style={{ width: "100%", height: "100%", borderRadius: 24, objectFit: "cover" }} />
+        </div>
         <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-1px", marginBottom: 6, color: "#111827" }}>Bolão Copa 2026</h1>
         <p style={{ color: "#9ca3af", fontSize: 14 }}>Entre e acompanhe o bolão</p>
       </div>
       <div className="card" style={{ marginBottom: 12, padding: "24px" }}>
-        <div style={{ fontWeight: 700, fontSize: 13, color: "#16a34a", letterSpacing: .5, textTransform: "uppercase", marginBottom: 16 }}>Acesse sua conta</div>
+        <div style={{ fontWeight: 700, fontSize: 13, color: "#16a34a", letterSpacing: .5, textTransform: "uppercase", marginBottom: 16 }}>Entrar</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <input className="inp" type="email" placeholder="Seu email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} />
           <input className="inp" type="password" placeholder="Senha" value={loginSenha} onChange={e => setLoginSenha(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} />
