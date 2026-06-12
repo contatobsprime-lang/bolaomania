@@ -67,6 +67,7 @@ export default function TelaPalpites({
         </select>
         {campAtual && <div style={{ marginTop: 8, fontSize: 12, color: "#6b7280" }}>Seu palpite: <strong style={{ color: "#16a34a" }}>{F[campAtual]} {campAtual}</strong></div>}
       </div>
+      <ShopeeAffiliateBanner tela="palpites" />
 
       {/* Abas de fase */}
       <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap", overflowX: "auto" }}>
@@ -194,7 +195,6 @@ export default function TelaPalpites({
               <button onClick={salvarElim} disabled={salvando} style={{ marginTop: 13, width: "100%", padding: "13px", borderRadius: 12, border: "none", cursor: "pointer", background: temRasc ? "#16a34a" : "#f3f4f6", color: temRasc ? "#fff" : "#9ca3af", fontFamily: "'Inter',sans-serif", fontWeight: 700, fontSize: 14 }}>
                 {salvando ? "Salvando..." : temRasc ? `Salvar palpites — ${FASE_L[faseAtiva]}` : "Palpites salvos ✓"}
               </button>
-              <ShopeeAffiliateBanner tela="palpites" />
             </>
           )}
         </div>
