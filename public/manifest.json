@@ -4,8 +4,8 @@
   "description": "Bolão da Copa do Mundo 2026",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
   "orientation": "portrait",
   "icons": [
     {
