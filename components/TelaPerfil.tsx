@@ -4,6 +4,8 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Jogo, RankingEntry } from "@/lib/types";
 import { calcBadges } from "@/lib/calculos";
+import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
+
 
 // Paleta de cores disponíveis para o avatar — sem rosa
 export const AVATAR_CORES = [

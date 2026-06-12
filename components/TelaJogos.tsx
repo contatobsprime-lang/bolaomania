@@ -6,6 +6,8 @@ import { JOGOS_GRUPO } from "@/data/jogos-grupo";
 import { FASE_L } from "@/lib/constantes";
 import { lock, fmtD, fmtH, statusJ } from "@/lib/utils";
 import { calcJogo } from "@/lib/calculos";
+import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
+
 
 interface Props {
   statusF: StatusFiltro;

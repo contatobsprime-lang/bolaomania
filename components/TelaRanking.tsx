@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { RankingEntry, Jogo } from "@/lib/types";
 import { calcBadges } from "@/lib/calculos";
+import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
 
 // ─── PRAZO DE PAGAMENTO ───────────────────────────────────────────────────────
 // 28/06/2026 às 15h00 horário de Brasília (UTC-3) = 18h00 UTC

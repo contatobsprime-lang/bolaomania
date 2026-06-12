@@ -1,6 +1,8 @@
 "use client";
 
 import { CONFIG, MEDAL } from "@/lib/constantes";
+import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
+
 
 interface Props {
   premios: any;

@@ -326,6 +326,35 @@ select:focus {
 .jogo-card-body {
   padding: 18px 16px;
 }
+/* =========================
+   BADGES (status do jogo)
+========================= */
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.badge.br {
+  background: rgba(239,68,68,.1);
+  color: #dc2626;
+}
+
+.badge.bg {
+  background: rgba(22,163,74,.1);
+  color: #16a34a;
+}
+
+.badge.bb {
+  background: rgba(37,99,235,.1);
+  color: #2563eb;
+}
 
 /* =========================
    SKELETON

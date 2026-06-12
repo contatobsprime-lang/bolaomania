@@ -40,25 +40,25 @@ export default function TelaPalpites({
       {!pago && (
         <div className="card" style={{ marginBottom: 14, background: "linear-gradient(135deg, rgba(22,163,74,.08), rgba(22,163,74,.03))", border: "1.5px solid rgba(22,163,74,.25)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <div style={{ fontSize: 28 }}>🏆</div>
+            <i className="ti ti-trophy" aria-hidden="true" style={{ fontSize: 28, color: "#15803d" }} />
             <div>
               <div style={{ fontWeight: 700, color: "#15803d", fontSize: 14 }}>Concorra aos prêmios!</div>
               <div style={{ fontSize: 12, color: "#6b7280" }}>Seus palpites são salvos, mas só concorre quem pagar.</div>
             </div>
           </div>
-          <button className="btn-primary" onClick={() => setModo("pix")} style={{ width: "100%", fontSize: 13 }}>
-            💳 Pagar R${CONFIG.valorCota} e entrar no ranking →
+          <button className="btn-primary" onClick={() => setModo("pix")} style={{ width: "100%", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+            <i className="ti ti-credit-card" aria-hidden="true" /> Pagar R${CONFIG.valorCota} e entrar no ranking →
           </button>
         </div>
       )}
 
       {/* Campeão */}
       <div className="card" style={{ marginBottom: 14, border: "1px solid rgba(247,201,72,.2)", background: "rgba(247,201,72,.03)" }}>
-        <div style={{ fontWeight: 700, fontSize: 11, color: "#16a34a", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>🏆 Campeão da Copa</div>
+        <div style={{ fontWeight: 700, fontSize: 11, color: "#16a34a", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}><i className="ti ti-trophy" aria-hidden="true" /> Campeão da Copa</div>
         <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
           +{CONFIG.bonusCampeao} pts bônus ·{" "}
           {campLock()
-            ? <span style={{ color: "#b91c1c" }}>🔒 Bloqueado — palpite encerrado</span>
+            ? <span style={{ color: "#b91c1c", display: "inline-flex", alignItems: "center", gap: 4 }}><i className="ti ti-lock" aria-hidden="true" /> Bloqueado — palpite encerrado</span>
             : <span style={{ color: "#16a34a", fontWeight: 700 }}>{tr(CONFIG.bloqueioCompetidor)} para fechar</span>}
         </div>
         <select value={campAtual} onChange={e => setCamp(e.target.value)} disabled={campLock()}>
@@ -114,12 +114,12 @@ export default function TelaPalpites({
                 <div key={j.id} className="card" style={{ position: "relative", overflow: "hidden", padding: "13px", border: `1px solid ${bc === "transparent" ? "#f3f4f6" : bc + "44"}` }}>
                   {bc !== "transparent" && <div style={{ position: "absolute", top: 0, left: 0, width: 3, height: "100%", background: bc }} />}
                   <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 4 }}>
-                    {lk && !tPL && <span className="badge br">🔒</span>}
-                    {aP && <span className="badge bg">🎯 Exato!</span>}
-                    {aV && <span className="badge bb">✅</span>}
-                    {mod && <span className="badge" style={{ background: "rgba(251,191,36,.15)", color: "#fbbf24", border: "1px solid rgba(251,191,36,.3)" }}>✏️</span>}
+                    {lk && !tPL && <span className="badge br"><i className="ti ti-lock" aria-hidden="true" /></span>}
+                    {aP && <span className="badge bg"><i className="ti ti-target" aria-hidden="true" /> Exato!</span>}
+                    {aV && <span className="badge bb"><i className="ti ti-check" aria-hidden="true" /></span>}
+                    {mod && <span className="badge" style={{ background: "rgba(251,191,36,.15)", color: "#fbbf24", border: "1px solid rgba(251,191,36,.3)" }}><i className="ti ti-pencil" aria-hidden="true" /></span>}
                   </div>
-                  <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 9 }}>📍 {j.est} · {fmtH(j.dt)}</div>
+                  <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 9, display: "flex", alignItems: "center", gap: 4 }}><i className="ti ti-map-pin" aria-hidden="true" /> {j.est} · {fmtH(j.dt)}</div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flex: 1, minWidth: 0 }}>
                       <span style={{ fontSize: 22 }}>{F[j.time1]}</span>
