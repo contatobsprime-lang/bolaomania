@@ -747,6 +747,7 @@ export default function App() {
                         ranking={ranking} nPart={nPart} nPagos={nPagos}
                         togglePago={togglePago} resetarSenha={resetarSenha}
                         mostrarToast={mostrarToast} F={F}
+                        setResAdmin={setResAdmin} setResEAdmin={setResEAdmin}
                     />
                 )}
 

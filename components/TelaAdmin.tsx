@@ -27,12 +27,14 @@ interface Props {
   resetarSenha: (nome: string, email: string) => void;
   mostrarToast: (msg: string) => void;
   F: Record<string, string>;
+  setResAdmin: (jId: number, campo: string, valor: string) => void;
+  setResEAdmin: (jId: number, campo: string, valor: any) => void;
 }
 
 export default function TelaAdmin({
   adminModo, setAdminModo, grupoAtivo, setGrupoAtivo, faseAtiva, setFaseAtiva,
   res, resE, elim, updateElimT, campR, atualizarCampR, usuarios, ranking, nPart, nPagos,
-  togglePago, resetarSenha, mostrarToast, F
+  togglePago, resetarSenha, mostrarToast, F, setResAdmin, setResEAdmin
 }: Props) {
   const [resetNome, setResetNome] = useState<string | null>(null);
 
@@ -74,9 +76,9 @@ export default function TelaAdmin({
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "0 8px", flexShrink: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <input type="number" min={0} max={30} className={`si r${temRes ? " f" : ""}`} value={r.gols1 ?? ""} onChange={e => {/* setResAdmin */ }} placeholder="—" />
+                        <input type="number" min={0} max={30} className={`si r${temRes ? " f" : ""}`} value={r.gols1 ?? ""} onChange={e => setResAdmin(j.id, "gols1", e.target.value)} placeholder="—" />
                         <span style={{ color: "#d1d5db", fontSize: 14 }}>×</span>
-                        <input type="number" min={0} max={30} className={`si r${temRes ? " f" : ""}`} value={r.gols2 ?? ""} onChange={e => {/* setResAdmin */ }} placeholder="—" />
+                        <input type="number" min={0} max={30} className={`si r${temRes ? " f" : ""}`} value={r.gols2 ?? ""} onChange={e => setResAdmin(j.id, "gols2", e.target.value)} placeholder="—" />
                       </div>
                     </div>
                     <div style={{ textAlign: "center", flex: 1 }}>
@@ -133,13 +135,13 @@ export default function TelaAdmin({
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "0 8px", flexShrink: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <input type="number" min={0} max={30} className="si r" value={resE[j.id]?.gols1 ?? ""} onChange={e => {/* setResEAdmin */ }} placeholder="—" />
+                          <input type="number" min={0} max={30} className="si r" value={resE[j.id]?.gols1 ?? ""} onChange={e => setResEAdmin(j.id, "gols1", e.target.value)} placeholder="—" />
                           <span style={{ color: "#d1d5db", fontSize: 14 }}>×</span>
-                          <input type="number" min={0} max={30} className="si r" value={resE[j.id]?.gols2 ?? ""} onChange={e => {/* setResEAdmin */ }} placeholder="—" />
+                          <input type="number" min={0} max={30} className="si r" value={resE[j.id]?.gols2 ?? ""} onChange={e => setResEAdmin(j.id, "gols2", e.target.value)} placeholder="—" />
                         </div>
                         {j.fase !== "grupos" && (
                           <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6b7280", cursor: "pointer" }}>
-                            <input type="checkbox" checked={resE[j.id]?.penalti || false} onChange={e => {/* setResEAdmin */ }} style={{ width: 14, height: 14 }} /> Pênalti
+                            <input type="checkbox" checked={resE[j.id]?.penalti || false} onChange={e => setResEAdmin(j.id, "penalti", e.target.checked)} style={{ width: 14, height: 14 }} /> Pênalti
                           </label>
                         )}
                       </div>
