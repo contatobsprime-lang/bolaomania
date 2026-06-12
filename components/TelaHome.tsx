@@ -5,6 +5,8 @@ import { MEDAL, CONFIG } from "@/lib/constantes";
 import { JOGOS_GRUPO } from "@/data/jogos-grupo";
 import { lock, fmtDLong, fmtH, statusJ, tr } from "@/lib/utils";
 import { avatarColorPadrao } from "@/components/TelaPerfil";
+import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
+
 
 // Prazo de pagamento: 28/06/2026 às 15h Brasília (UTC-3) = 18h UTC
 const PRAZO_PAGAMENTO = new Date("2026-06-28T18:00:00Z");
@@ -14,11 +16,11 @@ const FIM_COPA = new Date("2026-07-19T00:00:00Z");
 
 // Fases reais com base nas datas oficiais da Copa 2026
 const FASES: { label: string; inicio: Date; fim: Date }[] = [
-  { label: "Fase de Grupos",   inicio: new Date("2026-06-11"), fim: new Date("2026-07-02") },
+  { label: "Fase de Grupos", inicio: new Date("2026-06-11"), fim: new Date("2026-07-02") },
   { label: "Oitavas de Final", inicio: new Date("2026-07-03"), fim: new Date("2026-07-06") },
   { label: "Quartas de Final", inicio: new Date("2026-07-08"), fim: new Date("2026-07-11") },
-  { label: "Semifinais",       inicio: new Date("2026-07-14"), fim: new Date("2026-07-15") },
-  { label: "Final",            inicio: new Date("2026-07-19"), fim: new Date("2026-07-19") },
+  { label: "Semifinais", inicio: new Date("2026-07-14"), fim: new Date("2026-07-15") },
+  { label: "Final", inicio: new Date("2026-07-19"), fim: new Date("2026-07-19") },
 ];
 
 function getFaseAtual(): string {
@@ -261,17 +263,16 @@ export default function TelaHome({
             className="card"
             style={{
               padding: "16px",
-              border: `1.5px solid ${
-                proximoJogo           ? "#fde68a" :
+              border: `1.5px solid ${proximoJogo ? "#fde68a" :
                 jogoStatus === "live" ? "#fca5a5" :
-                jogoStatus === "wait" ? "#d1d5db" :
-                "#86efac"
-              }`,
+                  jogoStatus === "wait" ? "#d1d5db" :
+                    "#86efac"
+                }`,
               background:
-                proximoJogo           ? "#fffbeb" :
-                jogoStatus === "live" ? "#fef2f2" :
-                jogoStatus === "wait" ? "#f9fafb" :
-                "#f0fdf4",
+                proximoJogo ? "#fffbeb" :
+                  jogoStatus === "live" ? "#fef2f2" :
+                    jogoStatus === "wait" ? "#f9fafb" :
+                      "#f0fdf4",
               cursor: proximoJogo ? "default" : "pointer",
             }}
             onClick={() => !proximoJogo && jogoDestaque && setJogoSel(jogoDestaque)}
@@ -284,11 +285,12 @@ export default function TelaHome({
                   : `Grupo ${jogoDestaque.g}`}
                 {" · "}{fmtDLong(jogoDestaque.dt)}
               </span>
-              <span style={{ fontWeight: 600, color:
-                proximoJogo           ? "#92400e" :
-                jogoStatus === "live" ? "#ef4444" :
-                jogoStatus === "wait" ? "#6b7280" :
-                "#16a34a"
+              <span style={{
+                fontWeight: 600, color:
+                  proximoJogo ? "#92400e" :
+                    jogoStatus === "live" ? "#ef4444" :
+                      jogoStatus === "wait" ? "#6b7280" :
+                        "#16a34a"
               }}>
                 {fmtH(jogoDestaque.dt)}
               </span>
@@ -388,7 +390,7 @@ export default function TelaHome({
           </div>
         </div>
       )}
-
+      <ShopeeAffiliateBanner tela="home" />
       {/* ── BLOCO 3: PROGRESSO DOS PALPITES ──────────────────────────────── */}
       <div className="card" style={{ padding: "14px 16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -503,6 +505,7 @@ export default function TelaHome({
           </button>
         ))}
       </div>
+      <ShopeeAffiliateBanner tela="home" />
 
     </div>
   );
