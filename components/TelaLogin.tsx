@@ -79,10 +79,10 @@ export default function TelaLogin({ onLogin, onCadastro }: Props) {
       <div style={{ textAlign: "center", marginBottom: 32 }}>
         <div style={{ width: 80, height: 80, background: "linear-gradient(135deg,#16a34a,#15803d)", borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 42, margin: "0 auto 16px" }}>⚽</div>
         <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-1px", marginBottom: 6, color: "#111827" }}>Bolão Copa 2026</h1>
-        <p style={{ color: "#9ca3af", fontSize: 14 }}>Entre e acompanhe seus palpites</p>
+        <p style={{ color: "#9ca3af", fontSize: 14 }}>Entre e acompanhe o bolão</p>
       </div>
       <div className="card" style={{ marginBottom: 12, padding: "24px" }}>
-        <div style={{ fontWeight: 700, fontSize: 13, color: "#16a34a", letterSpacing: .5, textTransform: "uppercase", marginBottom: 16 }}>Entrar</div>
+        <div style={{ fontWeight: 700, fontSize: 13, color: "#16a34a", letterSpacing: .5, textTransform: "uppercase", marginBottom: 16 }}>Acesse sua conta</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <input className="inp" type="email" placeholder="Seu email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} />
           <input className="inp" type="password" placeholder="Senha" value={loginSenha} onChange={e => setLoginSenha(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} />
@@ -91,7 +91,7 @@ export default function TelaLogin({ onLogin, onCadastro }: Props) {
           <button onClick={() => { setTelaEsqueceu(true); setEsqueceuEmail(loginEmail); }} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 13, cursor: "pointer", textAlign: "center" }}>Esqueci minha senha</button>
         </div>
       </div>
-      <button className="btn-ghost" onClick={() => { setLoginErro(""); onCadastro(); }}>Ainda não tenho conta</button>
+      <button className="btn-ghost" onClick={() => { setLoginErro(""); onCadastro(); }}>Criar conta</button>
     </div>
   );
 }
