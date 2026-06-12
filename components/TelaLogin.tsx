@@ -47,26 +47,30 @@ export default function TelaLogin({ onLogin, onCadastro }: Props) {
   if (telaEsqueceu) return (
     <div className="fade" style={{ maxWidth: 360, margin: "0 auto", paddingTop: 24 }}>
       <div style={{ textAlign: "center", marginBottom: 32 }}>
-        <div style={{ width: 80, height: 80, background: "linear-gradient(135deg,#16a34a,#15803d)", borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 42, margin: "0 auto 16px" }}>🔑</div>
-        <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, color: "#111827" }}>Recuperar senha</h1>
-        <p style={{ color: "#9ca3af", fontSize: 14 }}>Enviaremos um link para seu email</p>
+        <div style={{ width: 80, height: 80, background: "linear-gradient(135deg,#16a34a,#15803d)", borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", boxShadow: "0 12px 28px rgba(22,163,74,.18)" }}>
+          <i className="ti ti-lock-question" style={{ fontSize: 38, color: "#fff" }} aria-hidden="true" />
+        </div>
+        <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 6, color: "#111827", letterSpacing: "-0.5px" }}>Recuperar senha</h1>
+        <p style={{ color: "#6b7280", fontSize: 14 }}>Enviaremos um link para seu email</p>
       </div>
+
       {!esqueceuSent ? (
         <div className="card" style={{ marginBottom: 12, padding: "24px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <input className="inp" type="email" placeholder="Seu email" value={esqueceuEmail} onChange={e => setEsqueceuEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleEsqueceuSenha()} />
-            {esqueceuErro && <div style={{ color: "#b91c1c", fontSize: 13, background: "#fef2f2", padding: "8px 12px", borderRadius: 8 }}>{esqueceuErro}</div>}  {/* ← AQUI */}
-            <button className="btn-primary" onClick={handleEsqueceuSenha} disabled={carregando}>{carregando ? "Enviando..." : "Enviar link de recuperação"}</button>
+            <input className="inp" type="email" placeholder="Digite seu email" value={esqueceuEmail} onChange={e => setEsqueceuEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleEsqueceuSenha()} />
+            {esqueceuErro && <div style={{ color: "#b91c1c", fontSize: 13, background: "#fef2f2", padding: "8px 12px", borderRadius: 8 }}>{esqueceuErro}</div>}
+            <button className="btn-primary" onClick={handleEsqueceuSenha} disabled={carregando}>{carregando ? "Enviando..." : "Enviar link"}</button>
           </div>
         </div>
       ) : (
         <div className="card" style={{ textAlign: "center", padding: "32px", border: "1.5px solid #86efac", background: "#f0fdf4" }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>📧</div>
+          <div style={{ marginBottom: 12 }}><i className="ti ti-mail-check" style={{ fontSize: 44, color: "#16a34a" }} aria-hidden="true" /></div>
           <div style={{ fontWeight: 700, fontSize: 16, color: "#16a34a", marginBottom: 8 }}>Email enviado!</div>
-          <div style={{ fontSize: 13, color: "#6b7280" }}>Verifique sua caixa de entrada e clique no link para redefinir sua senha.</div>
+          <div style={{ fontSize: 13, color: "#6b7280" }}>Verifique sua caixa de entrada para redefinir sua senha.</div>
         </div>
       )}
-      <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => { setTelaEsqueceu(false); setEsqueceuSent(false); }}>← Voltar</button>
+
+      <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => { setTelaEsqueceu(false); setEsqueceuSent(false); }}>Voltar ao login</button>
     </div>
   );
 
@@ -75,7 +79,7 @@ export default function TelaLogin({ onLogin, onCadastro }: Props) {
       <div style={{ textAlign: "center", marginBottom: 32 }}>
         <div style={{ width: 80, height: 80, background: "linear-gradient(135deg,#16a34a,#15803d)", borderRadius: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 42, margin: "0 auto 16px" }}>⚽</div>
         <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-1px", marginBottom: 6, color: "#111827" }}>Bolão Copa 2026</h1>
-        <p style={{ color: "#9ca3af", fontSize: 14 }}>EUA · México · Canadá · Jun–Jul 2026</p>
+        <p style={{ color: "#9ca3af", fontSize: 14 }}>Entre e acompanhe seus palpites</p>
       </div>
       <div className="card" style={{ marginBottom: 12, padding: "24px" }}>
         <div style={{ fontWeight: 700, fontSize: 13, color: "#16a34a", letterSpacing: .5, textTransform: "uppercase", marginBottom: 16 }}>Entrar</div>
@@ -87,7 +91,7 @@ export default function TelaLogin({ onLogin, onCadastro }: Props) {
           <button onClick={() => { setTelaEsqueceu(true); setEsqueceuEmail(loginEmail); }} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 13, cursor: "pointer", textAlign: "center" }}>Esqueci minha senha</button>
         </div>
       </div>
-      <button className="btn-ghost" onClick={() => { setLoginErro(""); onCadastro(); }}>Criar conta nova →</button>
+      <button className="btn-ghost" onClick={() => { setLoginErro(""); onCadastro(); }}>Ainda não tenho conta</button>
     </div>
   );
 }
