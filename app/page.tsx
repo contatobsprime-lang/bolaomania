@@ -629,13 +629,14 @@ export default function App() {
                                 totSalvos={totSalvos}
                                 totJogos={totJogos}
                                 pctPal={pctPal}
-                                countdown={countdown}
                                 elim={elim}
                                 res={res}
                                 resE={resE}
                                 palS={palS}
                                 palR={palR}
                                 F={F}
+                                palCampeao={campAtual}
+                                novidades={{ jogos: 0 }}
                                 setModo={setModo}
                                 setJogoSel={setJogoSel}
                                 setPalLocal={setPalLocal}
