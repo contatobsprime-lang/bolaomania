@@ -78,7 +78,7 @@ export default function TelaLogin({ onLogin, onCadastro }: Props) {
     <div className="fade" style={{ maxWidth: 360, margin: "0 auto", paddingTop: 24 }}>
       <div style={{ textAlign: "center", marginBottom: 16 }}>
         <div style={{ margin: "0 auto 16px", width: 96, height: 96 }}>
-          <img src="/icone-bolao.png" alt="Bolão Copa 2026" style={{ width: "100%", height: "100%", borderRadius: 24, objectFit: "cover" }} />
+          <img src="/icon-512x512.png" alt="Bolão Copa 2026" style={{ width: "100%", height: "100%", borderRadius: 24, objectFit: "cover" }} />
         </div>
         <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-1px", marginBottom: 6, color: "#111827" }}>Bolão Copa 2026</h1>
         <p style={{ color: "#9ca3af", fontSize: 14 }}>Entre e acompanhe o bolão</p>
