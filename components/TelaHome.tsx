@@ -4,6 +4,7 @@ import type { Jogo } from "@/lib/types";
 import { MEDAL, CONFIG } from "@/lib/constantes";
 import { JOGOS_GRUPO } from "@/data/jogos-grupo";
 import { lock, fmtDLong, fmtH, statusJ, tr } from "@/lib/utils";
+import { avatarColorPadrao } from "@/components/TelaPerfil";
 
 // Prazo de pagamento: 28/06/2026 às 15h Brasília (UTC-3) = 18h UTC
 const PRAZO_PAGAMENTO = new Date("2026-06-28T18:00:00Z");
@@ -28,17 +29,6 @@ function getFaseAtual(): string {
   return "Encerrado";
 }
 
-// Gera cor de avatar baseada no nome (hash) — neutro, sem tendência de gênero
-function avatarColor(nome: string): string {
-  const cores = [
-    "#2563eb", "#7c3aed", "#db2777", "#ea580c",
-    "#16a34a", "#0891b2", "#d97706", "#dc2626",
-  ];
-  let hash = 0;
-  for (let i = 0; i < nome.length; i++) hash = nome.charCodeAt(i) + ((hash << 5) - hash);
-  return cores[Math.abs(hash) % cores.length];
-}
-
 interface Props {
   usuarioAtual: string | null;
   pago: boolean;
@@ -56,6 +46,8 @@ interface Props {
   palS: Record<number, { gols1: string; gols2: string }>;
   palR: Record<number, { gols1: string; gols2: string }>;
   F: Record<string, string>;
+  // Cor do avatar escolhida pelo usuário (salva no Supabase)
+  avatarCor?: string;
   // Palpite do campeão salvo (nome do time)
   palCampeao?: string;
   // Badges de novidade por aba
@@ -70,6 +62,7 @@ export default function TelaHome({
   usuarioAtual, pago, meusDados, minhaPos, nPart, totSalvos, totJogos, pctPal,
   premios, nPagos, elim,
   res, resE, palS, palR, F,
+  avatarCor,
   palCampeao,
   novidades,
   setModo, setJogoSel, setPalLocal, confirmarPalpite,
@@ -82,6 +75,9 @@ export default function TelaHome({
   const premioExibido = premios?.totalPremios != null
     ? `R$ ${premios.totalPremios}`
     : `R$ ${Math.floor(nPagos * CONFIG.valorCota * (1 - (CONFIG.comissao ?? 0)))}`;
+
+  // Cor do avatar — usa a escolhida pelo usuário, ou calcula pelo hash do nome
+  const cor = avatarCor || avatarColorPadrao(usuarioAtual || "?");
 
   // ── Próximo jogo pendente de palpite
   const todosJogos: Jogo[] = [
@@ -124,7 +120,15 @@ export default function TelaHome({
     return !isNaN(n) && n >= 10;
   }
 
-  const cor = avatarColor(usuarioAtual || "?");
+  // Auto-foco: após preencher gols2, foca no botão confirmar
+  function handleGols2Change(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!jogoDestaque) return;
+    setPalLocal(jogoDestaque.id, "gols2", e.target.value, jogoDestaque.dt);
+    if (e.target.value !== "") {
+      const btn = document.getElementById(`home_confirmar_${jogoDestaque.id}`);
+      if (btn) btn.focus();
+    }
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -143,14 +147,17 @@ export default function TelaHome({
 
         {/* Avatar + nome + fase */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-          <div style={{
-            width: 46, height: 46, borderRadius: "50%",
-            background: cor,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 17, fontWeight: 700, flexShrink: 0, letterSpacing: -0.5,
-            border: "2px solid rgba(255,255,255,0.35)",
-            color: "#fff",
-          }}>
+          <div
+            onClick={() => setModo("perfil")}
+            style={{
+              width: 46, height: 46, borderRadius: "50%",
+              background: cor,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 17, fontWeight: 700, flexShrink: 0, letterSpacing: -0.5,
+              border: "2px solid rgba(255,255,255,0.35)",
+              color: "#fff", cursor: "pointer",
+            }}
+          >
             {(usuarioAtual || "?").slice(0, 2).toUpperCase()}
           </div>
           <div>
@@ -255,15 +262,16 @@ export default function TelaHome({
             style={{
               padding: "16px",
               border: `1.5px solid ${
-                proximoJogo      ? "#fde68a" :
+                proximoJogo           ? "#fde68a" :
                 jogoStatus === "live" ? "#fca5a5" :
                 jogoStatus === "wait" ? "#d1d5db" :
                 "#86efac"
               }`,
-              background: proximoJogo      ? "#fffbeb" :
-                          jogoStatus === "live" ? "#fef2f2" :
-                          jogoStatus === "wait" ? "#f9fafb" :
-                          "#f0fdf4",
+              background:
+                proximoJogo           ? "#fffbeb" :
+                jogoStatus === "live" ? "#fef2f2" :
+                jogoStatus === "wait" ? "#f9fafb" :
+                "#f0fdf4",
               cursor: proximoJogo ? "default" : "pointer",
             }}
             onClick={() => !proximoJogo && jogoDestaque && setJogoSel(jogoDestaque)}
@@ -351,7 +359,7 @@ export default function TelaHome({
                     }}
                     value={palR[jogoDestaque.id]?.gols2 ?? ""}
                     onClick={e => e.stopPropagation()}
-                    onChange={e => setPalLocal(jogoDestaque.id, "gols2", e.target.value, jogoDestaque.dt)}
+                    onChange={handleGols2Change}
                     placeholder="0"
                   />
                   {golsSuspeito(palR[jogoDestaque.id]?.gols2 ?? "") && (
@@ -359,6 +367,7 @@ export default function TelaHome({
                   )}
                 </div>
                 <button
+                  id={`home_confirmar_${jogoDestaque.id}`}
                   className="btn-primary"
                   style={{ flex: 1, padding: "16px 8px", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                   onClick={async e => { e.stopPropagation(); await confirmarPalpite(jogoDestaque); }}
@@ -451,7 +460,7 @@ export default function TelaHome({
             label: "Campeão",
             sub: palCampeao
               ? `${F[palCampeao] || ""} ${palCampeao}`
-              : "Seu palpite",
+              : "Quem vai ganhar?",
             modo: "campeao",
             badge: 0,
           },
@@ -473,7 +482,6 @@ export default function TelaHome({
               position: "relative",
             }}
           >
-            {/* Badge de novidade */}
             {item.badge > 0 && (
               <div style={{
                 position: "absolute", top: 10, right: 10,
