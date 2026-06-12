@@ -208,7 +208,7 @@ export default function TelaRanking({
                 {premio && (
                   <div style={{ color: "#16a34a", fontWeight: 700, marginBottom: 6 }}>💰 R$ {premio.valor}</div>
                 )}
-                {!isPagante && (
+                {!isPagante && isMe && (
                   <div style={{ marginTop: 4 }}>
                     {prazoEncerrado ? (
                       <div style={{ fontSize: 11, color: "#9ca3af" }}>
@@ -219,20 +219,23 @@ export default function TelaRanking({
                         <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 6 }}>
                           ⚠️ Seus pontos não contam para o prêmio
                         </div>
-                        {isMe && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setModo("pix"); }}
-                            style={{
-                              width: "100%", padding: "8px", borderRadius: 8,
-                              border: "none", background: "#16a34a", color: "#fff",
-                              fontWeight: 700, fontSize: 12, cursor: "pointer",
-                            }}
-                          >
-                            💳 Pagar e concorrer →
-                          </button>
-                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setModo("pix"); }}
+                          style={{
+                            width: "100%", padding: "8px", borderRadius: 8,
+                            border: "none", background: "#16a34a", color: "#fff",
+                            fontWeight: 700, fontSize: 12, cursor: "pointer",
+                          }}
+                        >
+                          💳 Pagar e concorrer →
+                        </button>
                       </>
                     )}
+                  </div>
+                )}
+                {!isPagante && !isMe && !prazoEncerrado && (
+                  <div style={{ fontSize: 11, color: "#9ca3af" }}>
+                    ⚠️ Não concorre ao prêmio
                   </div>
                 )}
               </div>
@@ -279,8 +282,8 @@ export default function TelaRanking({
         </div>
       </div>
 
-      {/* AVISO DE PRAZO — só aparece enquanto ainda dá tempo de pagar */}
-      {!prazoEncerrado && (
+      {/* AVISO DE PRAZO — só para quem ainda não pagou e o prazo não encerrou */}
+      {!prazoEncerrado && usuarioAtual && !meusDados?.pago && (
         <div style={{
           marginBottom: 14, padding: "10px 14px", borderRadius: 10,
           background: "#fffbeb", border: "1.5px solid #fde68a",
@@ -294,7 +297,7 @@ export default function TelaRanking({
       )}
 
       {/* MEU CARD de destaque */}
-      {minhaPos > 0 && meusDados && (
+      {minhaPos > 0 && meusDados && usuarioAtual && (
         <div style={{
           background: meusDados.pago
             ? "linear-gradient(135deg,#16a34a,#15803d)"
@@ -305,7 +308,7 @@ export default function TelaRanking({
           <div style={{ fontSize: 28 }}>
             {meusDados.pago
               ? (MEDAL[minhaPos - 1] || `${minhaPos}º`)
-              : `${posGlobalMap[usuarioAtual!]}º`}
+              : `${posGlobalMap[usuarioAtual]}º`}
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: 16 }}>
@@ -318,7 +321,7 @@ export default function TelaRanking({
               <div style={{ fontSize: 12, marginTop: 4, opacity: 0.9 }}>
                 {prazoEncerrado
                   ? "⏰ Prazo encerrado — não concorre ao prêmio"
-                  : <>⚠️ Fora do prêmio — <span style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => setModo("pix")}>pagar agora</span></>
+                  : <><span>⚠️ Fora do prêmio — </span><span style={{ textDecoration: "underline", cursor: "pointer" }} onClick={() => setModo("pix")}>pagar agora</span></>
                 }
               </div>
             )}

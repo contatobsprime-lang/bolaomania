@@ -4,6 +4,7 @@ import { GRUPOS, TODOS_TIMES, F, FASE_L, CONFIG } from "@/lib/constantes";
 import { JOGOS_GRUPO } from "@/data/jogos-grupo";
 import { lock, campLock, tr, fmtD, fmtH } from "@/lib/utils";
 import { calcJogo } from "@/lib/calculos";
+import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
 
 interface Props {
   pago: boolean;
@@ -152,6 +153,7 @@ export default function TelaPalpites({
           <button onClick={salvarGrupo} disabled={salvando} style={{ marginTop: 13, width: "100%", padding: "13px", borderRadius: 12, border: "none", cursor: salvando ? "not-allowed" : "pointer", background: temRasc ? "#16a34a" : "#f3f4f6", color: temRasc ? "#fff" : "#9ca3af", fontFamily: "'Inter',sans-serif", fontWeight: 700, fontSize: 14, transition: "all .2s" }}>
             {salvando ? "Salvando..." : temRasc ? `Salvar palpites — Grupo ${grupoAtivo}` : "Palpites salvos ✓"}
           </button>
+          <ShopeeAffiliateBanner tela="palpites" />
         </>
       )}
 
@@ -188,9 +190,12 @@ export default function TelaPalpites({
             })}
           </div>
           {elim.filter(j => j.fase === faseAtiva && j.time1).length > 0 && (
-            <button onClick={salvarElim} disabled={salvando} style={{ marginTop: 13, width: "100%", padding: "13px", borderRadius: 12, border: "none", cursor: "pointer", background: temRasc ? "#16a34a" : "#f3f4f6", color: temRasc ? "#fff" : "#9ca3af", fontFamily: "'Inter',sans-serif", fontWeight: 700, fontSize: 14 }}>
-              {salvando ? "Salvando..." : temRasc ? `Salvar palpites — ${FASE_L[faseAtiva]}` : "Palpites salvos ✓"}
-            </button>
+            <>
+              <button onClick={salvarElim} disabled={salvando} style={{ marginTop: 13, width: "100%", padding: "13px", borderRadius: 12, border: "none", cursor: "pointer", background: temRasc ? "#16a34a" : "#f3f4f6", color: temRasc ? "#fff" : "#9ca3af", fontFamily: "'Inter',sans-serif", fontWeight: 700, fontSize: 14 }}>
+                {salvando ? "Salvando..." : temRasc ? `Salvar palpites — ${FASE_L[faseAtiva]}` : "Palpites salvos ✓"}
+              </button>
+              <ShopeeAffiliateBanner tela="palpites" />
+            </>
           )}
         </div>
       )}
