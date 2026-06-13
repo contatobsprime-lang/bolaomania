@@ -14,7 +14,7 @@ export default function Onboarding({ onClose }: Props) {
           <i className="ti ti-soccer" style={{ color: "#fff", fontSize: 40 }} />
         </div>
         <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 6, color: "#111827" }}>Bem-vindo ao <span style={{ color: "#16a34a" }}>Bolão 2026!</span></h2>
-        <p style={{ fontSize: 13, color: "#9ca3af", marginBottom: 20, lineHeight: 1.7 }}>EUA · México · Canadá · 11 Jun – 19 Jul 2026</p>
+        <img src="/icon-512x512.png" alt="Bolão 2026" style={{ width: 120, height: 120, marginBottom: 16, borderRadius: 24, objectFit: "cover" }} />
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, textAlign: "left" }}>
           {[
             ["ti ti-target", "Placar exato", `+5 pts (grupos)`],
