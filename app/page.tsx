@@ -166,7 +166,7 @@ export default function App() {
             ]);
             if (us) {
                 const m: any = {};
-                us.forEach((u: any) => { m[u.nome] = { pago: u.pago, camp: u.campeao_palpite || "", email: u.email || "" }; });
+                us.forEach((u: any) => { m[u.nome] = { pago: u.pago, camp: u.campeao_palpite || "", email: u.email || "", avatarCor: u.avatar_cor || "" }; });
                 setUsuarios(m);
             }
             if (ps) {
@@ -714,10 +714,23 @@ export default function App() {
                         )}
                         {modo === "perfil" && (
                             <TelaPerfil
-                                usuarioAtual={usuarioAtual} emailAtual={emailAtual}
-                                pago={pago} meusDados={meusDados} minhaPos={minhaPos}
-                                ranking={ranking} palpitesMap={palpitesMap}
-                                elim={elim} res={res} resE={resE}
+                                usuarioAtual={usuarioAtual}
+                                emailAtual={emailAtual}
+                                pago={pago}
+                                meusDados={meusDados}
+                                minhaPos={minhaPos}
+                                ranking={ranking}
+                                palpitesMap={palpitesMap}
+                                elim={elim}
+                                res={res}
+                                resE={resE}
+                                avatarCor={u.avatarCor || ""}
+                                onAvatarCorChange={(cor) => {
+                                    setUsuarios((prev: any) => ({
+                                        ...prev,
+                                        [usuarioAtual || ""]: { ...prev[usuarioAtual || ""], avatarCor: cor }
+                                    }));
+                                }}
                             />
                         )}
                         {modo === "campeao" && (
