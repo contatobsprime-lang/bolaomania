@@ -29,9 +29,11 @@ export function usePushNotification(usuarioAtual: string | null) {
       applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
     });
 
-    await supabase.from("push_subscriptions").insert({
+    await supabase.from("push_subscriptions").upsert({
       usuario_nome: usuarioAtual,
       subscription: sub.toJSON(),
+    }, {
+      onConflict: "usuario_nome"
     });
   }
 
