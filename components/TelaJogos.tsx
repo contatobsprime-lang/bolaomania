@@ -68,6 +68,7 @@ export default function TelaJogos({
   elim, res, resE, palS, palpitesMap, F, setJogoSel,
 }: Props) {
 
+  const [proximosAberto, setProximosAberto] = useState(false);
   const [encerradosAberto, setEncerradosAberto] = useState(false);
   const ordemFases = ["grupos", "16avos", "oitavas", "quartas", "semi", "final"];
 
@@ -130,6 +131,11 @@ export default function TelaJogos({
     return st === "prox" && new Date(j.dt).toDateString() !== hoje;
   });
 
+  // Ordena próximos por data/hora
+  const jogosProximosOrdenados = [...jogosProximos].sort((a, b) => 
+    new Date(a.dt).getTime() - new Date(b.dt).getTime()
+  );
+
   const jogosEncerrados = faseAtiva === "grupos"
     ? JOGOS_GRUPO.filter(j => {
         const r = res[j.id] || {};
@@ -141,6 +147,10 @@ export default function TelaJogos({
         const tR = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
         return j.time1 && statusJ(j.dt, tR) === "enc";
       });
+
+  // Exibe 6 se fechado, todos se aberto
+  const proximosExibidos = proximosAberto ? jogosProximosOrdenados : jogosProximosOrdenados.slice(0, 6);
+  const encerradosExibidos = encerradosAberto ? jogosEncerrados : jogosEncerrados.slice(0, 6);
 
   function CardJogo({ j, isElim = false }: { j: any; isElim?: boolean }) {
     const r = isElim ? (resE[j.id] || {}) : (res[j.id] || {});
@@ -319,19 +329,27 @@ export default function TelaJogos({
           </>
         )}
 
-        {/* PRÓXIMOS */}
-        {jogosProximos.length > 0 && (
+        {/* PRÓXIMOS — expansível */}
+        {jogosProximosOrdenados.length > 0 && (
           <>
-            <SeparadorSecao
-              icone={<i className="ti ti-calendar" />}
-              label="Próximos"
-              cor="#6b7280"
-            />
-            {jogosProximos.map(j => <CardJogo key={j.id} j={j} isElim={isElim} />)}
+            <div
+              onClick={() => setProximosAberto(a => !a)}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "6px 0", cursor: "pointer",
+              }}
+            >
+              <span style={{ color: "#6b7280", fontSize: 13, display: "flex", alignItems: "center", gap: 5, fontWeight: 700 }}>
+                <i className="ti ti-calendar" /> Próximos ({jogosProximosOrdenados.length})
+              </span>
+              <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
+              <i className={`ti ti-chevron-${proximosAberto ? "up" : "down"}`} style={{ color: "#6b7280", fontSize: 13 }} />
+            </div>
+            {proximosExibidos.map(j => <CardJogo key={j.id} j={j} isElim={isElim} />)}
           </>
         )}
 
-        {/* ENCERRADOS — colapsável */}
+        {/* ENCERRADOS — expansível */}
         {jogosEncerrados.length > 0 && (
           <>
             <div
@@ -347,12 +365,12 @@ export default function TelaJogos({
               <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
               <i className={`ti ti-chevron-${encerradosAberto ? "up" : "down"}`} style={{ color: "#9ca3af", fontSize: 13 }} />
             </div>
-            {encerradosAberto && jogosEncerrados.map(j => <CardJogo key={j.id} j={j} isElim={isElim} />)}
+            {encerradosExibidos.map(j => <CardJogo key={j.id} j={j} isElim={isElim} />)}
           </>
         )}
 
         {/* VAZIO */}
-        {jogosAoVivo.length === 0 && jogosHoje.length === 0 && jogosProximos.length === 0 && jogosEncerrados.length === 0 && (
+        {jogosAoVivo.length === 0 && jogosHoje.length === 0 && jogosProximosOrdenados.length === 0 && jogosEncerrados.length === 0 && (
           <div className="card" style={{ textAlign: "center", padding: "32px", color: "#9ca3af" }}>
             <i className="ti ti-calendar" style={{ fontSize: 28, marginBottom: 8, display: "block" }} />
             Nenhum jogo encontrado
