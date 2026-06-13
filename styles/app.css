@@ -390,6 +390,15 @@ select:focus {
   background: rgba(247, 201, 72, .15);
   color: #92400e;
 }
+.badge.bred {
+  background: rgba(239,68,68,.1);
+  color: #dc2626;
+}
+
+.badge.byellow {
+  background: rgba(251,191,36,.15);
+  color: #92400e;
+}
 
 /* =========================
    SKELETON

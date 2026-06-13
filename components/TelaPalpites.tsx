@@ -154,7 +154,6 @@ export default function TelaPalpites({
           <button onClick={salvarGrupo} disabled={salvando} style={{ marginTop: 13, width: "100%", padding: "13px", borderRadius: 12, border: "none", cursor: salvando ? "not-allowed" : "pointer", background: temRasc ? "#16a34a" : "#f3f4f6", color: temRasc ? "#fff" : "#9ca3af", fontFamily: "'Inter',sans-serif", fontWeight: 700, fontSize: 14, transition: "all .2s" }}>
             {salvando ? "Salvando..." : temRasc ? `Salvar palpites — Grupo ${grupoAtivo}` : "Palpites salvos ✓"}
           </button>
-          <ShopeeAffiliateBanner tela="palpites" />
         </>
       )}
 

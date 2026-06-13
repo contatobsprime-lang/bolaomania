@@ -505,8 +505,6 @@ export default function TelaHome({
           </button>
         ))}
       </div>
-      <ShopeeAffiliateBanner tela="home" />
-
     </div>
   );
 }
