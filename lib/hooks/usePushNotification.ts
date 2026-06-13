@@ -12,6 +12,7 @@ export function usePushNotification(usuarioAtual: string | null) {
 
   async function ativarNotificacoes() {
     if (!usuarioAtual) return;
+
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       alert("Seu navegador não suporta notificações push.");
       return;
@@ -19,6 +20,7 @@ export function usePushNotification(usuarioAtual: string | null) {
 
     const perm = await Notification.requestPermission();
     setPermissao(perm);
+
     if (perm !== "granted") return;
 
     const reg = await navigator.serviceWorker.register("/sw.js");
@@ -29,12 +31,21 @@ export function usePushNotification(usuarioAtual: string | null) {
       applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
     });
 
-    await supabase.from("push_subscriptions").upsert({
-      usuario_nome: usuarioAtual,
-      subscription: sub.toJSON(),
-    }, {
-      onConflict: "usuario_nome"
-    });
+    const { error } = await supabase
+      .from("push_subscriptions")
+      .upsert(
+        {
+          usuario_nome: usuarioAtual,
+          subscription: sub.toJSON(),
+        },
+        {
+          onConflict: "usuario_nome",
+        }
+      );
+
+    if (error) {
+      console.error("Erro ao salvar push:", error.message);
+    }
   }
 
   return { permissao, ativarNotificacoes };
