@@ -26,7 +26,6 @@ interface Props {
   setJogoSel: (j: Jogo) => void;
 }
 
-// Calcula acertos de todos os participantes num jogo
 function calcAcertos(
   jogoId: number,
   palpitesMap: Record<string, any>,
@@ -71,16 +70,12 @@ export default function TelaJogos({
   useEffect(() => {
     for (const r of [1, 2, 3]) {
       const jogosR = JOGOS_GRUPO.filter(j => j.r === r);
-
-      // Prioridade 1: tem jogo ao vivo
       const temLive = jogosR.some(j => {
         const tR = res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "";
         const st = statusJ(j.dt, tR);
         return st === "live" || st === "wait";
       });
       if (temLive) { setRodada(r); return; }
-
-      // Prioridade 2: tem jogo próximo
       const temProx = jogosR.some(j => {
         const tR = res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "";
         return statusJ(j.dt, tR) === "prox";
@@ -94,22 +89,27 @@ export default function TelaJogos({
   useEffect(() => {
     if (faseAtiva !== "grupos") return;
     const jogosR = JOGOS_GRUPO.filter(j => j.r === rodada);
-
     const temLive = jogosR.some(j => {
       const tR = res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "";
-      const st = statusJ(j.dt, tR);
-      return st === "live" || st === "wait";
+      return statusJ(j.dt, tR) === "live" || statusJ(j.dt, tR) === "wait";
     });
     if (temLive) { setStatusF("aovivo"); return; }
-
     const temProx = jogosR.some(j => {
       const tR = res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "";
       return statusJ(j.dt, tR) === "prox";
     });
     if (temProx) { setStatusF("proximos"); return; }
-
     setStatusF("terminados");
   }, [res, rodada, faseAtiva]);
+
+  // Jogos filtrados considerando "Todos" quando status = terminados
+  const jogosDaRodada = statusF === "terminados"
+    ? JOGOS_GRUPO.filter(j => {
+        const r = res[j.id] || {};
+        const tR = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
+        return statusJ(j.dt, tR) === "enc";
+      })
+    : jogosFiltrados;
 
   return (
     <div>
@@ -120,17 +120,17 @@ export default function TelaJogos({
       </div>
 
       {/* NÍVEL 1 — FASES */}
-      <div style={{ display: "flex", gap: 5, marginBottom: 12, flexWrap: "wrap", overflowX: "auto" }}>
+      <div style={{ display: "flex", gap: 5, marginBottom: 14, flexWrap: "wrap" }}>
         {ordemFases.map((f) => (
           <button
             key={f}
-            className={`ftab ${faseAtiva === f ? "on" : "off"}`}
             onClick={() => setFaseAtiva(f)}
             style={{
-              padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb",
-              background: faseAtiva === f ? "#16a34a" : "#f9fafb",
+              padding: "7px 16px", borderRadius: 20,
+              border: `1.5px solid ${faseAtiva === f ? "#16a34a" : "#e5e7eb"}`,
+              background: faseAtiva === f ? "#16a34a" : "#fff",
               color: faseAtiva === f ? "#fff" : "#6b7280",
-              fontWeight: 600, fontSize: 12, cursor: "pointer",
+              fontWeight: 600, fontSize: 13, cursor: "pointer",
               transition: "all .2s", whiteSpace: "nowrap",
             }}
           >
@@ -141,14 +141,20 @@ export default function TelaJogos({
 
       {faseAtiva === "grupos" && (
         <>
-          {/* NÍVEL 2 — STATUS */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+          {/* NÍVEL 2 — STATUS (sutil, texto com underline) */}
+          <div style={{ display: "flex", gap: 20, marginBottom: 14, paddingBottom: 10, borderBottom: "1px solid #f3f4f6" }}>
             {(["proximos", "aovivo", "terminados"] as const).map((s) => (
               <button
                 key={s}
-                className={`stab ${statusF === s ? "on" : "off"}`}
                 onClick={() => setStatusF(s)}
-                style={{ display: "flex", alignItems: "center", gap: 5 }}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  fontSize: 13, fontWeight: statusF === s ? 700 : 500,
+                  color: statusF === s ? "#16a34a" : "#9ca3af",
+                  borderBottom: `2px solid ${statusF === s ? "#16a34a" : "transparent"}`,
+                  paddingBottom: 4, display: "flex", alignItems: "center", gap: 5,
+                  transition: "all .2s",
+                }}
               >
                 {s === "proximos" && <><i className="ti ti-clock" /> Próximos</>}
                 {s === "aovivo" && <><i className="ti ti-broadcast" /> Ao Vivo</>}
@@ -157,36 +163,41 @@ export default function TelaJogos({
             ))}
           </div>
 
-          {/* NÍVEL 3 — RODADAS */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-            {[1, 2, 3].map((r) => (
-              <button
-                key={r}
-                onClick={() => setRodada(r)}
-                style={{
-                  flex: 1, padding: "8px", borderRadius: 8,
-                  border: `1.5px solid ${rodada === r ? "#16a34a" : "#e5e7eb"}`,
-                  background: rodada === r ? "#16a34a" : "#f9fafb",
-                  color: rodada === r ? "#fff" : "#6b7280",
-                  fontWeight: 600, fontSize: 12, cursor: "pointer",
-                  transition: "all .2s",
-                }}
-              >
-                Rodada {r}
-              </button>
-            ))}
-          </div>
+          {/* BANNER SHOPEE */}
+          <ShopeeAffiliateBanner tela="jogos" />
+
+          {/* NÍVEL 3 — RODADAS (discreto, só quando não é terminados) */}
+          {statusF !== "terminados" && (
+            <div style={{ display: "flex", gap: 6, marginBottom: 14, marginTop: 10 }}>
+              {[1, 2, 3].map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setRodada(r)}
+                  style={{
+                    flex: 1, padding: "6px",
+                    borderRadius: 8,
+                    border: "none",
+                    borderBottom: `2px solid ${rodada === r ? "#16a34a" : "#e5e7eb"}`,
+                    background: "transparent",
+                    color: rodada === r ? "#16a34a" : "#9ca3af",
+                    fontWeight: rodada === r ? 700 : 500,
+                    fontSize: 12, cursor: "pointer",
+                    transition: "all .2s",
+                  }}
+                >
+                  Rodada {r}
+                </button>
+              ))}
+            </div>
+          )}
         </>
       )}
 
-      {/* BANNER SHOPEE */}
-      <ShopeeAffiliateBanner tela="jogos" />
-
       {/* JOGOS */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: faseAtiva !== "grupos" ? 12 : 0 }}>
         {faseAtiva === "grupos" ? (
           <>
-            {jogosFiltrados.length === 0 && (
+            {jogosDaRodada.length === 0 && (
               <div className="card" style={{ textAlign: "center", padding: "32px", color: "#9ca3af" }}>
                 <div style={{ fontSize: 28, marginBottom: 8 }}>
                   {statusF === "proximos"
@@ -195,11 +206,11 @@ export default function TelaJogos({
                     ? <i className="ti ti-broadcast" style={{ fontSize: 28 }} />
                     : <i className="ti ti-check" style={{ fontSize: 28 }} />}
                 </div>
-                Nenhum jogo {statusF === "proximos" ? "próximo" : statusF === "aovivo" ? "ao vivo" : "encerrado"} nesta rodada
+                Nenhum jogo {statusF === "proximos" ? "próximo" : statusF === "aovivo" ? "ao vivo" : "encerrado"}
               </div>
             )}
 
-            {jogosFiltrados.map((j) => {
+            {jogosDaRodada.map((j) => {
               const r = res[j.id] || {};
               const tR = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
               const pJ = palS[j.id];
@@ -223,12 +234,10 @@ export default function TelaJogos({
                   className="card"
                   onClick={() => { if (!lk && !tR) setJogoSel(j); }}
                   style={{
-                    padding: "14px",
-                    cursor: !lk && !tR ? "pointer" : "default",
+                    padding: "14px", cursor: !lk && !tR ? "pointer" : "default",
                     border: `1px solid ${st === "live" ? "#fecaca" : mT === "placar" ? "#86efac" : mT === "vencedor" ? "#bfdbfe" : "#e5e7eb"}`,
                   }}
                 >
-                  {/* HEADER DO CARD */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", background: "#f3f4f6", padding: "3px 8px", borderRadius: 6 }}>
@@ -239,33 +248,14 @@ export default function TelaJogos({
                       </span>
                     </div>
                     <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
-                      {!lk && !tR && tP && (
-                        <span className="badge bgr" style={{ fontSize: 9 }}>
-                          <i className="ti ti-check" /> {pJ.gols1}×{pJ.gols2}
-                        </span>
-                      )}
-                      {!lk && !tR && !tP && (
-                        <span className="badge bg" style={{ fontSize: 9 }}>Palpitar</span>
-                      )}
-                      {lk && !tR && (
-                        <span className="badge br" style={{ fontSize: 9 }}>
-                          <i className="ti ti-lock" />
-                        </span>
-                      )}
-                      {st === "live" && (
-                        <span className="badge bred" style={{ fontSize: 9 }}>
-                          <i className="ti ti-broadcast" /> AO VIVO
-                        </span>
-                      )}
-                      {st === "wait" && (
-                        <span className="badge byellow" style={{ fontSize: 9 }}>
-                          <i className="ti ti-hourglass" /> Aguardando
-                        </span>
-                      )}
+                      {!lk && !tR && tP && <span className="badge bgr" style={{ fontSize: 9 }}><i className="ti ti-check" /> {pJ.gols1}×{pJ.gols2}</span>}
+                      {!lk && !tR && !tP && <span className="badge bg" style={{ fontSize: 9 }}>Palpitar</span>}
+                      {lk && !tR && <span className="badge br" style={{ fontSize: 9 }}><i className="ti ti-lock" /></span>}
+                      {st === "live" && <span className="badge bred" style={{ fontSize: 9 }}><i className="ti ti-broadcast" /> AO VIVO</span>}
+                      {st === "wait" && <span className="badge byellow" style={{ fontSize: 9 }}><i className="ti ti-hourglass" /> Aguardando</span>}
                     </div>
                   </div>
 
-                  {/* TIMES E PLACAR */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}>
                       <span style={{ fontSize: 26 }}>{F[j.time1] || "🏳️"}</span>
@@ -289,7 +279,6 @@ export default function TelaJogos({
                     </div>
                   </div>
 
-                  {/* FOOTER — resultado e acertos */}
                   {tR && (
                     <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #f9fafb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ fontSize: 11, color: "#6b7280" }}>
@@ -297,21 +286,11 @@ export default function TelaJogos({
                         {tP ? (
                           <strong style={{ color: mT === "placar" ? "#16a34a" : mT === "vencedor" ? "#2563eb" : "#b91c1c" }}>
                             {pJ.gols1}×{pJ.gols2}{" "}
-                            {mT === "placar"
-                              ? <i className="ti ti-target" />
-                              : mT === "vencedor"
-                              ? <i className="ti ti-check" />
-                              : <i className="ti ti-x" />}
+                            {mT === "placar" ? <i className="ti ti-target" /> : mT === "vencedor" ? <i className="ti ti-check" /> : <i className="ti ti-x" />}
                           </strong>
-                        ) : (
-                          <span style={{ color: "#d1d5db" }}>—</span>
-                        )}
+                        ) : <span style={{ color: "#d1d5db" }}>—</span>}
                       </div>
-                      {nPal > 0 && (
-                        <div style={{ fontSize: 10, color: "#16a34a", fontWeight: 700 }}>
-                          {nAc}/{nPal} acertaram
-                        </div>
-                      )}
+                      {nPal > 0 && <div style={{ fontSize: 10, color: "#16a34a", fontWeight: 700 }}>{nAc}/{nPal} acertaram</div>}
                     </div>
                   )}
                 </div>
@@ -319,140 +298,100 @@ export default function TelaJogos({
             })}
           </>
         ) : (
-          // ELIMINATÓRIAS
           <>
-            {elim.filter(j => j.fase === faseAtiva).length === 0 && (
-              <div className="card" style={{ textAlign: "center", padding: "32px", color: "#d1d5db" }}>
+            {/* BANNER NAS ELIMINATÓRIAS */}
+            <ShopeeAffiliateBanner tela="jogos" />
+
+            {elim.filter(j => j.fase === faseAtiva && j.time1).length === 0 && (
+              <div className="card" style={{ textAlign: "center", padding: "32px", color: "#d1d5db", marginTop: 12 }}>
                 Fase ainda não definida
               </div>
             )}
 
-            {elim
-              .filter(j => j.fase === faseAtiva)
-              .map((j) => {
-                const rE = resE[j.id] || {};
-                const tR = rE.gols1 !== undefined && rE.gols1 !== "" && rE.gols2 !== undefined && rE.gols2 !== "";
-                const pJ = palS[j.id];
-                const tP = pJ && pJ.gols1 !== "" && pJ.gols2 !== "";
-                const lk = lock(j.dt);
-                const st = statusJ(j.dt, tR);
-                let mT = "";
-                if (tR && tP) {
-                  const { tipo } = calcJogo(
-                    parseInt(pJ.gols1), parseInt(pJ.gols2),
-                    parseInt(rE.gols1), parseInt(rE.gols2),
-                    j.fase || "oitavas", rE.penalti || false
-                  );
-                  mT = tipo;
-                }
-                const { nAc, nPal } = tR ? calcAcertos(j.id, palpitesMap, rE, j.fase || "oitavas") : { nAc: 0, nPal: 0 };
-                const time1 = j.time1 || j.home_team_label || "A definir";
-                const time2 = j.time2 || j.away_team_label || "A definir";
-                const indefinido = !j.time1;
-
-                return (
-                  <div
-                    key={j.id}
-                    className="card"
-                    onClick={() => { if (!lk && !tR && !indefinido) setJogoSel(j); }}
-                    style={{
-                      padding: "14px",
-                      cursor: !lk && !tR && !indefinido ? "pointer" : "default",
-                      opacity: indefinido ? 0.6 : 1,
-                      border: `1px solid ${st === "live" ? "#fecaca" : mT === "placar" ? "#86efac" : mT === "vencedor" ? "#bfdbfe" : "#e5e7eb"}`,
-                    }}
-                  >
-                    {/* HEADER */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", background: "#f3f4f6", padding: "3px 8px", borderRadius: 6 }}>
-                          {j.label}
-                        </span>
-                        {j.est && (
-                          <span style={{ fontSize: 11, color: "#6b7280", display: "flex", alignItems: "center", gap: 3 }}>
-                            <i className="ti ti-map-pin" /> {j.est}
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
-                        {!indefinido && !lk && !tR && tP && (
-                          <span className="badge bgr" style={{ fontSize: 9 }}>
-                            <i className="ti ti-check" /> {pJ.gols1}×{pJ.gols2}
-                          </span>
-                        )}
-                        {!indefinido && !lk && !tR && !tP && (
-                          <span className="badge bg" style={{ fontSize: 9 }}>Palpitar</span>
-                        )}
-                        {!indefinido && lk && !tR && (
-                          <span className="badge br" style={{ fontSize: 9 }}>
-                            <i className="ti ti-lock" />
-                          </span>
-                        )}
-                        {st === "live" && (
-                          <span className="badge bred" style={{ fontSize: 9 }}>
-                            <i className="ti ti-broadcast" /> AO VIVO
-                          </span>
-                        )}
-                        {st === "wait" && (
-                          <span className="badge byellow" style={{ fontSize: 9 }}>
-                            <i className="ti ti-hourglass" /> Aguardando
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* TIMES E PLACAR */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}>
-                        <span style={{ fontSize: 26 }}>{F[time1] || "🏳️"}</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, textAlign: "center", color: indefinido ? "#9ca3af" : "#374151" }}>{time1}</span>
-                      </div>
-                      <div style={{ textAlign: "center", padding: "0 12px", minWidth: 80 }}>
-                        {tR ? (
-                          <div style={{ fontWeight: 800, fontSize: 24, fontFamily: "'JetBrains Mono',monospace", color: "#111827", letterSpacing: 2 }}>
-                            {rE.gols1} × {rE.gols2}
-                          </div>
-                        ) : (
-                          <div style={{ fontSize: 13, color: indefinido ? "#d1d5db" : "#374151", fontWeight: 600, fontFamily: "'JetBrains Mono',monospace" }}>
-                            {fmtD(j.dt)}<br />{fmtH(j.dt)}
-                          </div>
-                        )}
-                        {rE.penalti && <div style={{ fontSize: 9, color: "#fbbf24", marginTop: 2 }}>Pênaltis</div>}
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}>
-                        <span style={{ fontSize: 26 }}>{F[time2] || "🏳️"}</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, textAlign: "center", color: indefinido ? "#9ca3af" : "#374151" }}>{time2}</span>
-                      </div>
-                    </div>
-
-                    {/* FOOTER */}
-                    {tR && (
-                      <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #f9fafb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div style={{ fontSize: 11, color: "#6b7280" }}>
-                          Meu palpite:{" "}
-                          {tP ? (
-                            <strong style={{ color: mT === "placar" ? "#16a34a" : mT === "vencedor" ? "#2563eb" : "#b91c1c" }}>
-                              {pJ.gols1}×{pJ.gols2}{" "}
-                              {mT === "placar"
-                                ? <i className="ti ti-target" />
-                                : mT === "vencedor"
-                                ? <i className="ti ti-check" />
-                                : <i className="ti ti-x" />}
-                            </strong>
-                          ) : (
-                            <span style={{ color: "#d1d5db" }}>—</span>
-                          )}
-                        </div>
-                        {nPal > 0 && (
-                          <div style={{ fontSize: 10, color: "#16a34a", fontWeight: 700 }}>
-                            {nAc}/{nPal} acertaram
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+            {elim.filter(j => j.fase === faseAtiva && j.time1).map((j) => {
+              const rE = resE[j.id] || {};
+              const tR = rE.gols1 !== undefined && rE.gols1 !== "" && rE.gols2 !== undefined && rE.gols2 !== "";
+              const pJ = palS[j.id];
+              const tP = pJ && pJ.gols1 !== "" && pJ.gols2 !== "";
+              const lk = lock(j.dt);
+              const st = statusJ(j.dt, tR);
+              let mT = "";
+              if (tR && tP) {
+                const { tipo } = calcJogo(
+                  parseInt(pJ.gols1), parseInt(pJ.gols2),
+                  parseInt(rE.gols1), parseInt(rE.gols2),
+                  j.fase || "oitavas", rE.penalti || false
                 );
-              })}
+                mT = tipo;
+              }
+              const { nAc, nPal } = tR ? calcAcertos(j.id, palpitesMap, rE, j.fase || "oitavas") : { nAc: 0, nPal: 0 };
+
+              return (
+                <div
+                  key={j.id}
+                  className="card"
+                  onClick={() => { if (!lk && !tR) setJogoSel(j); }}
+                  style={{
+                    padding: "14px", cursor: !lk && !tR ? "pointer" : "default",
+                    border: `1px solid ${st === "live" ? "#fecaca" : mT === "placar" ? "#86efac" : mT === "vencedor" ? "#bfdbfe" : "#e5e7eb"}`,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", background: "#f3f4f6", padding: "3px 8px", borderRadius: 6 }}>
+                        {j.label}
+                      </span>
+                      {j.est && <span style={{ fontSize: 11, color: "#6b7280", display: "flex", alignItems: "center", gap: 3 }}><i className="ti ti-map-pin" /> {j.est}</span>}
+                    </div>
+                    <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+                      {!lk && !tR && tP && <span className="badge bgr" style={{ fontSize: 9 }}><i className="ti ti-check" /> {pJ.gols1}×{pJ.gols2}</span>}
+                      {!lk && !tR && !tP && <span className="badge bg" style={{ fontSize: 9 }}>Palpitar</span>}
+                      {lk && !tR && <span className="badge br" style={{ fontSize: 9 }}><i className="ti ti-lock" /></span>}
+                      {st === "live" && <span className="badge bred" style={{ fontSize: 9 }}><i className="ti ti-broadcast" /> AO VIVO</span>}
+                      {st === "wait" && <span className="badge byellow" style={{ fontSize: 9 }}><i className="ti ti-hourglass" /> Aguardando</span>}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}>
+                      <span style={{ fontSize: 26 }}>{F[j.time1] || "🏳️"}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, textAlign: "center" }}>{j.time1}</span>
+                    </div>
+                    <div style={{ textAlign: "center", padding: "0 12px", minWidth: 80 }}>
+                      {tR ? (
+                        <div style={{ fontWeight: 800, fontSize: 24, fontFamily: "'JetBrains Mono',monospace", color: "#111827", letterSpacing: 2 }}>
+                          {rE.gols1} × {rE.gols2}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 13, color: "#374151", fontWeight: 600, fontFamily: "'JetBrains Mono',monospace" }}>
+                          {fmtD(j.dt)}<br />{fmtH(j.dt)}
+                        </div>
+                      )}
+                      {rE.penalti && <div style={{ fontSize: 9, color: "#fbbf24", marginTop: 2 }}>Pênaltis</div>}
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}>
+                      <span style={{ fontSize: 26 }}>{F[j.time2] || "🏳️"}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, textAlign: "center" }}>{j.time2}</span>
+                    </div>
+                  </div>
+
+                  {tR && (
+                    <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #f9fafb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ fontSize: 11, color: "#6b7280" }}>
+                        Meu palpite:{" "}
+                        {tP ? (
+                          <strong style={{ color: mT === "placar" ? "#16a34a" : mT === "vencedor" ? "#2563eb" : "#b91c1c" }}>
+                            {pJ.gols1}×{pJ.gols2}{" "}
+                            {mT === "placar" ? <i className="ti ti-target" /> : mT === "vencedor" ? <i className="ti ti-check" /> : <i className="ti ti-x" />}
+                          </strong>
+                        ) : <span style={{ color: "#d1d5db" }}>—</span>}
+                      </div>
+                      {nPal > 0 && <div style={{ fontSize: 10, color: "#16a34a", fontWeight: 700 }}>{nAc}/{nPal} acertaram</div>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </>
         )}
       </div>
