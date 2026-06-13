@@ -9,7 +9,7 @@ export const JOGOS_GRUPO = [
   { id: 5,  g: "C", r: 1, fase: "grupos", time1: "Brasil",          time2: "Marrocos",         dt: "2026-06-13T19:00:00", est: "MetLife Stadium",       cid: "Nova York/NJ"     },
   { id: 6,  g: "C", r: 1, fase: "grupos", time1: "Haiti",           time2: "Escócia",          dt: "2026-06-13T22:00:00", est: "Gillette Stadium",      cid: "Boston"           },
   { id: 7,  g: "D", r: 1, fase: "grupos", time1: "Estados Unidos",  time2: "Paraguai",         dt: "2026-06-12T22:00:00", est: "SoFi Stadium",          cid: "Los Angeles"      },
-  { id: 8,  g: "D", r: 1, fase: "grupos", time1: "Austrália",       time2: "Turquia",          dt: "2026-06-13T01:00:00", est: "BC Place",              cid: "Vancouver"        },
+  { id: 8,  g: "D", r: 1, fase: "grupos", time1: "Austrália",       time2: "Turquia",          dt: "2026-06-14T01:00:00", est: "BC Place",              cid: "Vancouver"        },
   { id: 9,  g: "E", r: 1, fase: "grupos", time1: "Alemanha",        time2: "Curaçao",          dt: "2026-06-14T14:00:00", est: "NRG Stadium",           cid: "Houston"          },
   { id: 10, g: "E", r: 1, fase: "grupos", time1: "Costa do Marfim", time2: "Equador",          dt: "2026-06-14T20:00:00", est: "Lincoln Financial",     cid: "Filadélfia"       },
   { id: 11, g: "F", r: 1, fase: "grupos", time1: "Holanda",   time2: "Japão",            dt: "2026-06-14T17:00:00", est: "AT&T Stadium",          cid: "Dallas"           },
