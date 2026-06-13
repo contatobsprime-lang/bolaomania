@@ -349,7 +349,7 @@ export default function TelaRanking({
           ))}
         </div>
       </div>
-
+      <ShopeeAffiliateBanner tela="ranking" />
       {/* RANKING UNIFICADO */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
         {rankingUnificado.map((p) => (

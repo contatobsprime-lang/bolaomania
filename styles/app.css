@@ -11,7 +11,7 @@
   --text: #111827;
   --muted: #6b7280;
   --border: #e5e7eb;
-  --shadow: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 /* =========================
@@ -37,9 +37,11 @@ body {
 ::-webkit-scrollbar {
   width: 4px;
 }
+
 ::-webkit-scrollbar-track {
   background: #f0f2f5;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--primary);
   border-radius: 2px;
@@ -52,6 +54,7 @@ input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
 }
+
 input[type=number] {
   -moz-appearance: textfield;
   appearance: textfield;
@@ -65,21 +68,39 @@ input[type=number] {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes confetti {
-  0% { transform: translateY(0) rotate(0); opacity: 1; }
-  100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+  0% {
+    transform: translateY(0) rotate(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-100px) rotate(720deg);
+    opacity: 0;
+  }
 }
 
 @keyframes pulse {
-  50% { opacity: .5; }
+  50% {
+    opacity: .5;
+  }
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* =========================
@@ -168,7 +189,7 @@ select {
 .inp:focus,
 select:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(22,163,74,.08);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, .08);
 }
 
 /* =========================
@@ -206,7 +227,7 @@ select:focus {
   background: #fff;
   border-top: 1px solid var(--border);
   display: flex;
-  box-shadow: 0 -2px 12px rgba(0,0,0,.06);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, .06);
   z-index: 200;
 }
 
@@ -240,13 +261,16 @@ select:focus {
 }
 
 .navbtn.active .ni {
-  filter: drop-shadow(0 0 4px rgba(22,163,74,.35));
+  filter: drop-shadow(0 0 4px rgba(22, 163, 74, .35));
 }
 
 /* =========================
    TABS
 ========================= */
-.tab, .stab, .ftab, .gtab {
+.tab,
+.stab,
+.ftab,
+.gtab {
   font-family: 'Inter', sans-serif;
   border-radius: 10px;
   border: 1.5px solid var(--border);
@@ -313,7 +337,7 @@ select:focus {
   border: 1px solid var(--border);
   border-radius: 16px;
   margin-bottom: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
 }
 
 .jogo-card-header,
@@ -326,6 +350,7 @@ select:focus {
 .jogo-card-body {
   padding: 18px 16px;
 }
+
 /* =========================
    BADGES (status do jogo)
 ========================= */
@@ -342,18 +367,28 @@ select:focus {
 }
 
 .badge.br {
-  background: rgba(239,68,68,.1);
+  background: rgba(239, 68, 68, .1);
   color: #dc2626;
 }
 
 .badge.bg {
-  background: rgba(22,163,74,.1);
+  background: rgba(22, 163, 74, .1);
   color: #16a34a;
 }
 
 .badge.bb {
-  background: rgba(37,99,235,.1);
+  background: rgba(37, 99, 235, .1);
   color: #2563eb;
+}
+
+.badge.bp {
+  background: rgba(245, 158, 11, .1);
+  color: #d97706;
+}
+
+.badge.bgr {
+  background: rgba(247, 201, 72, .15);
+  color: #92400e;
 }
 
 /* =========================
