@@ -30,7 +30,7 @@ export default function TelaRegras({ premios }: Props) {
       rows: [
         ["🏆", `Campeão da Copa (fecha 04/07)`, `+${CONFIG.bonusCampeao} pts`], 
         ["🥅", "Pênalti: vale o vencedor final", "sem placar exato"], 
-        ["🔒", `Palpites fecham ${CONFIG.minutesBloqueio}min antes do jogo`, "automático"]
+        ["🔒", `Palpites fecham ${CONFIG.minutesBloqueio}min antes do jogo começar`, "automático"]
       ] 
     },
     { 
