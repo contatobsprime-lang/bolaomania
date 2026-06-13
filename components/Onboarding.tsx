@@ -31,8 +31,9 @@ export default function Onboarding({ onClose }: Props) {
             </div>
           ))}
         </div>
-        <button className="btn-primary" onClick={onClose}>Entendido, vamos lá! 🚀</button>
-      </div>
+        <button className="btn-primary" onClick={onClose}>
+          Entendido, vamos lá! <i className="ti ti-rocket" style={{ marginLeft: 6 }} />
+        </button>      </div>
     </div>
   );
 }
