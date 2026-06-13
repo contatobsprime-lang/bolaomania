@@ -30,7 +30,7 @@ export function useUIState() {
 
     // Pull refresh
     const [pullRefresh, setPullRefresh] = useState(0);
-    const [notif30min, setNotif30min] = useState(false);
+    const [notif15min, setNotif15min] = useState(false);
 
     // Salvar modo no localStorage
     useEffect(() => {
@@ -91,7 +91,7 @@ export function useUIState() {
         // Pull
         pullRefresh,
         setPullRefresh,
-        notif30min,
-        setNotif30min,
+        notif15min,
+        setNotif15min,
     };
 }

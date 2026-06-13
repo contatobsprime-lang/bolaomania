@@ -1,7 +1,7 @@
 export const CONFIG = {
   valorCota: 10,
   bonusCampeao: 20,
-  minutesBloqueio: 30,
+  minutesBloqueio: 10,
   bloqueioCompetidor: "2026-07-04T18:00:00",
   comissao: 0.10,
   premios: { 1: 0.36, 2: 0.22, 3: 0.14, 4: 0.10, 5: 0.08 } as Record<number, number>,

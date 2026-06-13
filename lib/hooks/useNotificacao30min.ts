@@ -37,8 +37,8 @@ export function useNotificacao30min(
       const prox = sem[0];
       const diffMs = new Date(prox.dt).getTime() - Date.now();
 
-      // Notifica se estiver dentro de 30min e ainda não notificou esse jogo
-      if (diffMs > 0 && diffMs <= 35 * 60 * 1000 && !notificados.current.has(prox.id)) {
+      // Notifica se estiver dentro de 15min e ainda não notificou esse jogo
+      if (diffMs > 0 && diffMs <= 15 * 60 * 1000 && !notificados.current.has(prox.id)) {
         notificados.current.add(prox.id);
         setPopupJogo(prox);
         setTimeout(() => setPopupJogo(null), 15000);

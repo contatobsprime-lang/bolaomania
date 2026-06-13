@@ -60,7 +60,7 @@ export default function PopupNotificacao({ popupJogo, setPopupJogo, setJogoSel, 
             fontWeight: 600,
           }}
         >
-          Começa em 30 minutos!
+          Começa em 15 minutos!
         </div>
 
         <div
