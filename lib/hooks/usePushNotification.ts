@@ -37,6 +37,7 @@ export function usePushNotification(usuarioAtual: string | null) {
         {
           usuario_nome: usuarioAtual,
           subscription: sub.toJSON(),
+          endpoint: sub.endpoint,
         },
         {
           onConflict: "usuario_nome",
