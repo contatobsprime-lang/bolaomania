@@ -4,7 +4,7 @@ import "@/styles/app.css";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import PixQRCode from "@/components/PixQRCode";
-import { CONFIG, ADMIN_EMAIL, GRUPOS, TODOS_TIMES, F, MEDAL, FASE_L, ELIM_TMPL } from "@/lib/constantes";
+import { CONFIG, ADMIN_EMAIL, GRUPOS, TODOS_TIMES, F, MEDAL, FASE_L } from "@/lib/constantes";
 import { JOGOS_GRUPO } from "@/data/jogos-grupo";
 import type { Jogo, Palpite, Resultado, Usuario, DetJogo, RankingEntry, ToastTipo, Modo, StatusFiltro, HistRodada, Tela } from "@/lib/types";
 import { lock, campLock, fmtD, fmtDLong, fmtH, tr, statusJ } from "@/lib/utils";
@@ -184,16 +184,29 @@ export default function App() {
                 rs.forEach((r: any) => { m[r.jogo_id] = { gols1: r.gols1?.toString() ?? "", gols2: r.gols2?.toString() ?? "", penalti: r.penalti }; });
                 setRes(m);
             }
+            // FIX: monta elim diretamente do Supabase, sem depender de estado anterior
             if (es && es.length > 0) {
-                setElim(prev => prev.map((j: any) => {
-                    const e = es.find((el: any) => el.jogo_id === j.id);
-                    if (!e) return j;
-                    return { ...j, time1: e.time1 || "", time2: e.time2 || "", dt: e.data_hora || j.dt, est: e.estadio || j.est, cid: e.cidade || j.cid };
-                }));
+                setElim(es
+                    .filter((e: any) => e.jogo_id !== null)
+                    .map((e: any) => ({
+                        id: e.jogo_id,
+                        fase: e.fase || "",
+                        label: e.label || "",
+                        dt: e.data_hora || "",
+                        est: e.est || "",
+                        cid: e.cid || "",
+                        time1: e.time1 || "",
+                        time2: e.time2 || "",
+                    }))
+                );
                 const m: any = {};
                 es.forEach((e: any) => {
-                    if (e.gols1 !== null || e.gols2 !== null)
-                        m[e.jogo_id] = { gols1: e.gols1?.toString() ?? "", gols2: e.gols2?.toString() ?? "", penalti: e.penalti };
+                    if (e.jogo_id !== null && e.gols1 !== null && e.gols2 !== null)
+                        m[e.jogo_id] = {
+                            gols1: e.gols1?.toString() ?? "",
+                            gols2: e.gols2?.toString() ?? "",
+                            penalti: e.penalti,
+                        };
                 });
                 setResE(m);
             }

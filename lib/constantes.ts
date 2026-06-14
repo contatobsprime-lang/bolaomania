@@ -60,4 +60,3 @@ export const FASE_L: Record<string, string> = {
   final: "Final",
 };
 
-export const ELIM_TMPL: any[] = [];
