@@ -387,13 +387,6 @@ export default function TelaJogos({
             Nenhum jogo encontrado
           </div>
         )}
-
-        {/* ELIMINATÓRIAS SEM TIMES */}
-        {isElim && elim.filter(j => j.fase === faseAtiva && j.time1).length === 0 && (
-          <div className="card" style={{ textAlign: "center", padding: "32px", color: "#d1d5db" }}>
-            Fase ainda não definida
-          </div>
-        )}
       </div>
     </div>
   );
