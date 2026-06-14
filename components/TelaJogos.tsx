@@ -88,12 +88,17 @@ export default function TelaJogos({
     for (const r of [1, 2, 3]) {
       const jogosR = JOGOS_GRUPO.filter(j => j.r === r);
       const temLive = jogosR.some(j => {
-        const tR = res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "";
+        // FIX: verifica gols1 E gols2
+        const tR =
+          res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "" &&
+          res[j.id]?.gols2 !== undefined && res[j.id]?.gols2 !== "";
         return statusJ(j.dt, tR) === "live" || statusJ(j.dt, tR) === "wait";
       });
       if (temLive) { setRodada(r); return; }
       const temProx = jogosR.some(j => {
-        const tR = res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "";
+        const tR =
+          res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "" &&
+          res[j.id]?.gols2 !== undefined && res[j.id]?.gols2 !== "";
         return statusJ(j.dt, tR) === "prox";
       });
       if (temProx) { setRodada(r); return; }
@@ -117,12 +122,16 @@ export default function TelaJogos({
   });
 
   const hoje = new Date().toDateString();
-  const jogosHoje = jogosRodadaAtual.filter(j => {
-    const r = getResultado(j);
-    const tR = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
-    const st = statusJ(j.dt, tR);
-    return st === "prox" && new Date(j.dt).toDateString() === hoje;
-  });
+
+  // FIX: ordenado por horário crescente
+  const jogosHoje = jogosRodadaAtual
+    .filter(j => {
+      const r = getResultado(j);
+      const tR = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
+      const st = statusJ(j.dt, tR);
+      return st === "prox" && new Date(j.dt).toDateString() === hoje;
+    })
+    .sort((a, b) => new Date(a.dt).getTime() - new Date(b.dt).getTime());
 
   const jogosProximos = jogosRodadaAtual.filter(j => {
     const r = getResultado(j);
@@ -131,12 +140,13 @@ export default function TelaJogos({
     return st === "prox" && new Date(j.dt).toDateString() !== hoje;
   });
 
-  // Ordena próximos por data/hora
-  const jogosProximosOrdenados = [...jogosProximos].sort((a, b) => 
+  // Ordena próximos por data/hora crescente
+  const jogosProximosOrdenados = [...jogosProximos].sort((a, b) =>
     new Date(a.dt).getTime() - new Date(b.dt).getTime()
   );
 
-  const jogosEncerrados = faseAtiva === "grupos"
+  // FIX: todos os encerrados (todas as rodadas), ordenados decrescente (mais recente primeiro)
+  const jogosEncerrados = (faseAtiva === "grupos"
     ? JOGOS_GRUPO.filter(j => {
         const r = res[j.id] || {};
         const tR = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
@@ -146,11 +156,12 @@ export default function TelaJogos({
         const r = resE[j.id] || {};
         const tR = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
         return j.time1 && statusJ(j.dt, tR) === "enc";
-      });
+      })
+  ).sort((a, b) => new Date(b.dt).getTime() - new Date(a.dt).getTime());
 
-  // Exibe 6 se fechado, todos se aberto
-  const proximosExibidos = proximosAberto ? jogosProximosOrdenados : jogosProximosOrdenados.slice(0, 6);
-  const encerradosExibidos = encerradosAberto ? jogosEncerrados : jogosEncerrados.slice(0, 6);
+  // Exibe 4 se fechado, todos se aberto
+  const proximosExibidos = proximosAberto ? jogosProximosOrdenados : jogosProximosOrdenados.slice(0, 4);
+  const encerradosExibidos = encerradosAberto ? jogosEncerrados : jogosEncerrados.slice(0, 4);
 
   function CardJogo({ j, isElim = false }: { j: any; isElim?: boolean }) {
     const r = isElim ? (resE[j.id] || {}) : (res[j.id] || {});
