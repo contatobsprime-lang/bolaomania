@@ -698,6 +698,7 @@ export default function App() {
                                 usuarioAtual={usuarioAtual} ranking={ranking}
                                 premios={premios} palpitesMap={palpitesMap}
                                 elim={elim} res={res} resE={resE}
+                                jogosGrupo={jogosGrupo}
                                 MEDAL={MEDAL} F={F}
                                 mostrarToast={mostrarToast}
                                 setModo={setModo}
@@ -707,8 +708,8 @@ export default function App() {
                         {modo === "historico" && (
                             <TelaHistorico
                                 palS={palS} elim={elim} res={res} resE={resE}
-                                campAtual={campAtual} campR={campR} F={F}
                                 jogosGrupo={jogosGrupo}
+                                campAtual={campAtual} campR={campR} F={F}
                             />
                         )}
                         {modo === "pix" && (
@@ -728,6 +729,7 @@ export default function App() {
                                 pago={pago} meusDados={meusDados} minhaPos={minhaPos}
                                 ranking={ranking} palpitesMap={palpitesMap}
                                 elim={elim} res={res} resE={resE}
+                                jogosGrupo={jogosGrupo}
                                 avatarCor={u.avatarCor || ""}
                                 onAvatarCorChange={(cor) => {
                                     setUsuarios((prev: any) => ({ ...prev, [usuarioAtual || ""]: { ...prev[usuarioAtual || ""], avatarCor: cor } }));

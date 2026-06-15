@@ -30,6 +30,7 @@ export function avatarColorPadrao(nome: string): string {
 }
 
 interface Props {
+  jogosGrupo: any[];
   usuarioAtual: string | null;
   emailAtual: string | null;
   pago: boolean;
@@ -49,8 +50,9 @@ export default function TelaPerfil({
   usuarioAtual, emailAtual, pago, meusDados, minhaPos,
   ranking, palpitesMap, elim, res, resE,
   avatarCor, onAvatarCorChange,
+  jogosGrupo,
 }: Props) {
-  const badges = calcBadges(usuarioAtual || "", ranking, palpitesMap, elim, res, resE);
+  const badges = calcBadges(usuarioAtual || "", ranking, palpitesMap, elim, res, resE, jogosGrupo);
   const [salvandoCor, setSalvandoCor] = useState(false);
   const [editandoCor, setEditandoCor] = useState(false);
 
