@@ -19,7 +19,7 @@ interface Props {
 export default function TelaHistorico({ palS, elim, res, resE, campAtual, campR, F, jogosGrupo }: Props) {
   const [histRodada, setHistRodada] = useState<HistRodada>("todas");
 
-  const dados = calcTudo(palS, elim, res, resE, campAtual, campR);
+  const dados = calcTudo(palS, elim, res, resE, campAtual, campR, jogosGrupo);
   let comRes = dados.det.filter((d: DetJogo) => d.res);
   if (histRodada !== "todas") comRes = comRes.filter((d: DetJogo) => d.r === histRodada);
 
