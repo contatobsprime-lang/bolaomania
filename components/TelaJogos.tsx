@@ -50,15 +50,41 @@ function calcAcertos(
 
 function SeparadorSecao({ icone, label, cor }: { icone: React.ReactNode; label: string; cor: string }) {
   return (
-    <div style={{
-      display: "flex", alignItems: "center", gap: 8,
-      padding: "6px 0", marginBottom: 6,
-    }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", marginBottom: 6 }}>
       <span style={{ color: cor, fontSize: 13, display: "flex", alignItems: "center", gap: 5, fontWeight: 700 }}>
         {icone} {label}
       </span>
       <div style={{ flex: 1, height: 1, background: `${cor}33` }} />
     </div>
+  );
+}
+
+function BotaoVerMais({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: "100%", padding: "12px 16px",
+        background: "transparent",
+        border: "1.5px solid #e5e7eb",
+        borderRadius: 12, cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "all .2s",
+        fontFamily: "'Inter',sans-serif",
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = "#16a34a";
+        e.currentTarget.style.background = "#f0fdf4";
+        (e.currentTarget.querySelector("span") as HTMLElement).style.color = "#16a34a";
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = "#e5e7eb";
+        e.currentTarget.style.background = "transparent";
+        (e.currentTarget.querySelector("span") as HTMLElement).style.color = "#374151";
+      }}
+    >
+      <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Ver mais jogos</span>
+    </button>
   );
 }
 
@@ -73,7 +99,6 @@ export default function TelaJogos({
   const [encerradosExibidos, setEncerradosExibidos] = useState(4);
   const ordemFases = ["grupos", "16avos", "oitavas", "quartas", "semi", "final"];
 
-  // Auto-detecta fase ativa
   useEffect(() => {
     let faseDetectada = "grupos";
     for (const fase of ordemFases) {
@@ -84,21 +109,16 @@ export default function TelaJogos({
     setFaseAtiva(faseDetectada);
   }, [elim]);
 
-  // Auto-detecta rodada ativa
   useEffect(() => {
     for (const r of [1, 2, 3]) {
       const jogosR = jogosGrupo.filter(j => j.r === r);
       const temLive = jogosR.some(j => {
-        const tR =
-          res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "" &&
-          res[j.id]?.gols2 !== undefined && res[j.id]?.gols2 !== "";
+        const tR = res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "" && res[j.id]?.gols2 !== undefined && res[j.id]?.gols2 !== "";
         return statusJ(j.dt, tR) === "live" || statusJ(j.dt, tR) === "wait";
       });
       if (temLive) { setRodada(r); return; }
       const temProx = jogosR.some(j => {
-        const tR =
-          res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "" &&
-          res[j.id]?.gols2 !== undefined && res[j.id]?.gols2 !== "";
+        const tR = res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "" && res[j.id]?.gols2 !== undefined && res[j.id]?.gols2 !== "";
         return statusJ(j.dt, tR) === "prox";
       });
       if (temProx) { setRodada(r); return; }
@@ -106,7 +126,6 @@ export default function TelaJogos({
     setRodada(3);
   }, [res]);
 
-  // Classifica jogos da rodada em seções
   const jogosRodadaAtual = faseAtiva === "grupos"
     ? jogosGrupo.filter(j => j.r === rodada)
     : elim.filter(j => j.fase === faseAtiva && j.time1);
@@ -156,11 +175,8 @@ export default function TelaJogos({
       })
   ).sort((a, b) => new Date(b.dt).getTime() - new Date(a.dt).getTime());
 
-  // Exibe conforme o número definido
   const proximosExibidosList = jogosProximosOrdenados.slice(0, proximosExibidos);
   const encerradosExibidosList = jogosEncerrados.slice(0, encerradosExibidos);
-
-  // Verifica se há mais para mostrar
   const temMaisProximos = jogosProximosOrdenados.length > proximosExibidos;
   const temMaisEncerrados = jogosEncerrados.length > encerradosExibidos;
 
@@ -196,7 +212,6 @@ export default function TelaJogos({
           animation: isLive ? "pulse 2s infinite" : undefined,
         }}
       >
-        {/* HEADER */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", background: "#f3f4f6", padding: "3px 8px", borderRadius: 6 }}>
@@ -214,7 +229,6 @@ export default function TelaJogos({
           </div>
         </div>
 
-        {/* TIMES */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}>
             <span style={{ fontSize: 26 }}>{F[j.time1] || "🏳️"}</span>
@@ -238,7 +252,6 @@ export default function TelaJogos({
           </div>
         </div>
 
-        {/* FOOTER */}
         {tR && (
           <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #f9fafb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: 11, color: "#6b7280" }}>
@@ -261,13 +274,11 @@ export default function TelaJogos({
 
   return (
     <div>
-      {/* TÍTULO */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
         <i className="ti ti-calendar" style={{ fontSize: 20, color: "#16a34a" }} />
         <div style={{ fontWeight: 800, fontSize: 18 }}>Agenda de Jogos</div>
       </div>
 
-      {/* NÍVEL 1 — FASES */}
       <div style={{ display: "flex", gap: 5, marginBottom: 14, flexWrap: "wrap" }}>
         {ordemFases.map((f) => (
           <button
@@ -287,10 +298,8 @@ export default function TelaJogos({
         ))}
       </div>
 
-      {/* BANNER */}
       <ShopeeAffiliateBanner tela="jogos" />
 
-      {/* RODADAS — só na fase grupos */}
       {faseAtiva === "grupos" && (
         <div style={{ display: "flex", gap: 6, margin: "12px 0" }}>
           {[1, 2, 3].map((r) => (
@@ -314,98 +323,38 @@ export default function TelaJogos({
         </div>
       )}
 
-      {/* LISTA DE JOGOS */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
 
-        {/* AO VIVO */}
         {jogosAoVivo.length > 0 && (
           <>
-            <SeparadorSecao
-              icone={<i className="ti ti-broadcast" />}
-              label="Ao Vivo"
-              cor="#dc2626"
-            />
+            <SeparadorSecao icone={<i className="ti ti-broadcast" />} label="Ao Vivo" cor="#dc2626" />
             {jogosAoVivo.map(j => <CardJogo key={j.id} j={j} isElim={isElim} />)}
           </>
         )}
 
-        {/* HOJE */}
         {jogosHoje.length > 0 && (
           <>
-            <SeparadorSecao
-              icone={<i className="ti ti-clock" />}
-              label="Hoje"
-              cor="#16a34a"
-            />
+            <SeparadorSecao icone={<i className="ti ti-clock" />} label="Hoje" cor="#16a34a" />
             {jogosHoje.map(j => <CardJogo key={j.id} j={j} isElim={isElim} />)}
           </>
         )}
 
-        {/* PRÓXIMOS — com paginação */}
         {jogosProximosOrdenados.length > 0 && (
           <>
-            <SeparadorSecao
-              icone={<i className="ti ti-calendar" />}
-              label={`Próximos (${jogosProximosOrdenados.length})`}
-              cor="#6b7280"
-            />
+            <SeparadorSecao icone={<i className="ti ti-calendar" />} label={`Próximos (${jogosProximosOrdenados.length})`} cor="#6b7280" />
             {proximosExibidosList.map(j => <CardJogo key={j.id} j={j} isElim={isElim} />)}
-            
-            {temMaisProximos && (
-              <button
-                onClick={() => setProximosExibidos(prev => prev + 4)}
-                style={{
-                  width: "100%", padding: "10px",
-                  background: "#f3f4f6", border: "1px solid #e5e7eb",
-                  borderRadius: 8, color: "#6b7280", fontWeight: 600,
-                  fontSize: 13, cursor: "pointer", transition: "all .2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#e5e7eb";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#f3f4f6";
-                }}
-              >
-                Ver mais
-              </button>
-            )}
+            {temMaisProximos && <BotaoVerMais onClick={() => setProximosExibidos(prev => prev + 4)} />}
           </>
         )}
 
-        {/* ENCERRADOS — com paginação */}
         {jogosEncerrados.length > 0 && (
           <>
-            <SeparadorSecao
-              icone={<i className="ti ti-check" />}
-              label={`Encerrados (${jogosEncerrados.length})`}
-              cor="#9ca3af"
-            />
+            <SeparadorSecao icone={<i className="ti ti-check" />} label={`Encerrados (${jogosEncerrados.length})`} cor="#9ca3af" />
             {encerradosExibidosList.map(j => <CardJogo key={j.id} j={j} isElim={isElim} />)}
-            
-            {temMaisEncerrados && (
-              <button
-                onClick={() => setEncerradosExibidos(prev => prev + 4)}
-                style={{
-                  width: "100%", padding: "10px",
-                  background: "#f3f4f6", border: "1px solid #e5e7eb",
-                  borderRadius: 8, color: "#6b7280", fontWeight: 600,
-                  fontSize: 13, cursor: "pointer", transition: "all .2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#e5e7eb";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#f3f4f6";
-                }}
-              >
-                Ver mais
-              </button>
-            )}
+            {temMaisEncerrados && <BotaoVerMais onClick={() => setEncerradosExibidos(prev => prev + 4)} />}
           </>
         )}
 
-        {/* VAZIO */}
         {jogosAoVivo.length === 0 && jogosHoje.length === 0 && jogosProximosOrdenados.length === 0 && jogosEncerrados.length === 0 && (
           <div className="card" style={{ textAlign: "center", padding: "32px", color: "#9ca3af" }}>
             <i className="ti ti-calendar" style={{ fontSize: 28, marginBottom: 8, display: "block" }} />
