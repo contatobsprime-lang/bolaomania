@@ -1,9 +1,17 @@
 import { CONFIG } from "@/lib/constantes";
 
+// ─── Força UTC em strings sem timezone ───────────────────────────────────────
+
+function toUTC(dt: string): Date {
+  if (!dt) return new Date(NaN);
+  const s = dt.includes("Z") || dt.includes("+") || dt.includes("-", 10) ? dt : dt + "Z";
+  return new Date(s);
+}
+
 // ─── Bloqueio de palpites ────────────────────────────────────────────────────
 
 export function lock(dt: string): boolean {
-  return (new Date(dt).getTime() - Date.now()) / 60000 <= CONFIG.minutesBloqueio;
+  return (toUTC(dt).getTime() - Date.now()) / 60000 <= CONFIG.minutesBloqueio;
 }
 
 export function campLock(): boolean {
@@ -13,21 +21,21 @@ export function campLock(): boolean {
 // ─── Formatação de datas ─────────────────────────────────────────────────────
 
 export function fmtDLong(iso: string): string {
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
+  return toUTC(iso).toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
 }
 
 export function fmtD(iso: string): string {
-  return new Date(iso).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
+  return toUTC(iso).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
 }
 
 export function fmtH(iso: string): string {
-  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return toUTC(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
 // ─── Countdown ───────────────────────────────────────────────────────────────
 
 export function tr(iso: string): string | null {
-  const d = (new Date(iso).getTime() - Date.now()) / 1000;
+  const d = (toUTC(iso).getTime() - Date.now()) / 1000;
   if (d <= 0) return null;
   const dy = Math.floor(d / 86400);
   const h  = Math.floor(d / 3600);
@@ -40,10 +48,11 @@ export function tr(iso: string): string | null {
 
 // ─── Status do jogo ──────────────────────────────────────────────────────────
 
-export function statusJ(dt: string, temRes: boolean): "enc" | "live" | "wait" | "prox" {
-  const diff = Date.now() - new Date(dt).getTime();
+export function statusJ(dt: string, temRes: boolean, isElim = false): "enc" | "live" | "wait" | "prox" {
+  const diff = Date.now() - toUTC(dt).getTime();
+  const janela = isElim ? 200 * 60000 : 130 * 60000;
   if (temRes) return "enc";
-  if (diff > 0 && diff < 130 * 60000) return "live";
-  if (diff >= 130 * 60000) return "wait";
+  if (diff > 0 && diff < janela) return "live";
+  if (diff >= janela) return "wait";
   return "prox";
 }
