@@ -33,7 +33,7 @@ export default function TelaRanking({
   minhaPos, meusDados, usuarioAtual, ranking, premios,
   palpitesMap, elim, res, resE, MEDAL, F,
   mostrarToast, setModo,
-  isLoading = false, error = null
+  isLoading = false, error = null,
   jogosGrupo,
 }: Props) {
   const [detUser, setDetUser] = useState<string | null>(null);
