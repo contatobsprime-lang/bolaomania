@@ -34,7 +34,7 @@ interface Props {
 export default function TelaAdmin({
   adminModo, setAdminModo, grupoAtivo, setGrupoAtivo, faseAtiva, setFaseAtiva,
   res, resE, elim, updateElimT, campR, atualizarCampR, usuarios, ranking, nPart, nPagos,
-  togglePago, resetarSenha, mostrarToast, F, setResAdmin, setResEAdmin
+  togglePago, resetarSenha, mostrarToast, F, setResAdmin, setResEAdmin,
   jogosGrupo,
 }: Props) {
   const [resetNome, setResetNome] = useState<string | null>(null);
