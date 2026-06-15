@@ -68,8 +68,8 @@ export default function TelaJogos({
   elim, res, resE, palS, palpitesMap, F, setJogoSel,
 }: Props) {
 
-  const [proximosAberto, setProximosAberto] = useState(false);
-  const [encerradosAberto, setEncerradosAberto] = useState(false);
+  const [proximosExibidos, setProximosExibidos] = useState(4);
+  const [encerradosExibidos, setEncerradosExibidos] = useState(4);
   const ordemFases = ["grupos", "16avos", "oitavas", "quartas", "semi", "final"];
 
   // Auto-detecta fase ativa
@@ -88,7 +88,6 @@ export default function TelaJogos({
     for (const r of [1, 2, 3]) {
       const jogosR = JOGOS_GRUPO.filter(j => j.r === r);
       const temLive = jogosR.some(j => {
-        // FIX: verifica gols1 E gols2
         const tR =
           res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "" &&
           res[j.id]?.gols2 !== undefined && res[j.id]?.gols2 !== "";
@@ -123,7 +122,6 @@ export default function TelaJogos({
 
   const hoje = new Date().toDateString();
 
-  // FIX: ordenado por horário crescente
   const jogosHoje = jogosRodadaAtual
     .filter(j => {
       const r = getResultado(j);
@@ -140,12 +138,10 @@ export default function TelaJogos({
     return st === "prox" && new Date(j.dt).toDateString() !== hoje;
   });
 
-  // Ordena próximos por data/hora crescente
   const jogosProximosOrdenados = [...jogosProximos].sort((a, b) =>
     new Date(a.dt).getTime() - new Date(b.dt).getTime()
   );
 
-  // FIX: todos os encerrados (todas as rodadas), ordenados decrescente (mais recente primeiro)
   const jogosEncerrados = (faseAtiva === "grupos"
     ? JOGOS_GRUPO.filter(j => {
         const r = res[j.id] || {};
@@ -159,9 +155,13 @@ export default function TelaJogos({
       })
   ).sort((a, b) => new Date(b.dt).getTime() - new Date(a.dt).getTime());
 
-  // Exibe 4 se fechado, todos se aberto
-  const proximosExibidos = proximosAberto ? jogosProximosOrdenados : jogosProximosOrdenados.slice(0, 4);
-  const encerradosExibidos = encerradosAberto ? jogosEncerrados : jogosEncerrados.slice(0, 4);
+  // Exibe conforme o número definido
+  const proximosExibidosList = jogosProximosOrdenados.slice(0, proximosExibidos);
+  const encerradosExibidosList = jogosEncerrados.slice(0, encerradosExibidos);
+
+  // Verifica se há mais para mostrar
+  const temMaisProximos = jogosProximosOrdenados.length > proximosExibidos;
+  const temMaisEncerrados = jogosEncerrados.length > encerradosExibidos;
 
   function CardJogo({ j, isElim = false }: { j: any; isElim?: boolean }) {
     const r = isElim ? (resE[j.id] || {}) : (res[j.id] || {});
@@ -340,43 +340,67 @@ export default function TelaJogos({
           </>
         )}
 
-        {/* PRÓXIMOS — expansível */}
+        {/* PRÓXIMOS — com paginação */}
         {jogosProximosOrdenados.length > 0 && (
           <>
-            <div
-              onClick={() => setProximosAberto(a => !a)}
-              style={{
-                display: "flex", alignItems: "center", gap: 8,
-                padding: "6px 0", cursor: "pointer",
-              }}
-            >
-              <span style={{ color: "#6b7280", fontSize: 13, display: "flex", alignItems: "center", gap: 5, fontWeight: 700 }}>
-                <i className="ti ti-calendar" /> Próximos ({jogosProximosOrdenados.length})
-              </span>
-              <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
-              <i className={`ti ti-chevron-${proximosAberto ? "up" : "down"}`} style={{ color: "#6b7280", fontSize: 13 }} />
-            </div>
-            {proximosExibidos.map(j => <CardJogo key={j.id} j={j} isElim={isElim} />)}
+            <SeparadorSecao
+              icone={<i className="ti ti-calendar" />}
+              label={`Próximos (${jogosProximosOrdenados.length})`}
+              cor="#6b7280"
+            />
+            {proximosExibidosList.map(j => <CardJogo key={j.id} j={j} isElim={isElim} />)}
+            
+            {temMaisProximos && (
+              <button
+                onClick={() => setProximosExibidos(prev => prev + 4)}
+                style={{
+                  width: "100%", padding: "10px",
+                  background: "#f3f4f6", border: "1px solid #e5e7eb",
+                  borderRadius: 8, color: "#6b7280", fontWeight: 600,
+                  fontSize: 13, cursor: "pointer", transition: "all .2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#e5e7eb";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "#f3f4f6";
+                }}
+              >
+                Ver mais
+              </button>
+            )}
           </>
         )}
 
-        {/* ENCERRADOS — expansível */}
+        {/* ENCERRADOS — com paginação */}
         {jogosEncerrados.length > 0 && (
           <>
-            <div
-              onClick={() => setEncerradosAberto(a => !a)}
-              style={{
-                display: "flex", alignItems: "center", gap: 8,
-                padding: "6px 0", cursor: "pointer",
-              }}
-            >
-              <span style={{ color: "#9ca3af", fontSize: 13, display: "flex", alignItems: "center", gap: 5, fontWeight: 700 }}>
-                <i className="ti ti-check" /> Encerrados ({jogosEncerrados.length})
-              </span>
-              <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
-              <i className={`ti ti-chevron-${encerradosAberto ? "up" : "down"}`} style={{ color: "#9ca3af", fontSize: 13 }} />
-            </div>
-            {encerradosExibidos.map(j => <CardJogo key={j.id} j={j} isElim={isElim} />)}
+            <SeparadorSecao
+              icone={<i className="ti ti-check" />}
+              label={`Encerrados (${jogosEncerrados.length})`}
+              cor="#9ca3af"
+            />
+            {encerradosExibidosList.map(j => <CardJogo key={j.id} j={j} isElim={isElim} />)}
+            
+            {temMaisEncerrados && (
+              <button
+                onClick={() => setEncerradosExibidos(prev => prev + 4)}
+                style={{
+                  width: "100%", padding: "10px",
+                  background: "#f3f4f6", border: "1px solid #e5e7eb",
+                  borderRadius: 8, color: "#6b7280", fontWeight: 600,
+                  fontSize: 13, cursor: "pointer", transition: "all .2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#e5e7eb";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "#f3f4f6";
+                }}
+              >
+                Ver mais
+              </button>
+            )}
           </>
         )}
 
