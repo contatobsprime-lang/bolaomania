@@ -4,7 +4,7 @@ import { CONFIG } from "@/lib/constantes";
 
 function toUTC(dt: string): Date {
   if (!dt) return new Date(NaN);
-  const s = dt.includes("T") ? (dt.includes("Z") || dt.includes("+") ? dt : dt + "Z") : dt.replace(" ", "T") + "Z";
+  const s = dt.includes("T") ? dt : dt.replace(" ", "T");
   return new Date(s);
 }
 
