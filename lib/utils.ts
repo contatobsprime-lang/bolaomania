@@ -21,15 +21,15 @@ export function campLock(): boolean {
 // ─── Formatação de datas ─────────────────────────────────────────────────────
 
 export function fmtDLong(iso: string): string {
-  return toUTC(iso).toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
+  return toUTC(iso).toLocaleDateString("pt-BR", { day: "numeric", month: "long", timeZone: "America/Sao_Paulo" });
 }
 
 export function fmtD(iso: string): string {
-  return toUTC(iso).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
+  return toUTC(iso).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
 }
 
 export function fmtH(iso: string): string {
-  return toUTC(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return toUTC(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
 }
 
 // ─── Countdown ───────────────────────────────────────────────────────────────
