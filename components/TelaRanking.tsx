@@ -11,6 +11,7 @@ const PRAZO_PAGAMENTO = new Date("2026-06-28T18:00:00Z");
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Props {
+  jogosGrupo: any[];
   minhaPos: number;
   meusDados: any;
   usuarioAtual: string | null;
@@ -33,6 +34,7 @@ export default function TelaRanking({
   palpitesMap, elim, res, resE, MEDAL, F,
   mostrarToast, setModo,
   isLoading = false, error = null
+  jogosGrupo,
 }: Props) {
   const [detUser, setDetUser] = useState<string | null>(null);
 
