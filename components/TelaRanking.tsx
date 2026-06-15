@@ -123,7 +123,7 @@ export default function TelaRanking({
     const isPagante = !!p.pago;
     const posPagante = isPagante ? rankingPagantes.findIndex(r => r.nome === p.nome) : -1;
     const premio = isPagante ? premios.dist.find((d: any) => d.pos === posPagante + 1) : null;
-    const badges = calcBadges(p.nome, ranking, palpitesMap, elim, res, resE);
+    const badges = calcBadges(p.nome, ranking, palpitesMap, elim, res, resE, jogosGrupo);
     const posExibida = isPagante ? (MEDAL[posPagante] || `${posPagante + 1}º`) : `${posGlobalMap[p.nome]}º`;
 
     // Badge de status para não-pagantes
