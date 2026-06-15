@@ -1,5 +1,4 @@
 import { CONFIG } from "@/lib/constantes";
-import { JOGOS_GRUPO } from "@/data/jogos-grupo";
 import type { Jogo, RankingEntry, DetJogo } from "@/lib/types";
 
 // ─── Pontos por fase ─────────────────────────────────────────────────────────
@@ -26,7 +25,6 @@ export function calcJogo(
     return { pts: 0, tipo: "erro" };
   }
 
-  // eliminatórias
   if (pen) {
     if (vP === vR && vR !== 0) return { pts: p.vencedor, tipo: "vencedor" };
     return { pts: 0, tipo: "erro" };
@@ -44,13 +42,16 @@ export function calcTudo(
   res: Record<number, { gols1: string; gols2: string; penalti?: boolean }>,
   resE: Record<number, { gols1: string; gols2: string; penalti?: boolean }>,
   camp: string,
-  campR: string
+  campR: string,
+  jogosGrupo: any[]  // ← novo parâmetro
 ) {
   let pontos = 0, acertos = 0, placares = 0;
   const det: DetJogo[] = [];
 
-  [...JOGOS_GRUPO, ...elim].forEach(j => {
-    const r = j.g ? res[j.id] : resE[j.id];
+  [...jogosGrupo, ...elim].forEach(j => {
+    // jogosGrupo usa j.grupo, elim usa j.g — normaliza
+    const isGrupo = !!(j.grupo || j.g);
+    const r = (j.grupo || j.g) ? res[j.id] : resE[j.id];
     const p = pals[j.id];
 
     if (!r || r.gols1 === "" || r.gols1 === undefined || r.gols2 === "" || r.gols2 === undefined) return;
@@ -63,7 +64,8 @@ export function calcTudo(
     const pg1 = parseInt(p.gols1), pg2 = parseInt(p.gols2);
     if (isNaN(rg1) || isNaN(rg2) || isNaN(pg1) || isNaN(pg2)) return;
 
-    const { pts: pt, tipo } = calcJogo(pg1, pg2, rg1, rg2, j.fase ?? "grupos", r.penalti ?? false);
+    const fase = j.grupo ? "grupos" : (j.fase ?? "grupos");
+    const { pts: pt, tipo } = calcJogo(pg1, pg2, rg1, rg2, fase, r.penalti ?? false);
     pontos += pt;
     if (tipo === "placar" || tipo === "vencedor") acertos++;
     if (tipo === "placar") placares++;
@@ -113,20 +115,21 @@ export function calcBadges(
   palpitesMap: Record<string, Record<number, { gols1: string; gols2: string }>>,
   elim: Jogo[],
   res: Record<number, { gols1: string; gols2: string; penalti?: boolean }>,
-  resE: Record<number, { gols1: string; gols2: string; penalti?: boolean }>
+  resE: Record<number, { gols1: string; gols2: string; penalti?: boolean }>,
+  jogosGrupo: any[]  // ← novo parâmetro
 ): string[] {
   const badges: string[] = [];
   const pals = palpitesMap[nome] ?? {};
 
-  const fases: { label: string; jogos: Jogo[]; isElim: boolean }[] = [
-    { label: "R1",      jogos: JOGOS_GRUPO.filter(j => j.r === 1),    isElim: false },
-    { label: "R2",      jogos: JOGOS_GRUPO.filter(j => j.r === 2),    isElim: false },
-    { label: "R3",      jogos: JOGOS_GRUPO.filter(j => j.r === 3),    isElim: false },
-    { label: "16avos",  jogos: elim.filter(j => j.fase === "16avos"), isElim: true  },
-    { label: "Oitavas", jogos: elim.filter(j => j.fase === "oitavas"),isElim: true  },
-    { label: "Quartas", jogos: elim.filter(j => j.fase === "quartas"),isElim: true  },
-    { label: "Semi",    jogos: elim.filter(j => j.fase === "semi"),   isElim: true  },
-    { label: "Final",   jogos: elim.filter(j => j.fase === "final"),  isElim: true  },
+  const fases: { label: string; jogos: any[]; isElim: boolean }[] = [
+    { label: "R1",      jogos: jogosGrupo.filter(j => j.rodada === 1),  isElim: false },
+    { label: "R2",      jogos: jogosGrupo.filter(j => j.rodada === 2),  isElim: false },
+    { label: "R3",      jogos: jogosGrupo.filter(j => j.rodada === 3),  isElim: false },
+    { label: "16avos",  jogos: elim.filter(j => j.fase === "16avos"),   isElim: true  },
+    { label: "Oitavas", jogos: elim.filter(j => j.fase === "oitavas"),  isElim: true  },
+    { label: "Quartas", jogos: elim.filter(j => j.fase === "quartas"),  isElim: true  },
+    { label: "Semi",    jogos: elim.filter(j => j.fase === "semi"),     isElim: true  },
+    { label: "Final",   jogos: elim.filter(j => j.fase === "final"),    isElim: true  },
   ];
 
   fases.forEach(({ label, jogos, isElim }) => {
@@ -139,7 +142,12 @@ export function calcBadges(
         const r = isElim ? resE[j.id] : res[j.id];
         const pal = palpites[j.id];
         if (!r || !pal || r.gols1 === "" || pal.gols1 === "") return;
-        const { pts: pt } = calcJogo(parseInt(pal.gols1), parseInt(pal.gols2), parseInt(r.gols1), parseInt(r.gols2), j.fase ?? "grupos", r.penalti ?? false);
+        const fase = isElim ? (j.fase ?? "grupos") : "grupos";
+        const { pts: pt } = calcJogo(
+          parseInt(pal.gols1), parseInt(pal.gols2),
+          parseInt(r.gols1), parseInt(r.gols2),
+          fase, r.penalti ?? false
+        );
         total += pt;
       });
       if (total > maxPts) { maxPts = total; craque = p.nome; }
@@ -148,15 +156,18 @@ export function calcBadges(
   });
 
   // ─── Vidente — 3 placares exatos consecutivos ─────────────────────────────
-
   let seq = 0;
-  [...JOGOS_GRUPO]
-    .sort((a, b) => new Date(a.dt).getTime() - new Date(b.dt).getTime())
+  [...jogosGrupo]
+    .sort((a, b) => new Date(a.data_hora).getTime() - new Date(b.data_hora).getTime())
     .forEach(j => {
       const r = res[j.id];
       const pal = pals[j.id];
       if (!r || !pal || r.gols1 === "" || pal.gols1 === "") { seq = 0; return; }
-      const { tipo } = calcJogo(parseInt(pal.gols1), parseInt(pal.gols2), parseInt(r.gols1), parseInt(r.gols2), "grupos", false);
+      const { tipo } = calcJogo(
+        parseInt(pal.gols1), parseInt(pal.gols2),
+        parseInt(r.gols1), parseInt(r.gols2),
+        "grupos", false
+      );
       if (tipo === "placar") {
         seq++;
         if (seq >= 3 && !badges.includes("🔮 Vidente")) badges.push("🔮 Vidente");
@@ -166,12 +177,11 @@ export function calcBadges(
     });
 
   // ─── Fiel — palpitou em todos os jogos de grupo ───────────────────────────
-
-  const palpitados = JOGOS_GRUPO.filter(j => {
+  const palpitados = jogosGrupo.filter(j => {
     const p = pals[j.id];
     return p && p.gols1 !== "" && p.gols2 !== "";
   }).length;
-  if (palpitados === JOGOS_GRUPO.length) badges.push("⚽ Fiel");
+  if (palpitados === jogosGrupo.length) badges.push("⚽ Fiel");
 
   return badges;
 }

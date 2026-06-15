@@ -6,6 +6,7 @@ import { calcTudo } from "@/lib/calculos";
 import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
 
 interface Props {
+  jogosGrupo: any[];
   palS: Record<number, { gols1: string; gols2: string }>;
   elim: Jogo[];
   res: Record<number, { gols1: string; gols2: string; penalti?: boolean }>;
@@ -15,7 +16,7 @@ interface Props {
   F: Record<string, string>;
 }
 
-export default function TelaHistorico({ palS, elim, res, resE, campAtual, campR, F }: Props) {
+export default function TelaHistorico({ palS, elim, res, resE, campAtual, campR, F, jogosGrupo }: Props) {
   const [histRodada, setHistRodada] = useState<HistRodada>("todas");
 
   const dados = calcTudo(palS, elim, res, resE, campAtual, campR);

@@ -3,13 +3,13 @@
 import { useEffect } from "react";
 import { useState } from "react";
 import type { Jogo, StatusFiltro } from "@/lib/types";
-import { JOGOS_GRUPO } from "@/data/jogos-grupo";
 import { FASE_L } from "@/lib/constantes";
 import { lock, fmtD, fmtH, statusJ } from "@/lib/utils";
 import { calcJogo } from "@/lib/calculos";
 import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
 
 interface Props {
+  jogosGrupo: any[];
   statusF: StatusFiltro;
   setStatusF: (s: StatusFiltro) => void;
   rodada: number;
@@ -66,6 +66,7 @@ export default function TelaJogos({
   statusF, setStatusF, rodada, setRodada,
   faseAtiva, setFaseAtiva, jogosFiltrados, jogosRodada,
   elim, res, resE, palS, palpitesMap, F, setJogoSel,
+  jogosGrupo,
 }: Props) {
 
   const [proximosExibidos, setProximosExibidos] = useState(4);
@@ -86,7 +87,7 @@ export default function TelaJogos({
   // Auto-detecta rodada ativa
   useEffect(() => {
     for (const r of [1, 2, 3]) {
-      const jogosR = JOGOS_GRUPO.filter(j => j.r === r);
+      const jogosR = jogosGrupo.filter(j => j.r === r);
       const temLive = jogosR.some(j => {
         const tR =
           res[j.id]?.gols1 !== undefined && res[j.id]?.gols1 !== "" &&
@@ -107,7 +108,7 @@ export default function TelaJogos({
 
   // Classifica jogos da rodada em seções
   const jogosRodadaAtual = faseAtiva === "grupos"
-    ? JOGOS_GRUPO.filter(j => j.r === rodada)
+    ? jogosGrupo.filter(j => j.r === rodada)
     : elim.filter(j => j.fase === faseAtiva && j.time1);
 
   function getResultado(j: any) {
@@ -143,7 +144,7 @@ export default function TelaJogos({
   );
 
   const jogosEncerrados = (faseAtiva === "grupos"
-    ? JOGOS_GRUPO.filter(j => {
+    ? jogosGrupo.filter(j => {
         const r = res[j.id] || {};
         const tR = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
         return statusJ(j.dt, tR) === "enc";

@@ -1,12 +1,12 @@
 "use client";
 
 import { GRUPOS, TODOS_TIMES, F, FASE_L, CONFIG } from "@/lib/constantes";
-import { JOGOS_GRUPO } from "@/data/jogos-grupo";
 import { lock, campLock, tr, fmtD, fmtH } from "@/lib/utils";
 import { calcJogo } from "@/lib/calculos";
 import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
 
 interface Props {
+  jogosGrupo: any[];
   pago: boolean;
   campAtual: string;
   faseAtiva: string;
@@ -33,6 +33,7 @@ export default function TelaPalpites({
   palR, palS, res, salvando, temRasc,
   setModo, setFaseAtiva, setGrupoAtivo, setJogoSel,
   setCamp, setPalLocal, salvarGrupo, salvarElim,
+  jogosGrupo,
 }: Props) {
   return (
     <div>
@@ -97,7 +98,7 @@ export default function TelaPalpites({
             {GRUPOS[grupoAtivo].map(t => <span key={t} style={{ fontSize: 10, color: "#6b7280" }}>{F[t]} {t}</span>)}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            {JOGOS_GRUPO.filter(j => j.g === grupoAtivo).map(j => {
+            {jogosGrupo.filter(j => j.g === grupoAtivo).map(j => {
               const r = res[j.id] || {};
               const tR = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
               const pL = palR[j.id] || {};
@@ -135,7 +136,7 @@ export default function TelaPalpites({
                           onChange={e => {
                             setPalLocal(j.id, "gols2", e.target.value, j.dt);
                             if (e.target.value !== "") {
-                              const prox = JOGOS_GRUPO.filter(jj => jj.g === grupoAtivo && jj.id > j.id && !lock(jj.dt))[0];
+                              const prox = jogosGrupo.filter(jj => jj.g === grupoAtivo && jj.id > j.id && !lock(jj.dt))[0];
                               if (prox) { const nx = document.getElementById(`g1_${prox.id}`); if (nx) nx.focus(); } else { setJogoSel(j); }
                             }
                           }} placeholder="—" />

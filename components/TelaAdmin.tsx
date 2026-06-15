@@ -3,10 +3,10 @@
 import { useState } from "react";
 import type { Jogo, RankingEntry } from "@/lib/types";
 import { CONFIG, GRUPOS, TODOS_TIMES, FASE_L, MEDAL } from "@/lib/constantes";
-import { JOGOS_GRUPO } from "@/data/jogos-grupo";
 import { fmtD, fmtH } from "@/lib/utils";
 
 interface Props {
+  jogosGrupo: any[];
   adminModo: string;
   setAdminModo: (m: string) => void;
   grupoAtivo: string;
@@ -35,6 +35,7 @@ export default function TelaAdmin({
   adminModo, setAdminModo, grupoAtivo, setGrupoAtivo, faseAtiva, setFaseAtiva,
   res, resE, elim, updateElimT, campR, atualizarCampR, usuarios, ranking, nPart, nPagos,
   togglePago, resetarSenha, mostrarToast, F, setResAdmin, setResEAdmin
+  jogosGrupo,
 }: Props) {
   const [resetNome, setResetNome] = useState<string | null>(null);
 
@@ -61,7 +62,7 @@ export default function TelaAdmin({
             {GRUPOS[grupoAtivo].map(t => <span key={t} style={{ fontSize: 10, color: "#6b7280" }}>{F[t]} {t}</span>)}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            {JOGOS_GRUPO.filter((j: Jogo) => j.g === grupoAtivo).map((j: Jogo) => {
+            {jogosGrupo.filter((j: Jogo) => j.g === grupoAtivo).map((j: Jogo) => {
               const r = res[j.id] || {};
               const temRes = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
               return (
@@ -91,7 +92,7 @@ export default function TelaAdmin({
             })}
           </div>
           <div style={{ marginTop: 10, padding: "9px 13px", background: "rgba(74,222,128,.04)", border: "1px solid rgba(74,222,128,.12)", borderRadius: 9, display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 11, color: "#6b7280" }}>{Object.entries(res).filter(([, r]) => r.gols1 !== "" && r.gols1 !== undefined).length}/{JOGOS_GRUPO.length} resultados</span>            <span className="badge bgr">☁ Supabase</span>
+            <span style={{ fontSize: 11, color: "#6b7280" }}>{Object.entries(res).filter(([, r]) => r.gols1 !== "" && r.gols1 !== undefined).length}/{jogosGrupo.length} resultados</span>            <span className="badge bgr">☁ Supabase</span>
           </div>
         </div>
       )}

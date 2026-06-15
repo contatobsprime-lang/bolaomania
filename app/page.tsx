@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import PixQRCode from "@/components/PixQRCode";
 import { CONFIG, ADMIN_EMAIL, GRUPOS, TODOS_TIMES, F, MEDAL, FASE_L } from "@/lib/constantes";
-import { JOGOS_GRUPO } from "@/data/jogos-grupo";
+import { JOGOS_GRUPO as JOGOS_GRUPO_FALLBACK } from "@/data/jogos-grupo";
 import type { Jogo, Palpite, Resultado, Usuario, DetJogo, RankingEntry, ToastTipo, Modo, StatusFiltro, HistRodada, Tela } from "@/lib/types";
 import { lock, campLock, fmtD, fmtDLong, fmtH, tr, statusJ } from "@/lib/utils";
 import { calcJogo, calcTudo, calcPremios, desempate, calcBadges, pts } from "@/lib/calculos";
@@ -31,6 +31,22 @@ import { useNotificacao30min } from "@/lib/hooks/useNotificacao30min";
 import { usePushNotification } from "@/lib/hooks/usePushNotification";
 import Onboarding from "@/components/Onboarding";
 
+// Normaliza jogo do Supabase para o formato interno do app
+function normalizarJogo(j: any) {
+    return {
+        id: j.id,
+        g: j.grupo,
+        r: j.rodada,
+        fase: "grupos",
+        time1: j.time1,
+        time2: j.time2,
+        dt: j.data_hora,
+        est: j.estadio,
+        cid: j.cidade,
+        status_jogo: j.status_jogo,
+        finalizado: j.finalizado,
+    };
+}
 
 export default function App() {
     const [tela, setTela] = useState<Tela>("login");
@@ -51,8 +67,7 @@ export default function App() {
     const [cadSenha, setCadSenha] = useState("");
     const [cadSenha2, setCadSenha2] = useState("");
     const [cadErro, setCadErro] = useState("");
-    const [esqueceuEmail, setEsqueceuEmail] = useState("");
-    const [esqueceuSent, setEsqueceuSent] = useState(false);
+    const [jogosGrupo, setJogosGrupo] = useState<any[]>(JOGOS_GRUPO_FALLBACK); // ← fallback imediato
     const [elim, setElim] = useState<any[]>([]);
     const [palpitesMap, setPalpitesMap] = useState<any>({});
     const [rascunho, setRascunho] = useState<any>({});
@@ -65,22 +80,16 @@ export default function App() {
         typeof window !== "undefined" ? localStorage.getItem("modoAtual") || "home" : "home"
     );
     const [adminModo, setAdminModo] = useState("resultados");
-    const [copChave, setCopChave] = useState(false);
-    const [copCola, setCopCola] = useState(false);
-    const [copRank, setCopRank] = useState(false);
     const [rodada, setRodada] = useState(1);
     const [statusF, setStatusF] = useState<"proximos" | "aovivo" | "terminados">("proximos");
     const [jogoSel, setJogoSel] = useState<any | null>(null);
-    const [histRodada, setHistRodada] = useState<number | "todas">("todas");
     const [feed, setFeed] = useState<any[]>([]);
     const [, setTick] = useState(0);
     const [sessaoCarregando, setSessaoCarregando] = useState(true);
     const [pullRefresh, setPullRefresh] = useState(0);
 
     const { popupJogo, setPopupJogo, countdown } = useNotificacao30min(
-        palpitesMap,
-        elim,
-        usuarioAtual
+        palpitesMap, elim, usuarioAtual
     );
 
     const { permissao, ativarNotificacoes } = usePushNotification(usuarioAtual);
@@ -158,18 +167,28 @@ export default function App() {
 
     const carregarTudo = useCallback(async () => {
         try {
-            const [{ data: us }, { data: ps }, { data: rs }, { data: es }, { data: cfg }] = await Promise.all([
+            const [
+                { data: us },
+                { data: ps },
+                { data: rs },
+                { data: es },
+                { data: cfg },
+                { data: jgs },
+            ] = await Promise.all([
                 supabase.from("usuarios").select("*"),
                 supabase.from("palpites").select("*"),
                 supabase.from("resultados").select("*"),
                 supabase.from("eliminatorias").select("*"),
                 supabase.from("config").select("*"),
+                supabase.from("jogos").select("*").order("data_hora"), // ← tabela jogos
             ]);
+
             if (us) {
                 const m: any = {};
                 us.forEach((u: any) => { m[u.nome] = { pago: u.pago, camp: u.campeao_palpite || "", email: u.email || "", avatarCor: u.avatar_cor || "" }; });
                 setUsuarios(m);
             }
+
             if (ps) {
                 const m: any = {};
                 ps.forEach((p: any) => {
@@ -179,12 +198,13 @@ export default function App() {
                 setPalpitesMap(m);
                 setRascunho(m);
             }
+
             if (rs) {
                 const m: any = {};
                 rs.forEach((r: any) => { m[r.jogo_id] = { gols1: r.gols1?.toString() ?? "", gols2: r.gols2?.toString() ?? "", penalti: r.penalti }; });
                 setRes(m);
             }
-            // FIX: monta elim diretamente do Supabase, sem depender de estado anterior
+
             if (es && es.length > 0) {
                 setElim(es
                     .filter((e: any) => e.jogo_id !== null)
@@ -202,19 +222,27 @@ export default function App() {
                 const m: any = {};
                 es.forEach((e: any) => {
                     if (e.jogo_id !== null && e.gols1 !== null && e.gols2 !== null)
-                        m[e.jogo_id] = {
-                            gols1: e.gols1?.toString() ?? "",
-                            gols2: e.gols2?.toString() ?? "",
-                            penalti: e.penalti,
-                        };
+                        m[e.jogo_id] = { gols1: e.gols1?.toString() ?? "", gols2: e.gols2?.toString() ?? "", penalti: e.penalti };
                 });
                 setResE(m);
             }
+
+            // ← jogos de grupo do Supabase com fallback
+            if (jgs && jgs.length > 0) {
+                setJogosGrupo(jgs.map(normalizarJogo));
+            } else {
+                setJogosGrupo(JOGOS_GRUPO_FALLBACK);
+            }
+
             if (cfg) {
                 const c = cfg.find((x: any) => x.chave === "campeao_real");
                 if (c) setCampR(c.valor || "");
             }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+            // fallback em caso de erro total
+            setJogosGrupo(JOGOS_GRUPO_FALLBACK);
+        }
     }, []);
 
     useEffect(() => {
@@ -223,6 +251,7 @@ export default function App() {
         const canal = supabase.channel("realtime-bolao")
             .on("postgres_changes", { event: "*", schema: "public", table: "resultados" }, () => carregarTudo())
             .on("postgres_changes", { event: "*", schema: "public", table: "eliminatorias" }, () => carregarTudo())
+            .on("postgres_changes", { event: "*", schema: "public", table: "jogos" }, () => carregarTudo())
             .on("postgres_changes", { event: "*", schema: "public", table: "usuarios" }, () => carregarTudo())
             .subscribe();
         return () => { clearInterval(r); supabase.removeChannel(canal); };
@@ -262,29 +291,32 @@ export default function App() {
     const nPagos = Object.values(usuarios).filter((u: any) => u.pago).length;
     const premios = calcPremios(nPagos);
     const totSalvos = Object.values(palS).filter((p: any) => p.gols1 !== "" && p.gols1 !== undefined && p.gols2 !== "" && p.gols2 !== undefined).length;
-    const totJogos = JOGOS_GRUPO.length + elim.filter((j: any) => j.time1).length;
+    const totJogos = jogosGrupo.length + elim.filter((j: any) => j.time1).length;
     const pctPal = totJogos > 0 ? Math.round(totSalvos / totJogos * 100) : 0;
     const temRasc = Object.keys(palR).some(id => { const r = palR[id], s = palS[id] || {}; return r.gols1 !== s.gols1 || r.gols2 !== s.gols2; });
 
     const ranking = Object.keys(usuarios).map(nome => {
         const p = palpitesMap[nome] || {}, camp = usuarios[nome]?.camp || "";
-        const { pontos, acertos, placares, bonusCampeao, det } = calcTudo(p, elim, res, resE, camp, campR);
+        const { pontos, acertos, placares, bonusCampeao, det } = calcTudo(p, elim, res, resE, camp, campR, jogosGrupo);
         return { nome, pontos, acertos, placares, bonusCampeao, det, campeao: camp, campR, pago: usuarios[nome]?.pago };
     }).sort(desempate);
 
     const minhaPos = ranking.findIndex(r => r.nome === usuarioAtual) + 1;
     const meusDados = ranking.find(r => r.nome === usuarioAtual);
 
-    const jogosRodada = JOGOS_GRUPO
+    const jogosRodada = jogosGrupo
         .filter(j => j.r === rodada)
         .sort((a, b) => new Date(a.dt).getTime() - new Date(b.dt).getTime());
+
     const jogosFiltrados = jogosRodada.filter(j => {
         const r = res[j.id] || {};
         const temRes = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
-        const s = statusJ(j.dt, temRes);
-        if (statusF === "proximos") return s === "prox";
-        if (statusF === "aovivo") return s === "live" || s === "wait";
-        return s === "enc";
+        const st = j.status_jogo === "inprogress" ? "live"
+            : j.status_jogo === "finished" || temRes ? "enc"
+            : "prox";
+        if (statusF === "proximos") return st === "prox";
+        if (statusF === "aovivo") return st === "live";
+        return st === "enc";
     }).sort((a, b) => new Date(a.dt).getTime() - new Date(b.dt).getTime());
 
     async function handleLogin() {
@@ -345,7 +377,7 @@ export default function App() {
         if (!usuarioAtual || salvando) return;
         setSalvando(true);
         const ups: any[] = [];
-        JOGOS_GRUPO.filter(j => j.g === grupoAtivo).forEach(j => {
+        jogosGrupo.filter(j => j.g === grupoAtivo).forEach(j => {
             const p = palR[j.id] || {}; const g1 = parseInt(p.gols1), g2 = parseInt(p.gols2);
             if (!isNaN(g1) && !isNaN(g2) && p.gols1 !== "" && p.gols2 !== "") ups.push({ usuario_nome: usuarioAtual, jogo_id: j.id, gols1: g1, gols2: g2 });
         });
@@ -440,20 +472,13 @@ export default function App() {
         mostrarToast(`📧 Email de reset enviado para ${email}!`);
     }
 
-    function exportarRanking() {
-        const txt = `🏆 BOLÃO COPA 2026\n\n${ranking.map((p, i) => `${MEDAL[i] || `${i + 1}º`} ${p.nome} — ${p.pontos}pts`).join("\n")}\n\n💰 ${premios.dist.map(d => `${d.pos}º R$${d.valor}`).join(" | ")}`;
-        navigator.clipboard.writeText(txt);
-        setCopRank(true);
-        setTimeout(() => setCopRank(false), 2500);
-    }
-
     function JogoCardAdmin({ jogo, isElim = false }: any) {
         const r = isElim ? (resE[jogo.id] || {}) : (res[jogo.id] || {});
         const temRes = r.gols1 !== undefined && r.gols1 !== "" && r.gols2 !== undefined && r.gols2 !== "";
         return (
             <div style={{ padding: "12px", border: `1.5px solid ${temRes ? "#86efac" : "#e5e7eb"}` }} className="card">
                 <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 8, fontFamily: "'JetBrains Mono',monospace" }}>
-                    📍 {jogo.est || jogo.estadio} · {fmtD(jogo.dt || jogo.dataHora)} {fmtH(jogo.dt || jogo.dataHora)}
+                    📍 {jogo.est || jogo.estadio} · {fmtD(jogo.dt || jogo.data_hora)} {fmtH(jogo.dt || jogo.data_hora)}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ textAlign: "center", flex: 1 }}>
@@ -493,16 +518,11 @@ export default function App() {
                 {tela === "app" && (
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {permissao !== "granted" && (
-                            <button
-                                onClick={ativarNotificacoes}
-                                style={{ padding: "6px 12px", borderRadius: 8, border: "1.5px solid #86efac", background: "#dcfce7", color: "#166534", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
-                            >
+                            <button onClick={ativarNotificacoes} style={{ padding: "6px 12px", borderRadius: 8, border: "1.5px solid #86efac", background: "#dcfce7", color: "#166634", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
                                 🔔 Ativar
                             </button>
                         )}
-                        {!pago && (
-                            <span className="badge br" onClick={() => setModo("pix")} style={{ cursor: "pointer" }}>💳 Pagar</span>
-                        )}
+                        {!pago && <span className="badge br" onClick={() => setModo("pix")} style={{ cursor: "pointer" }}>💳 Pagar</span>}
                     </div>
                 )}
                 {tela === "admin" && (
@@ -510,7 +530,6 @@ export default function App() {
                 )}
             </div>
 
-            {/* LOADING */}
             {sessaoCarregando && (
                 <div style={{ position: "fixed", inset: 0, background: "#f5f7fa", zIndex: 99999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
                     <div style={{ width: 72, height: 72, background: "#16a34a", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40 }}>⚽</div>
@@ -582,7 +601,7 @@ export default function App() {
                                         <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 4 }}>Tempo restante</div>
                                         <div style={{ fontWeight: 800, fontSize: 20, color: "#16a34a", fontFamily: "'JetBrains Mono',monospace" }}>{tr(jogoSel.dt)}</div>
                                     </div>}
-                                    <button id="btn_confirmar" className="btn-primary" onClick={() => confirmarPalpite(jogoSel)} disabled={salvando} style={{ fontSize: 16, padding: "16px" }}>
+                                    <button className="btn-primary" onClick={() => confirmarPalpite(jogoSel)} disabled={salvando} style={{ fontSize: 16, padding: "16px" }}>
                                         {salvando ? "Salvando..." : "✅ Confirmar Palpite"}
                                     </button>
                                 </>
@@ -592,14 +611,13 @@ export default function App() {
                 </div>
             )}
 
-            {/* CONTEÚDO PRINCIPAL */}
             <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 14px", position: "relative", zIndex: 1, transform: `translateY(${pullRefresh}px)`, transition: pullRefresh > 0 ? "none" : "transform .3s ease" }}>
 
                 {tela === "login" && (
                     <TelaLogin
                         onLogin={(nome, email, isAdmin, u) => {
                             setUsuarioAtual(nome); setEmailAtual(email); setIsAdmin(isAdmin);
-                            setUsuarios((prev: Record<string, { pago: boolean; camp: string }>) => ({ ...prev, [nome]: { pago: u.pago, camp: u.campeao_palpite || "" } }));
+                            setUsuarios((prev: Record<string, any>) => ({ ...prev, [nome]: { pago: u.pago, camp: u.campeao_palpite || "" } }));
                             setTela("app"); irParaHome();
                         }}
                         onCadastro={() => setTela("cadastro")}
@@ -612,7 +630,7 @@ export default function App() {
                     <TelaCadastro
                         onCadastro={(nome, email, isAdmin) => {
                             setUsuarioAtual(nome); setEmailAtual(email); setIsAdmin(isAdmin);
-                            setUsuarios((prev: Record<string, { pago: boolean; camp: string }>) => ({ ...prev, [nome]: { pago: false, camp: "" } }));
+                            setUsuarios((prev: Record<string, any>) => ({ ...prev, [nome]: { pago: false, camp: "" } }));
                             setOnboarding(true); setTela("app"); irParaHome();
                         }}
                         onVoltar={() => setTela("login")}
@@ -641,6 +659,7 @@ export default function App() {
                                 F={F}
                                 palCampeao={campAtual}
                                 novidades={{ jogos: 0 }}
+                                jogosGrupo={jogosGrupo}
                                 setModo={setModo}
                                 setJogoSel={setJogoSel}
                                 setPalLocal={setPalLocal}
@@ -653,6 +672,7 @@ export default function App() {
                                 rodada={rodada} setRodada={setRodada}
                                 faseAtiva={faseAtiva} setFaseAtiva={setFaseAtiva}
                                 jogosFiltrados={jogosFiltrados} jogosRodada={jogosRodada}
+                                jogosGrupo={jogosGrupo}
                                 elim={elim} res={res} resE={resE}
                                 palS={palS} palpitesMap={palpitesMap}
                                 F={F} setJogoSel={setJogoSel}
@@ -662,6 +682,7 @@ export default function App() {
                             <TelaPalpites
                                 pago={pago} campAtual={campAtual}
                                 faseAtiva={faseAtiva} grupoAtivo={grupoAtivo}
+                                jogosGrupo={jogosGrupo}
                                 elim={elim} palR={palR} palS={palS}
                                 res={res} resE={resE}
                                 salvando={salvando} temRasc={temRasc}
@@ -687,13 +708,14 @@ export default function App() {
                             <TelaHistorico
                                 palS={palS} elim={elim} res={res} resE={resE}
                                 campAtual={campAtual} campR={campR} F={F}
+                                jogosGrupo={jogosGrupo}
                             />
                         )}
                         {modo === "pix" && (
                             <TelaPix
                                 pago={pago} usuarioAtual={usuarioAtual} emailAtual={emailAtual}
                                 onPago={() => {
-                                    setUsuarios((prev: Record<string, { pago: boolean; camp: string }>) => ({ ...prev, [usuarioAtual || ""]: { ...prev[usuarioAtual || ""], pago: true } }));
+                                    setUsuarios((prev: Record<string, any>) => ({ ...prev, [usuarioAtual || ""]: { ...prev[usuarioAtual || ""], pago: true } }));
                                     dispararConfete();
                                     mostrarToast("🎉 Pagamento confirmado! Bem-vindo ao bolão!");
                                     setTimeout(() => irParaHome(), 2000);
@@ -702,39 +724,23 @@ export default function App() {
                         )}
                         {modo === "perfil" && (
                             <TelaPerfil
-                                usuarioAtual={usuarioAtual}
-                                emailAtual={emailAtual}
-                                pago={pago}
-                                meusDados={meusDados}
-                                minhaPos={minhaPos}
-                                ranking={ranking}
-                                palpitesMap={palpitesMap}
-                                elim={elim}
-                                res={res}
-                                resE={resE}
+                                usuarioAtual={usuarioAtual} emailAtual={emailAtual}
+                                pago={pago} meusDados={meusDados} minhaPos={minhaPos}
+                                ranking={ranking} palpitesMap={palpitesMap}
+                                elim={elim} res={res} resE={resE}
                                 avatarCor={u.avatarCor || ""}
                                 onAvatarCorChange={(cor) => {
-                                    setUsuarios((prev: any) => ({
-                                        ...prev,
-                                        [usuarioAtual || ""]: { ...prev[usuarioAtual || ""], avatarCor: cor }
-                                    }));
+                                    setUsuarios((prev: any) => ({ ...prev, [usuarioAtual || ""]: { ...prev[usuarioAtual || ""], avatarCor: cor } }));
                                 }}
                             />
                         )}
                         {modo === "campeao" && (
-                            <TelaCampeao
-                                campAtual={campAtual} setCamp={setCamp}
-                                usuarios={usuarios} TODOS_TIMES={TODOS_TIMES} F={F}
-                            />
+                            <TelaCampeao campAtual={campAtual} setCamp={setCamp} usuarios={usuarios} TODOS_TIMES={TODOS_TIMES} F={F} />
                         )}
                         {modo === "regras" && <TelaRegras premios={premios} />}
                         {modo === "feed" && <TelaFeed feed={feed} />}
                         {modo === "mais" && (
-                            <TelaMais
-                                modo={modo} isAdmin={isAdmin}
-                                setModo={setModo} setTela={setTela}
-                                handleLogout={handleLogout} mostrarToast={mostrarToast}
-                            />
+                            <TelaMais modo={modo} isAdmin={isAdmin} setModo={setModo} setTela={setTela} handleLogout={handleLogout} mostrarToast={mostrarToast} />
                         )}
                     </div>
                 )}
@@ -745,6 +751,7 @@ export default function App() {
                         grupoAtivo={grupoAtivo} setGrupoAtivo={setGrupoAtivo}
                         faseAtiva={faseAtiva} setFaseAtiva={setFaseAtiva}
                         res={res} resE={resE} elim={elim}
+                        jogosGrupo={jogosGrupo}
                         updateElimT={updateElimT} campR={campR}
                         atualizarCampR={atualizarCampR} usuarios={usuarios}
                         ranking={ranking} nPart={nPart} nPagos={nPagos}
@@ -753,7 +760,6 @@ export default function App() {
                         setResAdmin={setResAdmin} setResEAdmin={setResEAdmin}
                     />
                 )}
-
             </div>
 
             <PopupNotificacao popupJogo={popupJogo} setPopupJogo={setPopupJogo} setJogoSel={setJogoSel} F={F} />

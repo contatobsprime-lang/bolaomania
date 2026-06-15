@@ -2,7 +2,6 @@
 
 import type { Jogo } from "@/lib/types";
 import { MEDAL, CONFIG } from "@/lib/constantes";
-import { JOGOS_GRUPO } from "@/data/jogos-grupo";
 import { lock, fmtDLong, fmtH, statusJ, tr } from "@/lib/utils";
 import { avatarColorPadrao } from "@/components/TelaPerfil";
 import { ShopeeAffiliateBanner } from "@/components/ShopeeAffiliateBanner";
@@ -32,6 +31,7 @@ function getFaseAtual(): string {
 }
 
 interface Props {
+  jogosGrupo: any[];
   usuarioAtual: string | null;
   pago: boolean;
   meusDados: any;
@@ -68,6 +68,7 @@ export default function TelaHome({
   palCampeao,
   novidades,
   setModo, setJogoSel, setPalLocal, confirmarPalpite,
+  jogosGrupo,
 }: Props) {
 
   const prazoEncerrado = new Date() > PRAZO_PAGAMENTO;
@@ -83,7 +84,7 @@ export default function TelaHome({
 
   // ── Próximo jogo pendente de palpite
   const todosJogos: Jogo[] = [
-    ...JOGOS_GRUPO,
+    ...jogosGrupo,
     ...elim.filter(j => j.time1 && j.time2),
   ];
 
